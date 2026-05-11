@@ -111,7 +111,7 @@ export default function ProntuariosPage() {
               
               <div className="mt-4 p-3 bg-cream-50 rounded-lg border border-cream-100">
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Queixa Principal:</p>
-                <p className="text-sm text-slate-700 italic">"{record.chiefComplaint}"</p>
+                <p className="text-sm text-slate-700 italic">&quot;{record.chiefComplaint}&quot;</p>
               </div>
             </div>
           ))}
