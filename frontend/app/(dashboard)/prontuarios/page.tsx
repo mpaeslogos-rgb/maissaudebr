@@ -88,7 +88,7 @@ export default function ProntuariosPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Stethoscope size={14} /> 
-                        {record.doctor.user.name}
+                        {record.doctor.user?.name ?? record.doctor.crm}
                       </span>
                     </div>
                   </div>

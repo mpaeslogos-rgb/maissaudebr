@@ -300,6 +300,7 @@ export default function PacientesPage() {
   // Bulk import
   const [importing, setImporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Busca no backend ──────────────────────────────────────────────────────
   const fetchPatients = useCallback(async () => {
@@ -334,6 +335,13 @@ export default function PacientesPage() {
       setPage(1)      // volta para a primeira página ao buscar
       setSearch(value)
     }, 500)
+  }
+
+  // ── Callback após salvar no modal ────────────────────────────────────────
+  function handleSaved() {
+    setShowModal(false)
+    setEditing(null)
+    fetchPatients()
   }
 
   // ── Paginação ─────────────────────────────────────────────────────────────

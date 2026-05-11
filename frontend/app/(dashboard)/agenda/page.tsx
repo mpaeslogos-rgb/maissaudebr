@@ -88,8 +88,8 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
       getDoctors({ limit: 100 }),
     ]).then(([p, d]) => {
       setPatients(p.data)
-      // ✅ CORREÇÃO: isActive mora em doc.user.isActive, não em doc.isActive
-      setDoctors(d.data.filter(doc => doc.user.isActive))
+      // ✅ CORREÇÃO: isActive mora em doc.user?.isActive, não em doc.isActive
+      setDoctors(d.data.filter(doc => doc.user?.isActive))
     }).catch(() => setError('Erro ao carregar pacientes/médicos.'))
       .finally(() => setLoading(false))
   }, [])
@@ -160,7 +160,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                   <option value="">Selecione um médico</option>
                   {doctors.map(d => (
                     <option key={d.id} value={d.id}>
-                      Dr(a). {d.user.name} — {d.specialty}
+                      Dr(a). {d.user?.name} — {d.specialty}
                     </option>
                   ))}
                 </select>
@@ -402,8 +402,8 @@ export default function AgendaPage() {
   // ── Carrega médicos ativos para o select de filtro ─────────────────────────
   useEffect(() => {
     getDoctors({ limit: 100 })
-      // ✅ CORREÇÃO: isActive mora em d.user.isActive, não em d.isActive
-      .then(r => setDoctors(r.data.filter(d => d.user.isActive)))
+      // ✅ CORREÇÃO: isActive mora em d.user?.isActive, não em d.isActive
+      .then(r => setDoctors(r.data.filter(d => d.user?.isActive)))
       .catch(() => {})
   }, [])
 
@@ -480,7 +480,7 @@ export default function AgendaPage() {
         >
           <option value="">Todos os médicos</option>
           {doctors.map(d => (
-            <option key={d.id} value={d.id}>Dr(a). {d.user.name} — {d.specialty}</option>
+            <option key={d.id} value={d.id}>Dr(a). {d.user?.name} — {d.specialty}</option>
           ))}
         </select>
 

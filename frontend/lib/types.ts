@@ -1,6 +1,4 @@
 // lib/types.ts
-// Tipos TypeScript que espelham o schema Prisma do backend
-// Formato de paginação real: { data, total, take, skip }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
@@ -18,14 +16,13 @@ export interface LoginResponse {
   user: AuthUser
 }
 
-// ─── Paginação (formato real do backend) ─────────────────────────────────────
-// O backend retorna: { data: T[], total: number, take: number, skip: number }
+// ─── Paginação ───────────────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {
   data: T[]
-  total: number   // total de registros no banco
-  take: number    // limite por página
-  skip: number    // offset
+  total: number
+  take: number
+  skip: number
 }
 
 // ─── Pacientes ───────────────────────────────────────────────────────────────
@@ -52,13 +49,20 @@ export type PatientListResponse = PaginatedResponse<Patient>
 
 export interface Doctor {
   id: string
-  userId: string
+  userId?: string
   crm: string
   crmState: string
   specialty: string
   phone?: string
   bio?: string
   consultationFee?: number
+  isActive?: boolean
+  user?: {
+    id?: string
+    name: string
+    email: string
+    isActive?: boolean
+  }
   createdAt: string
   updatedAt: string
 }
@@ -90,27 +94,6 @@ export interface ChatMessage {
   tool_calls?: any[]
   tool_call_id?: string
 }
-
-// ─── Médicos ─────────────────────────────────────────────────────────────────
-
-export interface Doctor {
-  id: string
-  crm: string
-  crmState: string
-  specialty: string
-  consultationFee: number
-  phone?: string
-  bio?: string
-  isActive: boolean
-  user: {
-    name: string
-    email: string
-  }
-  createdAt: string
-  updatedAt: string
-}
-
-export type DoctorListResponse = PaginatedResponse<Doctor>
 
 // ─── Agendamentos ─────────────────────────────────────────────────────────────
 
@@ -172,7 +155,7 @@ export interface Payment {
   id: string
   patientId: string
   appointmentId?: string
-  amount: string        // vem como string do backend (Decimal)
+  amount: string
   status: PaymentStatus
   method?: PaymentMethod
   dueDate: string
@@ -197,7 +180,6 @@ export interface Payment {
 
 export type PaymentListResponse = PaginatedResponse<Payment>
 
-// Formato real do /payments/summary
 export interface PaymentSummaryByStatus {
   status: PaymentStatus
   count: number
@@ -237,7 +219,7 @@ export interface AccountPayable {
   description: string
   category?: string
   supplier?: string
-  amount: string        // vem como string do backend (Decimal)
+  amount: string
   status: AccountPayableStatus
   dueDate: string
   paidAt?: string
@@ -264,7 +246,11 @@ export interface MedicalRecord {
   ocrText?: string
   ocrSummary?: string
   patient: { fullName: string }
-  doctor: { crm: string; specialty: string }
+  doctor: {
+    crm: string
+    specialty: string
+    user?: { name: string; email: string }
+  }
   createdAt: string
   updatedAt: string
 }
