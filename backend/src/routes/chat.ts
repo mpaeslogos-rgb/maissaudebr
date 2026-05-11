@@ -63,7 +63,7 @@ function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date) {
 async function findDoctorsBySpecialty(specialty: string) {
   const normalized = specialty.trim()
   let doctors = await prisma.doctor.findMany({
-    where: { specialty: { contains: normalized, mode: 'insensitive' } },
+    where: { specialty: { contains: normalized } },
     select: { id: true, specialty: true, crm: true, crmState: true, consultationFee: true },
     orderBy: { specialty: 'asc' },
   })
@@ -74,7 +74,7 @@ async function findDoctorsBySpecialty(specialty: string) {
   if (tokens.length === 0) return []
 
   return await prisma.doctor.findMany({
-    where: { OR: tokens.map((token) => ({ specialty: { contains: token, mode: 'insensitive' } })) },
+    where: { OR: tokens.map((token) => ({ specialty: { contains: token } })) },
     select: { id: true, specialty: true, crm: true, crmState: true, consultationFee: true },
     orderBy: { specialty: 'asc' },
   })
@@ -505,7 +505,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
                   if (doctor && lead) {
                     const startTime = new Date(`${preAppt.date}T${preAppt.time}:00`)
                     const endTime = new Date(startTime.getTime() + 30 * 60 * 1000) // 30 min
-                    await prisma.appointment.create({ data: { patientId: lead.patientId || '', doctorId: preAppt.doctorId, startTime, endTime, status: 'SCHEDULED' } })
+                    await prisma.appointment.create({ data: { patientId: (lead as any).patientId || '', doctorId: preAppt.doctorId, startTime, endTime, status: 'SCHEDULED' } })
                     await prisma.preAppointment.update({ where: { id: args.preAppointmentId }, data: { status: 'CONFIRMED' } })
                     result = JSON.stringify({ status: 'success', message: 'Consulta agendada.' })
                   } else {

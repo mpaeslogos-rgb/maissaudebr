@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { extractBoletoFromPdf, saveBoletoAsAccountPayable } from "./ocr.service";
+import { prisma } from "../../../lib/prisma";
 
 export async function ocrRoutes(app: FastifyInstance) {
 
@@ -60,7 +61,6 @@ export async function ocrRoutes(app: FastifyInstance) {
     { preHandler: [(app as any).authenticate] },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const { prisma } = await import("../../../server");
       
       const account = await prisma.accountPayable.findUnique({
         where: { id },
@@ -77,7 +77,6 @@ export async function ocrRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const body = request.body as any;
-      const { prisma } = await import("../../../server");
 
       const updated = await prisma.accountPayable.update({
         where: { id },

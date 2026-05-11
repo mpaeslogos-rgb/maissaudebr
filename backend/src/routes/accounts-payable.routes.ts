@@ -133,9 +133,9 @@ export async function accountsPayableRoutes(app: FastifyInstance) {
       ...(q
         ? {
             OR: [
-              { description: { contains: q, mode: 'insensitive' } },
-              { category: { contains: q, mode: 'insensitive' } },
-              { supplier: { contains: q, mode: 'insensitive' } },
+              { description: { contains: q } },
+              { category: { contains: q } },
+              { supplier: { contains: q } },
             ],
           }
         : {}),
