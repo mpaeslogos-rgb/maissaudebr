@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma2';
 
 export async function healthRoutes(app: FastifyInstance) {
   // Healthcheck simples (sem tocar no banco)
@@ -7,14 +7,14 @@ export async function healthRoutes(app: FastifyInstance) {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
 
-  // Verifica conexão com o Postgres
-  app.get('/db-check', async (request, reply) => {
+  // Verifica a conexão com o banco de dados
+  app.get('/db-check', async (_request, reply) => {
     try {
-      const result = await prisma.$queryRaw<{ now: Date }[]>`SELECT NOW() as now`;
+      await prisma.$queryRaw`SELECT 1`
       return {
         status: 'ok',
         database: 'connected',
-        serverTime: result[0].now,
+        serverTime: new Date().toISOString(),
       };
     } catch (error: any) {
       reply.code(500);

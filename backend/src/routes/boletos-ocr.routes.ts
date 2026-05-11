@@ -4,7 +4,7 @@ import path from "node:path"
 import crypto from "crypto"
 import OpenAI from "openai"
 import pdfParse from "pdf-parse"
-import { prisma } from "../lib/prisma"
+import { prisma } from "../lib/prisma2"
 import { authenticate } from "../plugins/auth"
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })

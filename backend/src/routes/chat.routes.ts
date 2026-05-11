@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 import { authenticate } from '../plugins/auth'
 
 const listQuerySchema = z.object({

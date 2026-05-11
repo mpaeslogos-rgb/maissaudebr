@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 import { authenticate } from '../plugins/auth'
 import * as XLSX from 'xlsx'
 
