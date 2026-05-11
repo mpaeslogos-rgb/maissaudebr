@@ -1,0 +1,345 @@
+### Login Admin — gera novo token
+# @name login
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@maissaudebr.com",
+  "password": "senha123"
+}
+
+###
+
+@token = {{login.response.body.token}}
+
+### Teste 1 - Health check
+GET http://localhost:3001/health
+
+
+### Teste 2 - Registrar usuario admin
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "name": "Marcos Admin",
+  "email": "admin@maissaudebr.com",
+  "password": "senha123",
+  "role": "ADMIN"
+}
+
+
+### Teste 3 - Login (captura o token)
+# @name login
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@maissaudebr.com",
+  "password": "senha123"
+}
+
+
+### Teste 4 - Listar appointments (autenticado)
+GET http://localhost:3001/appointments
+Authorization: Bearer {{login.response.body.token}}
+### Teste 5 - Criar paciente
+# @name novoPaciente
+POST http://localhost:3002/patients/bulk-import
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="pacientes.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./pacientes.xlsx
+------WebKitFormBoundary--
+
+{
+  "name": "Joao da Silva",
+  "cpf": "12345678901",
+  "email": "joao@example.com",
+  "phone": "11999998888",
+  "birthDate": "1985-03-15",
+  "gender": "M"
+}
+
+
+### Teste 6 - Listar pacientes
+GET http://localhost:3001/patients
+Authorization: Bearer {{login.response.body.token}}
+### Teste 7 - Criar medico (cria User + Doctor numa transacao)
+# @name novoMedico
+POST http://localhost:3001/doctors
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "name": "Dra. Ana Souza",
+  "email": "ana.souza@maissaudebr.com",
+  "password": "senha123",
+  "crm": "CRM-SP-123456",
+  "specialty": "Cardiologia",
+  "consultPrice": 350.00,
+  "consultTime": 30
+}
+
+
+### Teste 8 - Listar medicos
+GET http://localhost:3001/doctors
+Authorization: Bearer {{login.response.body.token}}
+
+### Teste 9 - Criar appointment (agendar consulta)
+# @name novaConsulta
+POST http://localhost:3001/appointments
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "doctorId": "34b6187e-5bb7-4c92-9825-974c9abfd59a",
+  "scheduledAt": "2026-05-15T14:00:00Z",
+  "duration": 30,
+  "notes": "Primeira consulta - avaliacao cardiologica"
+}
+
+
+### Teste 10 - Listar appointments (deve mostrar a consulta criada)
+GET http://localhost:3001/appointments
+Authorization: Bearer {{login.response.body.token}}
+
+
+### Teste 11 - Tentar criar OUTRA consulta no MESMO horario (deve dar 409)
+POST http://localhost:3001/appointments
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "doctorId": "34b6187e-5bb7-4c92-9825-974c9abfd59a",
+  "scheduledAt": "2026-05-15T14:15:00Z",
+  "duration": 30,
+  "notes": "Tentativa de conflito - deve falhar"
+}
+
+### Teste 12 - Buscar appointment por ID
+GET http://localhost:3001/appointments/fe0ee36a-00d7-4a42-8686-19c01950e7b1
+Authorization: Bearer {{login.response.body.token}}
+
+
+### Teste 13 - PATCH: confirmar a consulta (mudar status para CONFIRMED)
+PATCH http://localhost:3001/appointments/fe0ee36a-00d7-4a42-8686-19c01950e7b1
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
+}
+
+
+### Teste 14 - PATCH: reagendar para outro horario (deve passar - sem conflito)
+PATCH http://localhost:3001/appointments/fe0ee36a-00d7-4a42-8686-19c01950e7b1
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "scheduledAt": "2026-05-15T16:00:00Z",
+  "notes": "Reagendado a pedido do paciente"
+}
+
+
+### Teste 15 - DELETE: cancelar consulta (soft delete via status)
+DELETE http://localhost:3001/appointments/fe0ee36a-00d7-4a42-8686-19c01950e7b1
+Authorization: Bearer {{login.response.body.token}}
+
+
+### Teste 16 - Listar appointments depois do cancelamento
+GET http://localhost:3001/appointments
+Authorization: Bearer {{login.response.body.token}}
+
+### ==============================
+### PAYMENTS — Sub-etapa 2.1
+### ==============================
+
+### 1) Pagamento avulso (sem appointment) — DEVE retornar 201
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "amount": 150.00,
+  "method": "PIX"
+}
+
+### 2) Pagamento avulso JÁ PAGO — paidAt deve ser preenchido automaticamente
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "amount": 80.00,
+  "method": "DEBIT_CARD",
+  "status": "PAID"
+}
+
+### 3) Paciente inexistente — DEVE retornar 404 PATIENT_NOT_FOUND
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "00000000-0000-0000-0000-000000000000",
+  "amount": 100,
+  "method": "PIX"
+}
+
+### 4) Validação Zod — amount negativo DEVE retornar 400
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "amount": -10,
+  "method": "PIX"
+}
+
+### 5) Sem token — DEVE retornar 401
+POST http://localhost:3001/payments
+Content-Type: application/json
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "amount": 100,
+  "method": "PIX"
+}
+
+### 6) Criar novo appointment para o teste 7
+POST http://localhost:3001/appointments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "doctorId": "34b6187e-5bb7-4c92-9825-974c9abfd59a",
+  "scheduledAt": "2025-12-10T14:00:00.000Z",
+  "durationMinutes": 30
+}
+
+### 7) Pagamento vinculado ao appointment criado em (6)
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "appointmentId": "316cb984-a576-4c7a-9f3a-89c14f490e38",
+  "amount": 350.00,
+  "method": "CREDIT_CARD",
+  "status": "PAID"
+}
+
+### 8) Tentar criar OUTRO pagamento para o MESMO appointment — DEVE retornar 409
+POST http://localhost:3001/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "patientId": "30b993f7-0627-4b80-bbdb-5bcf953a3c91",
+  "appointmentId": "316cb984-a576-4c7a-9f3a-89c14f490e38",
+  "amount": 350.00,
+  "method": "PIX"
+}
+
+### 9) Pagamento com paciente errado para o appointment — DEVE retornar 400 APPOINTMENT_PATIENT_MISMATCH
+### (use um patientId DIFERENTE do dono do appointment de (6))
+### Crie outro paciente antes se ainda não tiver, ou pule este teste por agora.
+
+### ==============================
+### PAYMENTS — Sub-etapa 2.2 (GET /payments)
+### ==============================
+
+### 1) Listar todos (paginação default: page=1, pageSize=20)
+GET http://localhost:3001/payments
+Authorization: Bearer {{token}}
+
+### 2) Filtrar por status PAID
+GET http://localhost:3001/payments?status=PAID
+Authorization: Bearer {{token}}
+
+### 3) Filtrar por método PIX
+GET http://localhost:3001/payments?method=PIX
+Authorization: Bearer {{token}}
+
+### 4) Filtrar por paciente (João da Silva)
+GET http://localhost:3001/payments?patientId=30b993f7-0627-4b80-bbdb-5bcf953a3c91
+Authorization: Bearer {{token}}
+
+### 5) Filtrar por período (createdAt nos últimos 30 dias)
+### Ajuste as datas conforme hoje
+GET http://localhost:3001/payments?from=2026-04-01T00:00:00.000Z&to=2026-05-01T23:59:59.000Z
+Authorization: Bearer {{token}}
+
+### 6) Filtrar por período usando paidAt (caixa)
+GET http://localhost:3001/payments?from=2026-04-01T00:00:00.000Z&to=2026-05-01T23:59:59.000Z&dateField=paidAt
+Authorization: Bearer {{token}}
+
+### 7) Combinar filtros: PAID + PIX
+GET http://localhost:3001/payments?status=PAID&method=PIX
+Authorization: Bearer {{token}}
+
+### 8) Paginação: pageSize=2 (forçar mais de 1 página)
+GET http://localhost:3001/payments?page=1&pageSize=2
+Authorization: Bearer {{token}}
+
+### 9) Página 2 com pageSize=2
+GET http://localhost:3001/payments?page=2&pageSize=2
+Authorization: Bearer {{token}}
+
+### 10) Validação Zod — pageSize maior que 100 DEVE retornar 400
+GET http://localhost:3001/payments?pageSize=500
+Authorization: Bearer {{token}}
+
+### 11) Validação Zod — patientId não-UUID DEVE retornar 400
+GET http://localhost:3001/payments?patientId=abc
+Authorization: Bearer {{token}}
+
+### 12) Sem token DEVE retornar 401
+GET http://localhost:3001/payments
+
+### ==============================
+### PAYMENTS — Sub-etapa 2.3 (GET /payments/summary)
+### ==============================
+
+### 1) Summary geral (sem filtros) — usa paidAt como default
+GET http://localhost:3001/payments/summary
+Authorization: Bearer {{token}}
+
+### 2) Summary por createdAt (vê todos os 4 pagamentos criados)
+GET http://localhost:3001/payments/summary?dateField=createdAt
+Authorization: Bearer {{token}}
+
+### 3) Summary com período (ajuste as datas conforme hoje)
+GET http://localhost:3001/payments/summary?from=2026-04-01T00:00:00.000Z&to=2026-05-31T23:59:59.000Z&dateField=createdAt
+Authorization: Bearer {{token}}
+
+### 4) Summary de um paciente específico
+GET http://localhost:3001/payments/summary?patientId=30b993f7-0627-4b80-bbdb-5bcf953a3c91&dateField=createdAt
+Authorization: Bearer {{token}}
+
+### 5) Summary com período fora dos dados — totais devem ser 0
+GET http://localhost:3001/payments/summary?from=2020-01-01T00:00:00.000Z&to=2020-12-31T23:59:59.000Z&dateField=createdAt
+Authorization: Bearer {{token}}
+
+### 6) Validação Zod — patientId não-UUID DEVE retornar 400
+GET http://localhost:3001/payments/summary?patientId=abc
+Authorization: Bearer {{token}}
+
+### 7) Validação Zod — dateField inválido DEVE retornar 400
+GET http://localhost:3001/payments/summary?dateField=invalido
+Authorization: Bearer {{token}}
+
+### 8) Sem token DEVE retornar 401
+GET http://localhost:3001/payments/summary
