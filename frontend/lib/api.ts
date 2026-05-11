@@ -9,6 +9,7 @@ import type {
   PaymentListResponse, Payment, PaymentSummary,
   AccountPayableListResponse, AccountPayable,
   MedicalRecordListResponse, MedicalRecord,
+  ChatListResponse, Chat, ChatMessage,
   ApiError,
 } from './types'
 

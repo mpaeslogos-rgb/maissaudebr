@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat } from '@/lib/api'
+import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -16,16 +17,18 @@ export default function ChatsPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [patientTypes, setPatientTypes] = useState<Record<string, string>>({})
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadChats()
     loadDoctors()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (activeChat) {
-      // Simular mensagens do chat ativo
       setMessages([
         { role: 'assistant', content: 'Olá! Como posso ajudar?', timestamp: new Date() },
         { role: 'user', content: 'Gostaria de agendar uma consulta.', timestamp: new Date() },
@@ -41,14 +44,13 @@ export default function ChatsPage() {
     try {
       const res = await getChats({ limit: 50 })
       setChats(res.data)
-      
-      // Carregar tipos de paciente
+
       const types: Record<string, string> = {}
       for (const chat of res.data) {
         types[chat.id] = await getPatientType(chat)
       }
       setPatientTypes(types)
-      
+
       if (res.data.length > 0 && !activeChat) {
         setActiveChat(res.data[0])
       }
@@ -72,7 +74,7 @@ export default function ChatsPage() {
     if (!input.trim() || !activeChat || isSending) return
 
     const userMessage: Message = { role: 'user', content: input, timestamp: new Date() }
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev: Message[]) => [...prev, userMessage])
     setInput('')
     setIsSending(true)
 
@@ -83,13 +85,13 @@ export default function ChatsPage() {
       }))
 
       const res = await sendChatMessage({ messages: apiMessages, phone: activeChat.phone })
-      
+
       const assistantMessage: Message = { role: 'assistant', content: res.response, timestamp: new Date() }
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages((prev: Message[]) => [...prev, assistantMessage])
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error)
       const errorMessage: Message = { role: 'assistant', content: 'Desculpe, houve um erro. Tente novamente.', timestamp: new Date() }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages((prev: Message[]) => [...prev, errorMessage])
     } finally {
       setIsSending(false)
     }
@@ -99,9 +101,8 @@ export default function ChatsPage() {
     if (!activeChat) return
     try {
       await transferChat(activeChat.id, doctorId)
-      // Atualizar status do chat
-      setChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, status: 'TRANSFERRED_TO_DOCTOR', transferredToDoctorId: doctorId } : c))
-      setActiveChat(prev => prev ? { ...prev, status: 'TRANSFERRED_TO_DOCTOR', transferredToDoctorId: doctorId } : null)
+      setChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, status: 'TRANSFERRED_TO_DOCTOR' as const, transferredToDoctorId: doctorId } : c))
+      setActiveChat(prev => prev ? { ...prev, status: 'TRANSFERRED_TO_DOCTOR' as const, transferredToDoctorId: doctorId } : null)
     } catch (error) {
       console.error('Erro ao transferir chat:', error)
     }
@@ -109,20 +110,12 @@ export default function ChatsPage() {
 
   const getPatientType = async (chat: Chat) => {
     if (!chat.patientId) return 'novo'
-    
     try {
-      // Buscar histórico de consultas do paciente
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/appointments?patientId=${chat.patientId}&take=1`)
       const data = await response.json()
-      
-      if (data.data && data.data.length > 0) {
-        return 'retorno'
-      } else {
-        return 'antigo-convertido'
-      }
-    } catch (error) {
-      console.error('Erro ao verificar histórico:', error)
-      return 'retorno' // fallback
+      return data.data && data.data.length > 0 ? 'retorno' : 'antigo-convertido'
+    } catch {
+      return 'retorno'
     }
   }
 
@@ -132,7 +125,6 @@ export default function ChatsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Lista de chats - Lado esquerdo */}
       <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">Chats Ativos</h2>
@@ -171,11 +163,9 @@ export default function ChatsPage() {
         </div>
       </div>
 
-      {/* Chat ativo - Lado direito */}
       <div className="flex-1 flex flex-col">
         {activeChat ? (
           <>
-            {/* Cabeçalho do chat */}
             <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center">
               <div>
                 <h3 className="font-semibold text-gray-800">{activeChat.phone}</h3>
@@ -199,7 +189,6 @@ export default function ChatsPage() {
               </div>
             </div>
 
-            {/* Mensagens */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -216,7 +205,6 @@ export default function ChatsPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <div className="bg-white border-t border-gray-200 p-4">
               <div className="flex gap-2">
                 <input
