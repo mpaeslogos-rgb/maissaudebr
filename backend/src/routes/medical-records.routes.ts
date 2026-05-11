@@ -225,9 +225,9 @@ export async function medicalRecordsRoutes(app: FastifyInstance) {
       ...(q
         ? {
             OR: [
-              { diagnosis: { contains: q, mode: 'insensitive' } },
-              { chiefComplaint: { contains: q, mode: 'insensitive' } },
-              { observations: { contains: q, mode: 'insensitive' } },
+              { diagnosis: { contains: q } },
+              { chiefComplaint: { contains: q } },
+              { observations: { contains: q } },
             ],
           }
         : {}),

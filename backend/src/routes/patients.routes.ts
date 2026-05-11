@@ -65,9 +65,9 @@ export async function patientsRoutes(app: FastifyInstance) {
     const where: Prisma.PatientWhereInput = search
       ? {
           OR: [
-            { fullName: { contains: search, mode: 'insensitive' } },
+            { fullName: { contains: search } },
             { cpf: { contains: search } },
-            { email: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search } },
           ],
         }
       : {}

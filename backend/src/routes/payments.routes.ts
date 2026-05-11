@@ -171,7 +171,7 @@ export async function paymentsRoutes(app: FastifyInstance) {
         data: {
           patientId: data.patientId,
           appointmentId: data.appointmentId,
-          amount: new Prisma.Decimal(data.amount),
+          amount: data.amount,
           method: data.method,
           status: finalStatus,
           dueDate: data.dueDate,
@@ -232,7 +232,7 @@ export async function paymentsRoutes(app: FastifyInstance) {
       }),
     ])
 
-    const toNumber = (d: Prisma.Decimal | null) => Number(d ?? 0)
+    const toNumber = (d: number | null) => d ?? 0
 
     return reply.send({
       period: { from: from ?? null, to: to ?? null, dateField },
@@ -348,12 +348,8 @@ export async function paymentsRoutes(app: FastifyInstance) {
         }
       }
 
-      // Converter amount para Decimal se veio
       const dataToUpdate: Prisma.PaymentUpdateInput = {
         ...body.data,
-        ...(body.data.amount !== undefined
-          ? { amount: new Prisma.Decimal(body.data.amount) }
-          : {}),
       }
 
       const updated = await prisma.payment.update({

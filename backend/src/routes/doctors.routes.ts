@@ -107,9 +107,9 @@ export async function doctorsRoutes(app: FastifyInstance) {
     const where: Prisma.DoctorWhereInput = q
       ? {
           OR: [
-            { crm: { contains: q, mode: 'insensitive' } },
-            { specialty: { contains: q, mode: 'insensitive' } },
-            { user: { name: { contains: q, mode: 'insensitive' } } },
+            { crm: { contains: q } },
+            { specialty: { contains: q } },
+            { user: { name: { contains: q } } },
           ],
         }
       : {}

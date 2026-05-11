@@ -13,39 +13,52 @@ jobs:
   backend:
     name: Backend Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: file:./dev.db
+      JWT_SECRET: ci-secret-placeholder
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install backend dependencies
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
         run: npm install
-        working-directory: backend
+
       - name: Generate Prisma client
         run: npm run prisma:generate
-        working-directory: backend
-      - name: Build backend
+
+      - name: Build
         run: npm run build
-        working-directory: backend
 
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install frontend dependencies
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
         run: npm install
-        working-directory: frontend
-      - name: Build frontend
+
+      - name: Build
         run: npm run build
-        working-directory: frontend
-      - name: Lint frontend
+
+      - name: Lint
         run: npm run lint
-        working-directory: frontend

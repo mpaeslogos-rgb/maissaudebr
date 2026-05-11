@@ -30,7 +30,7 @@ export async function chatRoutes(app: FastifyInstance) {
     if (search) {
       where.OR = [
         { phone: { contains: search } },
-        { patient: { fullName: { contains: search, mode: 'insensitive' } } },
+        { patient: { fullName: { contains: search } } },
       ]
     }
 
