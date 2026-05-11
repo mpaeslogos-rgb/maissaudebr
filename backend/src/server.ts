@@ -27,8 +27,12 @@ async function bootstrap() {
     prefix: '/uploads/',
   })
 
+  const allowedOrigins = process.env.CORS_ALLOW_ORIGIN
+    ? process.env.CORS_ALLOW_ORIGIN.split(',').map(origin => origin.trim())
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002']
+
   await app.register(cors, {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    origin: allowedOrigins.includes('*') ? true : allowedOrigins,
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, AppointmentStatus } from '@prisma/client'
 import { authenticate } from '../plugins/auth'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 
 // ============================================================

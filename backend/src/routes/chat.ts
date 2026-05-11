@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import OpenAI from 'openai'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 
 type ChatMessage = {
   role: 'user' | 'assistant' | 'system' | 'tool'

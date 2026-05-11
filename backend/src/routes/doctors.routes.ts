@@ -3,7 +3,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { authenticate } from '../plugins/auth'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 
 // ============================================================

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { prisma } from '../lib/prisma'
+import { prisma } from '../lib/prisma2'
 
 const registerSchema = z.object({
   name: z.string().min(2),
