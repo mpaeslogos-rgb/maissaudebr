@@ -1,0 +1,411 @@
+// ============================================
+// CONFIGURAÇÃO
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Config {
+  id   String @id @default(cuid())
+  key  String @unique @default("clinic")
+
+  // Dados da clínica
+  clinicName      String @default("maissaudebr")
+  whatsappNumber  String @default("")
+  attendanceHours String @default("")
+  specialties     String @default("")
+
+  // Telemedicina
+  telemedicinePlatform     String @default("")
+  telemedicineLinkInfo     String @default("")
+  telemedicineInstructions String @default("")
+  linkSendTime             String @default("")
+
+  // Pagamentos
+  defaultConsultationFee String @default("")
+  pixKey                 String @default("")
+  paymentLink            String @default("")
+  paymentMethods         String @default("")
+  paymentInstructions    String @default("")
+
+  // Políticas da clínica
+  confirmationPolicy String @default("")
+  cancellationPolicy String @default("")
+
+  // Mensagens automáticas para WhatsApp
+  welcomeMessage         String @default("")
+  confirmationMessage    String @default("")
+  reminderMessage        String @default("")
+  paymentReminderMessage String @default("")
+  humanTransferMessage   String @default("")
+  emergencyMessage       String @default("")
+
+  // Regras adicionais para a IA
+  otherSettings String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("configs")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+  PATIENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BANK_TRANSFER
+  HEALTH_INSURANCE
+}
+
+enum AccountPayableStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ============================================
+// USUÁRIOS E AUTENTICAÇÃO
+// ============================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(RECEPTIONIST)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relações 1:1 (um User pode ser um Doctor ou um Patient)
+  doctor    Doctor?
+  patient   Patient?
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================
+// MÉDICOS
+// ============================================
+
+model Doctor {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  crm          String   @unique // Conselho Regional de Medicina
+  crmState     String   // UF do CRM (ex: "SP", "RJ")
+  specialty    String
+  phone        String?
+  bio          String?
+  consultationFee Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments    Appointment[]
+  medicalRecords  MedicalRecord[]
+  transferredChats Chat[]
+
+  @@index([crm])
+  @@index([specialty])
+  @@map("doctors")
+}
+
+// ============================================
+// PACIENTES
+// ============================================
+
+model Patient {
+  id          String    @id @default(cuid())
+  userId      String?   @unique // Opcional: paciente pode não ter login
+  fullName    String
+  cpf         String    @unique
+  rg          String?
+  birthDate   DateTime
+  gender      Gender
+  email       String?
+  phone       String
+  
+  // Endereço
+  zipCode     String?
+  street      String?
+  number      String?
+  complement  String?
+  neighborhood String?
+  city        String?
+  state       String?
+
+  // Dados clínicos
+  bloodType   String?
+  allergies   String?
+  notes       String?
+
+  // Convênio
+  healthInsurance     String?
+  healthInsuranceNumber String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  appointments    Appointment[]
+  medicalRecords  MedicalRecord[]
+  payments        Payment[]
+  chats           Chat[]
+
+  @@index([cpf])
+  @@index([fullName])
+  @@map("patients")
+}
+
+// ============================================
+// PRE AGENDAMENTOS
+// ============================================
+
+model PreAppointment {
+  id          String   @id @default(cuid())
+  leadId      String
+  doctorId    String
+  date        String   // Formato YYYY-MM-DD
+  time        String   // Formato HH:MM
+  specialty   String
+  status      String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("pre_appointments")
+}
+
+// ============================================
+// AGENDAMENTOS
+// ============================================
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  doctorId    String
+  startTime   DateTime
+  endTime     DateTime
+  status      AppointmentStatus @default(SCHEDULED)
+  reason      String?           // Motivo da consulta
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  patient        Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor         Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  medicalRecord  MedicalRecord?
+  payment        Payment?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([startTime])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ============================================
+// PRONTUÁRIOS MÉDICOS
+// ============================================
+
+model MedicalRecord {
+  id              String   @id @default(cuid())
+  patientId       String
+  doctorId        String
+  appointmentId   String?  @unique // 1:1 opcional com Appointment
+  
+  // Anamnese e diagnóstico
+  chiefComplaint  String?  // Queixa principal
+  historyOfIllness String? // História da doença atual
+  diagnosis       String?
+  prescription    String?  // Prescrição
+  observations    String?
+
+  // OCR / Anexos (resultados de exames extraídos via OpenAI)
+  attachmentUrl   String?  // URL do arquivo original (se salvar storage)
+  ocrText         String?  // Texto extraído via OCR
+  ocrSummary      String?  // Resumo gerado pela OpenAI
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([appointmentId])
+  @@map("medical_records")
+}
+
+// ============================================
+// PAGAMENTOS (CONTAS A RECEBER)
+// ============================================
+
+model Payment {
+  id              String         @id @default(cuid())
+  patientId       String
+  appointmentId   String?        @unique
+  amount          Float
+  status          PaymentStatus  @default(PENDING)
+  method          PaymentMethod?
+  dueDate         DateTime
+  paidAt          DateTime?
+  description     String?
+  invoiceUrl      String?        // Link da nota fiscal (se houver)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("payments")
+}
+
+// ============================================
+// CONTAS A PAGAR (despesas da clínica)
+// ============================================
+
+model AccountPayable {
+  id          String               @id @default(cuid())
+  description String
+  category    String?              // Ex: "Aluguel", "Energia", "Material"
+  supplier    String?              // Fornecedor
+  supplierCnpj  String?
+  digitableLine String?
+  barcode       String?
+  bankCode      String?
+  fileUrl       String?
+  ocrRawText    String?
+  ocrConfidence Float?
+  ocrStatus     String   @default("PENDING")
+  amount      Float
+  status      AccountPayableStatus @default(PENDING)
+  dueDate     DateTime
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([category])
+  @@map("accounts_payable")
+}
+
+// ============================================
+// AUDITORIA (LGPD / rastreabilidade)
+// ============================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // Ex: "CREATE", "UPDATE", "DELETE", "LOGIN"
+  entity     String   // Ex: "Patient", "Appointment"
+  entityId   String?
+  metadata   Json?    // Dados adicionais (antes/depois, IP, etc.)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  specialty String?
+  status    String   @default("PENDING_SCHEDULING") // PENDING, SCHEDULED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("leads")
+}
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  phone     String   @default("simulador")
+  intent    String?  // agendamento, pagamento, urgencia, humano, etc.
+  message   String
+  isUser    Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+
+  @@map("chat_logs")
+}
+
+model Chat {
+  id          String      @id @default(cuid())
+  phone       String      @unique
+  patientId   String?     // Link para paciente se identificado
+  status      ChatStatus  @default(ACTIVE) // ACTIVE, TRANSFERRED_TO_DOCTOR, CLOSED
+  transferredToDoctorId String? // ID do médico para quem foi transferido
+  lastMessageAt DateTime  @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  patient     Patient?    @relation(fields: [patientId], references: [id])
+  doctor      Doctor?     @relation(fields: [transferredToDoctorId], references: [id])
+
+  @@map("chats")
+}
+
+enum ChatStatus {
+  ACTIVE
+  TRANSFERRED_TO_DOCTOR
+  CLOSED
+}

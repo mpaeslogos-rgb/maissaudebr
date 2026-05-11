@@ -1,0 +1,411 @@
+// lib/api.ts
+// Fetch wrapper centralizado — formato real do backend confirmado
+
+import type {
+  LoginResponse,
+  PatientListResponse, Patient,
+  DoctorListResponse, Doctor,
+  AppointmentListResponse, Appointment,
+  PaymentListResponse, Payment, PaymentSummary,
+  AccountPayableListResponse, AccountPayable,
+  MedicalRecordListResponse, MedicalRecord,
+  ApiError,
+} from './types'
+
+// ─── URL base ────────────────────────────────────────────────────────────────
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+// ─── Chave do localStorage ────────────────────────────────────────────────────
+export const TOKEN_KEY = 'maissaudebr_token'
+
+// ─── Helpers de token ─────────────────────────────────────────────────────────
+
+export function saveToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token)
+}
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+export function isAuthenticated(): boolean {
+  return !!getToken()
+}
+
+// ─── Classe de erro customizada ───────────────────────────────────────────────
+
+export class ApiException extends Error {
+  public status: number
+  public data: ApiError
+
+  constructor(status: number, data: ApiError) {
+    super(data.error || 'Erro desconhecido')
+    this.name = 'ApiException'
+    this.status = status
+    this.data = data
+  }
+}
+
+// ─── Função base de fetch ─────────────────────────────────────────────────────
+
+interface FetchOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  body?: unknown
+  token?: string
+  isFormData?: boolean
+}
+
+async function apiFetch<T>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<T> {
+  const { method = 'GET', body, isFormData = false } = options
+  const token = options.token ?? getToken()
+  const headers: HeadersInit = {}
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  if (!isFormData && body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const config: RequestInit = { method, headers }
+
+  if (body !== undefined) {
+    config.body = isFormData
+      ? (body as FormData)
+      : JSON.stringify(body)
+  }
+
+  let response: Response
+  try {
+    response = await fetch(`${API_URL}${endpoint}`, config)
+  } catch {
+    throw new ApiException(0, {
+      error: 'Não foi possível conectar ao servidor. Verifique sua conexão.',
+    })
+  }
+
+  let responseData: unknown
+  try {
+    responseData = await response.json()
+  } catch {
+    responseData = {}
+  }
+
+  if (!response.ok) {
+    throw new ApiException(response.status, responseData as ApiError)
+  }
+
+  return responseData as T
+}
+
+// ─── Métodos HTTP ─────────────────────────────────────────────────────────────
+
+export function apiGet<T>(endpoint: string): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'GET' })
+}
+
+export function apiPost<T>(endpoint: string, body: unknown): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'POST', body })
+}
+
+export function apiPut<T>(endpoint: string, body: unknown): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'PUT', body })
+}
+
+export function apiPatch<T>(endpoint: string, body: unknown): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'PATCH', body })
+}
+
+export function apiDelete<T>(endpoint: string): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'DELETE' })
+}
+
+export function apiUpload<T>(endpoint: string, formData: FormData): Promise<T> {
+  return apiFetch<T>(endpoint, { method: 'POST', body: formData, isFormData: true })
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export async function loginUser(
+  email: string,
+  password: string
+): Promise<LoginResponse> {
+  return apiFetch<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: { email, password },
+    token: undefined,
+  })
+}
+
+export async function registerUser(data: {
+  name: string
+  email: string
+  password: string
+  role?: string
+}): Promise<LoginResponse> {
+  return apiFetch<LoginResponse>('/auth/register', {
+    method: 'POST',
+    body: data,
+    token: undefined,
+  })
+}
+
+// ─── Pacientes ────────────────────────────────────────────────────────────────
+
+export function getPatients(params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<PatientListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)   query.set('page', String(params.page))
+  if (params?.limit)  query.set('limit', String(params.limit))
+  if (params?.search) query.set('search', params.search)
+  const qs = query.toString()
+  return apiGet<PatientListResponse>(`/patients${qs ? `?${qs}` : ''}`)
+}
+
+export function getPatient(id: string): Promise<{ data: Patient }> {
+  return apiGet<{ data: Patient }>(`/patients/${id}`)
+}
+
+export function createPatient(data: Partial<Patient>): Promise<{ data: Patient }> {
+  return apiPost<{ data: Patient }>('/patients', data)
+}
+
+export function updatePatient(id: string, data: Partial<Patient>): Promise<{ data: Patient }> {
+  return apiPut<{ data: Patient }>(`/patients/${id}`, data)
+}
+
+export function deletePatient(id: string): Promise<{ message: string }> {
+  return apiDelete<{ message: string }>(`/patients/${id}`)
+}
+
+export function bulkImportPatients(file: File): Promise<{ message: string; data: Patient[] }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return apiUpload<{ message: string; data: Patient[] }>('/patients/bulk-import', formData)
+}
+
+// ─── Médicos ──────────────────────────────────────────────────────────────────
+
+export function getDoctors(params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<DoctorListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)   query.set('page', String(params.page))
+  if (params?.limit)  query.set('limit', String(params.limit))
+  if (params?.search) query.set('search', params.search)
+  const qs = query.toString()
+  return apiGet<DoctorListResponse>(`/doctors${qs ? `?${qs}` : ''}`)
+}
+
+export function getDoctor(id: string): Promise<{ data: Doctor }> {
+  return apiGet<{ data: Doctor }>(`/doctors/${id}`)
+}
+
+export function createDoctor(data: unknown): Promise<{ data: Doctor }> {
+  return apiPost<{ data: Doctor }>('/doctors', data)
+}
+
+export function updateDoctor(id: string, data: unknown): Promise<{ data: Doctor }> {
+  return apiPut<{ data: Doctor }>(`/doctors/${id}`, data)
+}
+
+export function deleteDoctor(id: string): Promise<{ message: string }> {
+  return apiDelete<{ message: string }>(`/doctors/${id}`)
+}
+
+// ─── Agendamentos ─────────────────────────────────────────────────────────────
+
+export function getAppointments(params?: {
+  page?: number
+  limit?: number
+  patientId?: string
+  doctorId?: string
+  status?: string
+}): Promise<AppointmentListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)      query.set('page', String(params.page))
+  if (params?.limit)     query.set('limit', String(params.limit))
+  if (params?.patientId) query.set('patientId', params.patientId)
+  if (params?.doctorId)  query.set('doctorId', params.doctorId)
+  if (params?.status)    query.set('status', params.status)
+  const qs = query.toString()
+  return apiGet<AppointmentListResponse>(`/appointments${qs ? `?${qs}` : ''}`)
+}
+
+export function getAppointment(id: string): Promise<{ data: Appointment }> {
+  return apiGet<{ data: Appointment }>(`/appointments/${id}`)
+}
+
+export function createAppointment(data: unknown): Promise<{ data: Appointment }> {
+  return apiPost<{ data: Appointment }>('/appointments', data)
+}
+
+export function updateAppointment(id: string, data: unknown): Promise<{ data: Appointment }> {
+  return apiPut<{ data: Appointment }>(`/appointments/${id}`, data)
+}
+
+export function cancelAppointment(id: string): Promise<{ data: Appointment }> {
+  return apiPost<{ data: Appointment }>(`/appointments/${id}/cancel`, {})
+}
+
+export function confirmAppointment(id: string): Promise<{ data: Appointment }> {
+  return apiPost<{ data: Appointment }>(`/appointments/${id}/confirm`, {})
+}
+
+// ─── Pagamentos ───────────────────────────────────────────────────────────────
+
+export function getPayments(params?: {
+  page?: number
+  limit?: number
+  status?: string
+  patientId?: string
+}): Promise<PaymentListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)      query.set('page', String(params.page))
+  if (params?.limit)     query.set('limit', String(params.limit))
+  if (params?.status)    query.set('status', params.status)
+  if (params?.patientId) query.set('patientId', params.patientId)
+  const qs = query.toString()
+  return apiGet<PaymentListResponse>(`/payments${qs ? `?${qs}` : ''}`)
+}
+
+export function getPayment(id: string): Promise<{ data: Payment }> {
+  return apiGet<{ data: Payment }>(`/payments/${id}`)
+}
+
+export function createPayment(data: unknown): Promise<{ data: Payment }> {
+  return apiPost<{ data: Payment }>('/payments', data)
+}
+
+export function payPayment(
+  id: string,
+  data?: { method?: string; paidAt?: string }
+): Promise<{ data: Payment }> {
+  return apiPost<{ data: Payment }>(`/payments/${id}/pay`, data ?? {})
+}
+
+export function refundPayment(id: string): Promise<{ data: Payment }> {
+  return apiPost<{ data: Payment }>(`/payments/${id}/refund`, {})
+}
+
+// ─── Chats ───────────────────────────────────────────────────────────────────
+
+export function getChats(params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<ChatListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)   query.set('page', String(params.page))
+  if (params?.limit)  query.set('limit', String(params.limit))
+  if (params?.search) query.set('search', params.search)
+  const qs = query.toString()
+  return apiGet<ChatListResponse>(`/chats${qs ? `?${qs}` : ''}`)
+}
+
+export function getChat(id: string): Promise<{ data: Chat }> {
+  return apiGet<{ data: Chat }>(`/chats/${id}`)
+}
+
+export function sendChatMessage(data: { messages: ChatMessage[]; phone?: string }): Promise<{ response: string }> {
+  return apiPost<{ response: string }>('/chat', data)
+}
+
+export function transferChat(chatId: string, doctorId: string): Promise<{ data: Chat }> {
+  return apiPost<{ data: Chat }>(`/chats/${chatId}/transfer`, { doctorId })
+}
+
+// Retorna o formato real do backend
+export function getPaymentSummary(): Promise<PaymentSummary> {
+  return apiGet<PaymentSummary>('/payments/summary')
+}
+
+// ─── Contas a Pagar ───────────────────────────────────────────────────────────
+
+export function getAccountsPayable(params?: {
+  page?: number
+  limit?: number
+  status?: string
+  overdueOnly?: boolean
+}): Promise<AccountPayableListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)       query.set('page', String(params.page))
+  if (params?.limit)      query.set('limit', String(params.limit))
+  if (params?.status)     query.set('status', params.status)
+  if (params?.overdueOnly) query.set('overdueOnly', 'true')
+  const qs = query.toString()
+  return apiGet<AccountPayableListResponse>(`/accounts-payable${qs ? `?${qs}` : ''}`)
+}
+
+export function createAccountPayable(data: unknown): Promise<{ data: AccountPayable }> {
+  return apiPost<{ data: AccountPayable }>('/accounts-payable', data)
+}
+
+export function payAccountPayable(id: string): Promise<{ data: AccountPayable }> {
+  return apiPost<{ data: AccountPayable }>(`/accounts-payable/${id}/pay`, {})
+}
+
+// ─── Prontuários ──────────────────────────────────────────────────────────────
+
+export function getMedicalRecords(params?: {
+  page?: number
+  limit?: number
+  patientId?: string
+  doctorId?: string
+}): Promise<MedicalRecordListResponse> {
+  const query = new URLSearchParams()
+  if (params?.page)      query.set('page', String(params.page))
+  if (params?.limit)     query.set('limit', String(params.limit))
+  if (params?.patientId) query.set('patientId', params.patientId)
+  if (params?.doctorId)  query.set('doctorId', params.doctorId)
+  const qs = query.toString()
+  return apiGet<MedicalRecordListResponse>(`/medical-records${qs ? `?${qs}` : ''}`)
+}
+
+export function getMedicalRecord(id: string): Promise<{ data: MedicalRecord }> {
+  return apiGet<{ data: MedicalRecord }>(`/medical-records/${id}`)
+}
+
+export function createMedicalRecord(data: unknown): Promise<{ data: MedicalRecord }> {
+  return apiPost<{ data: MedicalRecord }>('/medical-records', data)
+}
+
+export function updateMedicalRecord(id: string, data: unknown): Promise<{ data: MedicalRecord }> {
+  return apiPut<{ data: MedicalRecord }>(`/medical-records/${id}`, data)
+}
+
+
+// ─── OCR ──────────────────────────────────────────────────────────────────────
+
+export function ocrAnalyze(formData: FormData): Promise<unknown> {
+  return apiUpload('/ocr/analyze', formData)
+}
+
+export function ocrCreateMedicalRecord(
+  formData: FormData
+): Promise<{ medicalRecord: MedicalRecord }> {
+  return apiUpload<{ medicalRecord: MedicalRecord }>('/ocr/medical-records', formData)
+}
+
+export function ocrAttachToMedicalRecord(
+  id: string,
+  formData: FormData
+): Promise<{ medicalRecord: MedicalRecord }> {
+  return apiUpload<{ medicalRecord: MedicalRecord }>(
+    `/ocr/medical-records/${id}`,
+    formData
+  )
+}
