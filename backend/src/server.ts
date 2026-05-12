@@ -5,6 +5,7 @@ import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
 import fastifyStatic from '@fastify/static'
 import path from 'node:path'
+import fs from 'node:fs'
 
 import { healthRoutes } from './routes/health.routes'
 import { authRoutes } from './routes/auth.routes'
@@ -22,8 +23,13 @@ import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
 const app = Fastify({ logger: true })
 
 async function bootstrap() {
+  const uploadsDir = path.resolve(process.cwd(), 'uploads')
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true })
+  }
+
   await app.register(fastifyStatic, {
-    root: path.resolve(process.cwd(), 'uploads'),
+    root: uploadsDir,
     prefix: '/uploads/',
   })
 
