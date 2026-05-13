@@ -11,6 +11,7 @@ import {
   getPatients,
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient } from '@/lib/types'
+import { DoctorCreateModal } from '@/components/DoctorCreateModal'
 
 // ─── Helpers de status ───────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
+  const [showNewDoctor, setShowNewDoctor] = useState(false)
 
   const [patientId, setPatientId]     = useState('')
   const [doctorId, setDoctorId]       = useState('')
@@ -153,9 +155,18 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
 
               {/* Médico */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Médico <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Médico <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewDoctor(true)}
+                    className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                  >
+                    + Novo médico
+                  </button>
+                </div>
                 <select value={doctorId} onChange={e => setDoctorId(e.target.value)} className="input">
                   <option value="">Selecione um médico</option>
                   {doctors.map(d => (
@@ -164,10 +175,9 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                     </option>
                   ))}
                 </select>
-                {/* Aviso útil se nenhum médico ativo for encontrado */}
                 {!loading && doctors.length === 0 && (
                   <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ Nenhum médico ativo encontrado. Verifique o cadastro.
+                    Nenhum médico ativo encontrado. Clique em &quot;+ Novo médico&quot; para cadastrar.
                   </p>
                 )}
               </div>
@@ -243,6 +253,17 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
           )}
         </form>
       </div>
+
+      {showNewDoctor && (
+        <DoctorCreateModal
+          onClose={() => setShowNewDoctor(false)}
+          onSaved={(newDoc) => {
+            setDoctors(prev => [...prev, newDoc])
+            setDoctorId(newDoc.id)
+            setShowNewDoctor(false)
+          }}
+        />
+      )}
     </div>
   )
 }

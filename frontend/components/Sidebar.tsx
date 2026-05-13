@@ -17,6 +17,7 @@ import {
   Settings,
   FileText,
   LogOut,
+  Stethoscope,
 } from "lucide-react";
 
 const menu = [
@@ -24,6 +25,7 @@ const menu = [
   { href: "/chats",         label: "Chats",          icon: MessageSquare },
   { href: "/agenda",        label: "Agenda",         icon: Calendar },
   { href: "/pacientes",     label: "Pacientes",      icon: Users },
+  { href: "/medicos",       label: "Médicos",        icon: Stethoscope },
   { href: "/prontuarios",   label: "Prontuários",    icon: FileText },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign },
   { href: "/relatorios",    label: "Relatórios",     icon: BarChart3 },

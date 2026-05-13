@@ -204,23 +204,23 @@ export function getDoctors(params?: {
   search?: string
 }): Promise<DoctorListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)   query.set('page', String(params.page))
-  if (params?.limit)  query.set('limit', String(params.limit))
-  if (params?.search) query.set('search', params.search)
+  if (params?.limit)  query.set('take', String(params.limit))
+  if (params?.page && params?.limit) query.set('skip', String((params.page - 1) * params.limit))
+  if (params?.search) query.set('q', params.search)
   const qs = query.toString()
   return apiGet<DoctorListResponse>(`/doctors${qs ? `?${qs}` : ''}`)
 }
 
-export function getDoctor(id: string): Promise<{ data: Doctor }> {
-  return apiGet<{ data: Doctor }>(`/doctors/${id}`)
+export function getDoctor(id: string): Promise<Doctor> {
+  return apiGet<Doctor>(`/doctors/${id}`)
 }
 
-export function createDoctor(data: unknown): Promise<{ data: Doctor }> {
-  return apiPost<{ data: Doctor }>('/doctors', data)
+export function createDoctor(data: unknown): Promise<Doctor> {
+  return apiPost<Doctor>('/doctors', data)
 }
 
-export function updateDoctor(id: string, data: unknown): Promise<{ data: Doctor }> {
-  return apiPut<{ data: Doctor }>(`/doctors/${id}`, data)
+export function updateDoctor(id: string, data: unknown): Promise<Doctor> {
+  return apiPatch<Doctor>(`/doctors/${id}`, data)
 }
 
 export function deleteDoctor(id: string): Promise<{ message: string }> {
