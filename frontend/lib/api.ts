@@ -408,6 +408,23 @@ export function updateMedicalRecord(id: string, data: unknown): Promise<MedicalR
 }
 
 
+// ─── Configuração da clínica ─────────────────────────────────────────────────
+
+export interface ClinicConfig {
+  clinicName: string
+  whatsappNumber: string
+  attendanceHours: string
+  specialties: string
+  pixKey: string
+  paymentLink: string
+  confirmationPolicy: string
+  cancellationPolicy: string
+}
+
+export function getClinicConfig(): Promise<ClinicConfig> {
+  return apiGet<ClinicConfig>('/api/config')
+}
+
 // ─── OCR ──────────────────────────────────────────────────────────────────────
 
 export function ocrAnalyze(formData: FormData): Promise<unknown> {
