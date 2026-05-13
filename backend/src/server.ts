@@ -17,6 +17,7 @@ import { accountsPayableRoutes } from './routes/accounts-payable.routes'
 import { medicalRecordsRoutes } from './routes/medical-records.routes'
 import { ocrRoutes } from './routes/ocr.routes'
 import { chatRoutes } from './routes/chat.routes'
+import { chatRoutes as aiChatRoutes } from './routes/chat'
 import { configRoutes } from './routes/config'
 import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
 
@@ -64,6 +65,7 @@ async function bootstrap() {
   await app.register(ocrRoutes, { prefix: '/api' })
   await app.register(boletosOcrRoutes, { prefix: '/api/financial/ocr' })
   await app.register(chatRoutes, { prefix: '/api' })
+  await app.register(aiChatRoutes, { prefix: '/api' })
   await app.register(configRoutes)
 
   const PORT = Number(process.env.PORT) || 3001

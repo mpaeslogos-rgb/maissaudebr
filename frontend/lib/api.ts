@@ -310,23 +310,23 @@ export function getChats(params?: {
   search?: string
 }): Promise<ChatListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)   query.set('page', String(params.page))
-  if (params?.limit)  query.set('limit', String(params.limit))
+  if (params?.limit)  query.set('take', String(params.limit))
+  if (params?.page && params?.limit) query.set('skip', String((params.page - 1) * params.limit))
   if (params?.search) query.set('search', params.search)
   const qs = query.toString()
-  return apiGet<ChatListResponse>(`/chats${qs ? `?${qs}` : ''}`)
+  return apiGet<ChatListResponse>(`/api/chats${qs ? `?${qs}` : ''}`)
 }
 
 export function getChat(id: string): Promise<{ data: Chat }> {
-  return apiGet<{ data: Chat }>(`/chats/${id}`)
+  return apiGet<{ data: Chat }>(`/api/chats/${id}`)
 }
 
 export function sendChatMessage(data: { messages: ChatMessage[]; phone?: string }): Promise<{ response: string }> {
-  return apiPost<{ response: string }>('/chat', data)
+  return apiPost<{ response: string }>('/api/chat', data)
 }
 
 export function transferChat(chatId: string, doctorId: string): Promise<{ data: Chat }> {
-  return apiPost<{ data: Chat }>(`/chats/${chatId}/transfer`, { doctorId })
+  return apiPost<{ data: Chat }>(`/api/chats/${chatId}/transfer`, { doctorId })
 }
 
 // Retorna o formato real do backend
