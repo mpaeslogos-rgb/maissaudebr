@@ -255,15 +255,15 @@ export function createAppointment(data: unknown): Promise<{ data: Appointment }>
 }
 
 export function updateAppointment(id: string, data: unknown): Promise<{ data: Appointment }> {
-  return apiPut<{ data: Appointment }>(`/appointments/${id}`, data)
+  return apiPatch<{ data: Appointment }>(`/appointments/${id}`, data)
 }
 
 export function cancelAppointment(id: string): Promise<{ data: Appointment }> {
-  return apiPost<{ data: Appointment }>(`/appointments/${id}/cancel`, {})
+  return apiPatch<{ data: Appointment }>(`/appointments/${id}`, { status: 'CANCELLED' })
 }
 
 export function confirmAppointment(id: string): Promise<{ data: Appointment }> {
-  return apiPost<{ data: Appointment }>(`/appointments/${id}/confirm`, {})
+  return apiPatch<{ data: Appointment }>(`/appointments/${id}`, { status: 'CONFIRMED' })
 }
 
 // ─── Pagamentos ───────────────────────────────────────────────────────────────
