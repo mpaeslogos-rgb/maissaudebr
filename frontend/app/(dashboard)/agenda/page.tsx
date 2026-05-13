@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X, Video, Printer } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3 } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
@@ -719,6 +719,104 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   )
 }
 
+// ─── Vista Mensal ────────────────────────────────────────────────────────────
+
+interface MonthViewProps {
+  currentDate: Date
+  appointments: Appointment[]
+  onSelectAppointment: (apt: Appointment) => void
+  onNewAppointment: (day: Date) => void
+}
+
+function MonthView({ currentDate, appointments, onSelectAppointment, onNewAppointment }: MonthViewProps) {
+  const year  = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+
+  const firstDay    = new Date(year, month, 1)
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const startOffset = firstDay.getDay() // 0=Dom … 6=Sáb
+
+  const cells: (Date | null)[] = [
+    ...Array(startOffset).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1)),
+  ]
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const weekDayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+  return (
+    <div className="card flex-1 overflow-hidden p-0">
+      {/* Cabeçalho dos dias da semana */}
+      <div className="grid grid-cols-7 border-b border-surface-border">
+        {weekDayLabels.map(d => (
+          <div
+            key={d}
+            className="py-2 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider bg-cream-50 border-r border-surface-border last:border-r-0"
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Grade do mês */}
+      <div className="grid grid-cols-7" style={{ maxHeight: 'calc(100vh - 330px)', overflowY: 'auto' }}>
+        {cells.map((day, i) => {
+          if (!day) {
+            return (
+              <div
+                key={`empty-${i}`}
+                className="border-r border-b border-surface-border min-h-[90px] bg-cream-50/30 last:border-r-0"
+              />
+            )
+          }
+
+          const dayApts = appointments.filter(
+            apt => new Date(apt.startTime).toDateString() === day.toDateString()
+          )
+
+          return (
+            <div
+              key={formatDateISO(day)}
+              onClick={() => onNewAppointment(day)}
+              className={`border-r border-b border-surface-border min-h-[90px] p-1 cursor-pointer hover:bg-cream-50 transition-colors last:border-r-0 ${
+                isToday(day) ? 'bg-primary-50/40' : 'bg-white'
+              }`}
+            >
+              {/* Número do dia */}
+              <div className="flex justify-end mb-0.5">
+                <span className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
+                  isToday(day) ? 'bg-primary-600 text-white' : 'text-slate-500'
+                }`}>
+                  {day.getDate()}
+                </span>
+              </div>
+
+              {/* Pills de consultas */}
+              <div className="space-y-0.5">
+                {dayApts.slice(0, 3).map(apt => (
+                  <div
+                    key={apt.id}
+                    onClick={e => { e.stopPropagation(); onSelectAppointment(apt) }}
+                    className={`text-[10px] px-1.5 py-0.5 rounded-sm truncate cursor-pointer hover:opacity-80 border-l-2 leading-tight ${STATUS_STYLES[apt.status]}`}
+                  >
+                    <span className="font-semibold">
+                      {new Date(apt.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>{' '}
+                    {apt.patient.fullName.split(' ')[0]}
+                  </div>
+                ))}
+                {dayApts.length > 3 && (
+                  <div className="text-[10px] text-slate-400 pl-1">+{dayApts.length - 3} mais</div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
@@ -739,8 +837,11 @@ function Legend({ color, label }: { color: string; label: string }) {
 
 // ─── Página principal ────────────────────────────────────────────────────────
 
+type ViewMode = 'week' | 'month'
+
 export default function AgendaPage() {
   const [currentDate, setCurrentDate]                 = useState(new Date())
+  const [viewMode, setViewMode]                       = useState<ViewMode>('week')
   const [appointments, setAppointments]               = useState<Appointment[]>([])
   const [doctors, setDoctors]                         = useState<Doctor[]>([])
   const [filterDoctorId, setFilterDoctorId]           = useState('')
@@ -784,12 +885,22 @@ export default function AgendaPage() {
 
   useEffect(() => { fetchAppointments() }, [fetchAppointments])
 
-  // ── Navegação semanal ──────────────────────────────────────────────────────
+  // ── Navegação (semana ou mês) ──────────────────────────────────────────────
   function navigate(direction: 'prev' | 'next' | 'today') {
     if (direction === 'today') { setCurrentDate(new Date()); return }
     const d = new Date(currentDate)
-    d.setDate(d.getDate() + (direction === 'next' ? 7 : -7))
+    if (viewMode === 'month') {
+      d.setMonth(d.getMonth() + (direction === 'next' ? 1 : -1))
+    } else {
+      d.setDate(d.getDate() + (direction === 'next' ? 7 : -7))
+    }
     setCurrentDate(d)
+  }
+
+  function handleMonthCellClick(day: Date) {
+    setPrefillDate(formatDateISO(day))
+    setPrefillHour(8)
+    setShowNewModal(true)
   }
 
   // ── Filtra consultas para uma célula (dia + hora) ─────────────────────────
@@ -852,8 +963,8 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {/* Navegação da semana */}
-      <div className="flex items-center gap-2 bg-white p-4 rounded-xl border border-surface-border">
+      {/* Navegação + Toggle de visão */}
+      <div className="flex items-center gap-2 bg-white p-4 rounded-xl border border-surface-border flex-wrap">
         <button onClick={() => navigate('prev')} className="p-2 hover:bg-cream-100 rounded-lg">
           <ChevronLeft size={18} />
         </button>
@@ -863,8 +974,33 @@ export default function AgendaPage() {
         <button onClick={() => navigate('next')} className="p-2 hover:bg-cream-100 rounded-lg">
           <ChevronRight size={18} />
         </button>
-        <h2 className="font-semibold text-slate-800 ml-3 capitalize">{formatWeekTitle(days)}</h2>
-        {loading && <span className="ml-auto text-xs text-slate-400 animate-pulse">Carregando…</span>}
+        <h2 className="font-semibold text-slate-800 ml-3 capitalize">
+          {viewMode === 'month'
+            ? currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+            : formatWeekTitle(days)
+          }
+        </h2>
+        {loading && <span className="text-xs text-slate-400 animate-pulse">Carregando…</span>}
+
+        {/* Toggle semana / mês */}
+        <div className="ml-auto flex items-center gap-1 bg-cream-50 border border-surface-border rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('week')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              viewMode === 'week' ? 'bg-white shadow text-primary-700' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Rows3 size={14} /> Semana
+          </button>
+          <button
+            onClick={() => setViewMode('month')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              viewMode === 'month' ? 'bg-white shadow text-primary-700' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LayoutGrid size={14} /> Mês
+          </button>
+        </div>
       </div>
 
       {/* Erro */}
@@ -875,64 +1011,76 @@ export default function AgendaPage() {
         </div>
       )}
 
+      {/* Vista Mensal */}
+      {viewMode === 'month' && (
+        <MonthView
+          currentDate={currentDate}
+          appointments={appointments}
+          onSelectAppointment={setSelectedAppointment}
+          onNewAppointment={handleMonthCellClick}
+        />
+      )}
+
       {/* Grade semanal */}
-      <div className="card flex-1 overflow-hidden p-0">
-        <div className="overflow-auto h-full">
-          <div className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[800px]">
+      {viewMode === 'week' && (
+        <div className="card flex-1 overflow-hidden p-0">
+          <div className="overflow-auto h-full">
+            <div className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[800px]">
 
-            {/* Cabeçalho dos dias */}
-            <div className="bg-cream-50 border-b border-r border-surface-border sticky top-0 z-10" />
-            {days.map((day, i) => (
-              <div
-                key={i}
-                className={`border-b border-r border-surface-border p-3 text-center sticky top-0 z-10 ${
-                  isToday(day) ? 'bg-primary-50' : 'bg-cream-50'
-                }`}
-              >
-                <div className="text-xs text-slate-500 uppercase">
-                  {day.toLocaleDateString('pt-BR', { weekday: 'short' })}
+              {/* Cabeçalho dos dias */}
+              <div className="bg-cream-50 border-b border-r border-surface-border sticky top-0 z-10" />
+              {days.map((day, i) => (
+                <div
+                  key={i}
+                  className={`border-b border-r border-surface-border p-3 text-center sticky top-0 z-10 ${
+                    isToday(day) ? 'bg-primary-50' : 'bg-cream-50'
+                  }`}
+                >
+                  <div className="text-xs text-slate-500 uppercase">
+                    {day.toLocaleDateString('pt-BR', { weekday: 'short' })}
+                  </div>
+                  <div className={`text-lg font-bold ${isToday(day) ? 'text-primary-700' : 'text-slate-800'}`}>
+                    {day.getDate()}
+                  </div>
                 </div>
-                <div className={`text-lg font-bold ${isToday(day) ? 'text-primary-700' : 'text-slate-800'}`}>
-                  {day.getDate()}
-                </div>
-              </div>
-            ))}
+              ))}
 
-            {/* Linhas de horário */}
-            {HOURS.map(hour => (
-              <div key={`row-${hour}`} className="contents">
-                <div className="border-r border-b border-surface-border p-2 text-xs text-slate-500 font-mono text-right pr-2 bg-white">
-                  {String(hour).padStart(2, '0')}:00
-                </div>
-                {days.map((day, di) => {
-                  const apts = getApts(day, hour)
-                  return (
-                    <div
-                      key={`${hour}-${di}`}
-                      onClick={() => { if (apts.length === 0) handleCellClick(day, hour) }}
-                      className="border-r border-b border-surface-border min-h-[60px] p-1 hover:bg-cream-50 cursor-pointer relative"
-                    >
-                      {apts.map(apt => (
-                        <div
-                          key={apt.id}
-                          onClick={e => { e.stopPropagation(); setSelectedAppointment(apt) }}
-                          className={`text-xs p-1.5 rounded border-l-4 mb-1 cursor-pointer hover:shadow-md transition-shadow ${STATUS_STYLES[apt.status]}`}
-                        >
-                          <div className="font-semibold truncate">
-                            {new Date(apt.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{' '}
-                            {apt.patient.fullName}
+              {/* Linhas de horário */}
+              {HOURS.map(hour => (
+                <div key={`row-${hour}`} className="contents">
+                  <div className="border-r border-b border-surface-border p-2 text-xs text-slate-500 font-mono text-right pr-2 bg-white">
+                    {String(hour).padStart(2, '0')}:00
+                  </div>
+                  {days.map((day, di) => {
+                    const apts = getApts(day, hour)
+                    return (
+                      <div
+                        key={`${hour}-${di}`}
+                        onClick={() => { if (apts.length === 0) handleCellClick(day, hour) }}
+                        className="border-r border-b border-surface-border min-h-[60px] p-1 hover:bg-cream-50 cursor-pointer relative"
+                      >
+                        {apts.map(apt => (
+                          <div
+                            key={apt.id}
+                            onClick={e => { e.stopPropagation(); setSelectedAppointment(apt) }}
+                            className={`text-xs p-1.5 rounded border-l-4 mb-1 cursor-pointer hover:shadow-md transition-shadow ${STATUS_STYLES[apt.status]}`}
+                          >
+                            <div className="font-semibold truncate">
+                              {new Date(apt.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{' '}
+                              {apt.patient.fullName}
+                            </div>
+                            <div className="opacity-80 truncate">{apt.doctor.specialty}</div>
                           </div>
-                          <div className="opacity-80 truncate">{apt.doctor.specialty}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Painel de detalhes */}
       {selectedAppointment && (
