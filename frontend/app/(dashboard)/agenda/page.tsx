@@ -370,13 +370,13 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   }
 
   function printReceituario() {
-    const clinicName = clinicConfig?.clinicName || 'Clínica Médica'
-    const doctorName = apt.doctor.user.name
-    const crm        = `${apt.doctor.crm}-${apt.doctor.crmState}`
-    const specialty  = apt.doctor.specialty
-    const patName    = apt.patient.fullName
-    const patCpf     = apt.patient.cpf
-    const dateStr    = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    const clinicName   = clinicConfig?.clinicName || 'Clínica Médica'
+    const doctorName   = apt.doctor.user.name
+    const crm          = `${apt.doctor.crm}-${apt.doctor.crmState}`
+    const specialty    = apt.doctor.specialty
+    const patName      = apt.patient.fullName
+    const patCpf       = apt.patient.cpf
+    const dateStr      = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
     const prescription = form.prescription || '(Prescrição não informada)'
 
     const html = `<!DOCTYPE html>
@@ -386,34 +386,81 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   <title>Receituário — ${patName}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 24mm 20mm; max-width: 210mm; }
-    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom: 2px solid #111; padding-bottom:12px; margin-bottom:16px; }
-    .header-left h1 { font-size:15pt; font-weight:bold; margin-bottom:3px; }
-    .header-left p  { font-size:9pt; color:#444; line-height:1.5; }
-    .header-right   { text-align:right; font-size:9pt; color:#444; }
-    .title { text-align:center; font-size:13pt; font-weight:bold; letter-spacing:3px; text-transform:uppercase; margin:18px 0 14px; }
-    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 18mm 20mm 32mm; max-width: 210mm; }
+
+    /* Logo centralizado */
+    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
+    .logo-row  { display:flex; align-items:center; gap:10px; }
+    .logo-text { font-size:22pt; font-weight:bold; line-height:1; letter-spacing:-0.5px; }
+    .logo-text .plus-saude { color:#1B5E3F; }
+    .logo-text .br         { color:#0F3624; }
+    .logo-sub  { font-size:8pt; color:#555; margin-top:3px; letter-spacing:0.5px; }
+
+    /* Linha separadora com info do médico */
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
+    .header-left p  { font-size:9.5pt; color:#333; line-height:1.6; }
+    .header-left strong { color:#1B5E3F; }
+    .header-right   { text-align:right; font-size:9pt; color:#666; }
+
+    .title { text-align:center; font-size:13pt; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin:0 0 16px; color:#1B5E3F; }
+
+    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; background:#fafafa; }
     .patient-box p { font-size:10pt; }
     .patient-box span { font-weight:bold; }
+
     .section-label { font-size:8pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; color:#555; border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:10px; }
-    .prescription { min-height:180px; white-space:pre-wrap; font-size:11pt; line-height:1.7; margin-bottom:40px; }
-    .footer { border-top:1px solid #111; padding-top:16px; display:flex; justify-content:flex-end; }
-    .sign-block { text-align:center; min-width:220px; }
-    .sign-line { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
+    .prescription  { min-height:180px; white-space:pre-wrap; font-size:11pt; line-height:1.7; margin-bottom:40px; }
+
+    .sign-area { border-top:1px solid #1B5E3F; padding-top:16px; display:flex; justify-content:flex-end; }
+    .sign-block { text-align:center; min-width:230px; }
+    .sign-line  { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
     .sign-block p { font-size:10pt; line-height:1.6; }
     .sign-block .name { font-weight:bold; }
-    .date-line { margin-top:30px; font-size:10pt; text-align:right; color:#444; }
+    .date-line { margin-top:24px; font-size:10pt; text-align:right; color:#555; }
+
+    /* Rodapé institucional fixo na base da página */
+    .page-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      border-top: 1px solid #ccc;
+      padding: 6px 20mm;
+      text-align: center;
+      font-size: 7.5pt;
+      color: #777;
+      background: #fff;
+      line-height: 1.5;
+    }
+
     @media print {
-      body { padding:15mm; }
-      @page { size:A4 portrait; margin:15mm; }
+      body { padding:15mm 15mm 28mm; }
+      @page { size:A4 portrait; margin:10mm; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Logo centralizado -->
+  <div class="logo-wrap">
+    <div class="logo-row">
+      <svg width="44" height="44" viewBox="0 0 100 100" fill="none">
+        <g stroke="#1B5E3F" stroke-width="3.5" stroke-linecap="round">
+          <line x1="22" y1="18" x2="32" y2="18" />
+          <line x1="27" y1="13" x2="27" y2="23" />
+        </g>
+        <path
+          d="M 38 32 C 28 32, 22 40, 22 50 C 22 62, 35 72, 50 84 C 65 72, 78 62, 78 50 C 78 40, 72 32, 62 32 C 56 32, 52 36, 50 40 C 48 36, 44 32, 38 32 Z"
+          stroke="#1B5E3F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"
+        />
+      </svg>
+      <span class="logo-text"><span class="plus-saude">+Saúde</span><span class="br">BR</span></span>
+    </div>
+    <span class="logo-sub">${clinicName}</span>
+  </div>
+
+  <!-- Cabeçalho com dados do médico -->
   <div class="header">
     <div class="header-left">
-      <h1>${clinicName}</h1>
-      <p>Dr(a). ${doctorName}<br>${specialty}<br>CRM ${crm}</p>
+      <p><strong>Dr(a). ${doctorName}</strong><br>${specialty}<br>CRM ${crm}</p>
     </div>
     <div class="header-right">
       <p>Teleconsulta / Consulta Presencial</p>
@@ -431,7 +478,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   <div class="section-label">Prescrição</div>
   <div class="prescription">${prescription.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
 
-  <div class="footer">
+  <div class="sign-area">
     <div class="sign-block">
       <div class="sign-line">
         <p class="name">Dr(a). ${doctorName}</p>
@@ -441,6 +488,13 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   </div>
 
   <p class="date-line">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</p>
+
+  <!-- Rodapé institucional -->
+  <div class="page-footer">
+    <strong>+SaúdeBR</strong> — MAIS SAUDE SERVIÇO DE TELEMEDICINA LTDA &nbsp;|&nbsp;
+    CNPJ: 56.990.029/0001-12 &nbsp;|&nbsp;
+    R. Acre, 820 Cj. 610 — Vieiralves — Manaus / AM &nbsp; CEP: 69053-130
+  </div>
 
   <script>window.onload = function(){ window.print(); }<\/script>
 </body>
