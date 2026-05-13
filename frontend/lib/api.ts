@@ -329,6 +329,25 @@ export function transferChat(chatId: string, doctorId: string): Promise<{ data: 
   return apiPost<{ data: Chat }>(`/api/chats/${chatId}/transfer`, { doctorId })
 }
 
+// ─── WhatsApp ─────────────────────────────────────────────────────────────────
+
+export interface Contact {
+  id: string
+  name: string
+  phone: string | null
+  detail?: string
+  type: 'patient' | 'doctor' | 'supplier'
+}
+
+export function getContacts(search?: string): Promise<{ data: Contact[]; total: number }> {
+  const qs = search ? `?search=${encodeURIComponent(search)}` : ''
+  return apiGet<{ data: Contact[]; total: number }>(`/api/whatsapp/contacts${qs}`)
+}
+
+export function sendWhatsAppMessage(to: string, message: string): Promise<{ success: boolean }> {
+  return apiPost<{ success: boolean }>('/api/whatsapp/send', { to, message })
+}
+
 // Retorna o formato real do backend
 export function getPaymentSummary(): Promise<PaymentSummary> {
   return apiGet<PaymentSummary>('/payments/summary')
