@@ -1,16 +1,20 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X, Video } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
   confirmAppointment,
   cancelAppointment,
+  updateAppointment,
   getDoctors,
   getPatients,
+  getMedicalRecords,
+  createMedicalRecord,
+  updateMedicalRecord,
 } from '@/lib/api'
-import { Appointment, AppointmentStatus, Doctor, Patient } from '@/lib/types'
+import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
 
 // ─── Helpers de status ───────────────────────────────────────────────────────
@@ -276,13 +280,89 @@ interface DetailPanelProps {
   onRefresh: () => void
 }
 
+type ProntuarioForm = {
+  chiefComplaint: string
+  historyOfIllness: string
+  diagnosis: string
+  prescription: string
+  observations: string
+}
+
+const EMPTY_PRONTUARIO: ProntuarioForm = {
+  chiefComplaint: '', historyOfIllness: '', diagnosis: '', prescription: '', observations: '',
+}
+
 function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps) {
+  const [tab, setTab]     = useState<'resumo' | 'prontuario'>('resumo')
   const [acting, setActing] = useState(false)
   const [error, setError]   = useState('')
+
+  // Prontuário
+  const [record, setRecord]       = useState<MedicalRecord | null>(null)
+  const [history, setHistory]     = useState<MedicalRecord[]>([])
+  const [loadingRec, setLoadingRec] = useState(false)
+  const [form, setForm]           = useState<ProntuarioForm>(EMPTY_PRONTUARIO)
+  const [saving, setSaving]       = useState(false)
+  const [saveOk, setSaveOk]       = useState(false)
+  const [saveErr, setSaveErr]     = useState('')
 
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
   const durMin = Math.round((end.getTime() - start.getTime()) / 60_000)
+
+  // URL da vídeo chamada (meet.jit.si público, sala baseada no ID único da consulta)
+  const videoUrl = `https://meet.jit.si/MaisSaudeBR-${apt.id}`
+
+  // Carrega prontuário e histórico quando usuário abre a aba Prontuário
+  useEffect(() => {
+    if (tab !== 'prontuario') return
+    setLoadingRec(true)
+    Promise.all([
+      getMedicalRecords({ appointmentId: apt.id, limit: 1 }),
+      getMedicalRecords({ patientId: apt.patientId, limit: 5 }),
+    ]).then(([recRes, histRes]) => {
+      const current = recRes.data[0] ?? null
+      setRecord(current)
+      if (current) {
+        setForm({
+          chiefComplaint:   current.chiefComplaint   ?? '',
+          historyOfIllness: current.historyOfIllness ?? '',
+          diagnosis:        current.diagnosis        ?? '',
+          prescription:     current.prescription     ?? '',
+          observations:     current.observations     ?? '',
+        })
+      }
+      // Histórico: exclui a consulta atual
+      setHistory(histRes.data.filter(r => r.appointmentId !== apt.id))
+    }).catch(() => {}).finally(() => setLoadingRec(false))
+  }, [tab, apt.id, apt.patientId])
+
+  function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setSaveOk(false)
+  }
+
+  async function handleSaveProntuario() {
+    setSaving(true); setSaveErr(''); setSaveOk(false)
+    try {
+      if (record) {
+        await updateMedicalRecord(record.id, form)
+      } else {
+        const created = await createMedicalRecord({
+          ...form,
+          patientId:     apt.patientId,
+          doctorId:      apt.doctorId,
+          appointmentId: apt.id,
+        })
+        setRecord(created)
+      }
+      setSaveOk(true)
+    } catch (err: unknown) {
+      setSaveErr(err instanceof Error ? err.message : 'Erro ao salvar.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleConfirm() {
     setActing(true); setError('')
@@ -299,81 +379,205 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     finally { setActing(false) }
   }
 
+  async function handleStartConsulta() {
+    // Abre vídeo em nova aba e muda status para IN_PROGRESS
+    window.open(videoUrl, '_blank')
+    try {
+      await updateAppointment(apt.id, { status: 'IN_PROGRESS' })
+      onRefresh()
+      setTab('prontuario')
+    } catch { /* silencioso — já abriu a sala */ }
+  }
+
+  async function handleFinishConsulta() {
+    if (!window.confirm('Finalizar consulta?')) return
+    setActing(true); setError('')
+    try {
+      await updateAppointment(apt.id, { status: 'COMPLETED' })
+      onRefresh(); onClose()
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erro') }
+    finally { setActing(false) }
+  }
+
   return (
     <>
       <div onClick={onClose} className="fixed inset-0 bg-black/40 z-40" />
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col">
-        <div className="p-6 border-b border-surface-border flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800">Detalhes da Consulta</h2>
-          <button onClick={onClose} className="p-2 hover:bg-cream-100 rounded-lg text-slate-500">
-            <X size={20} />
-          </button>
-        </div>
+      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col">
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-lg">
-              {apt.patient.fullName.charAt(0)}
-            </div>
-            <div>
-              <div className="font-bold text-slate-800">{apt.patient.fullName}</div>
-              <div className="text-xs text-slate-500">{apt.patient.phone}</div>
-              {apt.patient.email && <div className="text-xs text-slate-400">{apt.patient.email}</div>}
-            </div>
-          </div>
-
+        {/* Cabeçalho */}
+        <div className="p-5 border-b border-surface-border flex items-center justify-between shrink-0">
           <div>
-            <div className="text-xs text-slate-500 uppercase mb-1">Status</div>
-            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[apt.status]}`}>
-              {STATUS_LABELS[apt.status]}
-            </span>
+            <h2 className="text-lg font-bold text-slate-800">{apt.patient.fullName}</h2>
+            <p className="text-xs text-slate-400">{apt.doctor.specialty} · {start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
           </div>
+          <button onClick={onClose} className="p-2 hover:bg-cream-100 rounded-lg text-slate-500"><X size={20} /></button>
+        </div>
 
-          <InfoRow label="Horário" value={
-            `${start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })} (${durMin} min)`
-          } />
+        {/* Tabs */}
+        <div className="flex border-b border-surface-border shrink-0">
+          {(['resumo', 'prontuario'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                tab === t
+                  ? 'border-b-2 border-primary-600 text-primary-700'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {t === 'resumo' ? 'Resumo' : 'Prontuário'}
+            </button>
+          ))}
+        </div>
 
-          <InfoRow
-            label="Profissional"
-            value={`Dr(a). ${apt.doctor.user.name} — ${apt.doctor.specialty}`}
-          />
+        {/* Conteúdo */}
+        <div className="flex-1 overflow-y-auto">
 
-          {apt.reason && (
-            <div>
-              <div className="text-xs text-slate-500 uppercase mb-1">Motivo</div>
-              <p className="text-sm text-slate-600 bg-cream-50 p-3 rounded-lg">{apt.reason}</p>
+          {/* ── Aba Resumo ── */}
+          {tab === 'resumo' && (
+            <div className="p-5 space-y-5">
+              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
+
+              {/* Status */}
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[apt.status]}`}>
+                {STATUS_LABELS[apt.status]}
+              </span>
+
+              {/* Paciente */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold">
+                  {apt.patient.fullName.charAt(0)}
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-800">{apt.patient.fullName}</div>
+                  <div className="text-xs text-slate-500">{apt.patient.phone}{apt.patient.email ? ` · ${apt.patient.email}` : ''}</div>
+                </div>
+              </div>
+
+              <InfoRow label="Horário" value={`${start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })} (${durMin} min)`} />
+              <InfoRow label="Profissional" value={`Dr(a). ${apt.doctor.user.name} — ${apt.doctor.specialty} · CRM ${apt.doctor.crm}-${apt.doctor.crmState}`} />
+              {apt.reason && <InfoRow label="Motivo" value={apt.reason} />}
+
+              {/* Vídeo chamada */}
+              {(apt.status === 'CONFIRMED' || apt.status === 'IN_PROGRESS') && (
+                <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-primary-800 font-medium text-sm">
+                    <Video size={16} />
+                    Teleconsulta
+                  </div>
+                  <p className="text-xs text-primary-600">
+                    A sala de vídeo é privada e exclusiva desta consulta. Compartilhe o link com o paciente.
+                  </p>
+                  <div className="flex gap-2">
+                    {apt.status === 'CONFIRMED' && (
+                      <button onClick={handleStartConsulta} disabled={acting} className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm">
+                        <Video size={15} /> Iniciar Consulta
+                      </button>
+                    )}
+                    {apt.status === 'IN_PROGRESS' && (
+                      <a href={videoUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm">
+                        <Video size={15} /> Entrar na Sala
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(videoUrl); alert('Link copiado!') }}
+                      className="btn-outline text-sm px-3"
+                    >
+                      Copiar link
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {apt.notes && (
-            <div>
-              <div className="text-xs text-slate-500 uppercase mb-1">Observações</div>
-              <p className="text-sm text-slate-600 bg-cream-50 p-3 rounded-lg">{apt.notes}</p>
+          {/* ── Aba Prontuário ── */}
+          {tab === 'prontuario' && (
+            <div className="p-5 space-y-4">
+              {loadingRec ? (
+                <p className="text-center text-slate-400 py-8">Carregando prontuário…</p>
+              ) : (
+                <>
+                  {saveOk && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2 text-sm">Prontuário salvo com sucesso.</div>}
+                  {saveErr && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm">{saveErr}</div>}
+
+                  {/* Editor */}
+                  {[
+                    { name: 'chiefComplaint',   label: 'Queixa principal' },
+                    { name: 'historyOfIllness', label: 'História da doença atual' },
+                    { name: 'diagnosis',        label: 'Diagnóstico (CID)' },
+                    { name: 'prescription',     label: 'Prescrição / Conduta' },
+                    { name: 'observations',     label: 'Observações' },
+                  ].map(f => (
+                    <div key={f.name}>
+                      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">{f.label}</label>
+                      <textarea
+                        name={f.name}
+                        value={form[f.name as keyof ProntuarioForm]}
+                        onChange={handleFormChange}
+                        rows={f.name === 'prescription' ? 4 : 3}
+                        className="input resize-none w-full text-sm"
+                        placeholder={`${f.label}…`}
+                      />
+                    </div>
+                  ))}
+
+                  <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary w-full">
+                    {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
+                  </button>
+
+                  {/* Histórico do paciente */}
+                  {history.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                        Consultas anteriores — {apt.patient.fullName}
+                      </p>
+                      <div className="space-y-2">
+                        {history.map(h => (
+                          <div key={h.id} className="bg-cream-50 border border-surface-border rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium text-slate-600">
+                                {new Date(h.createdAt).toLocaleDateString('pt-BR')}
+                              </span>
+                              <span className="text-xs text-slate-400">{h.doctor?.specialty}</span>
+                            </div>
+                            {h.diagnosis && (
+                              <p className="text-xs text-slate-700"><span className="font-medium">Diagnóstico:</span> {h.diagnosis}</p>
+                            )}
+                            {h.chiefComplaint && (
+                              <p className="text-xs text-slate-500 mt-0.5 truncate">{h.chiefComplaint}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <div className="p-6 border-t border-surface-border flex justify-between items-center gap-3">
+        {/* Rodapé com ações */}
+        <div className="p-5 border-t border-surface-border flex gap-2 shrink-0">
           {apt.status === 'SCHEDULED' && (
-            <button onClick={handleConfirm} disabled={acting} className="btn-primary flex-1">
-              {acting ? 'Confirmando…' : 'Confirmar'}
+            <button onClick={handleConfirm} disabled={acting} className="btn-primary flex-1 text-sm">
+              {acting ? '…' : 'Confirmar'}
             </button>
           )}
-          {(apt.status === 'SCHEDULED' || apt.status === 'CONFIRMED') && (
-            <button
-              onClick={handleCancel}
-              disabled={acting}
-              className="flex-1 text-semantic-danger border border-semantic-danger hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              {acting ? 'Cancelando…' : 'Cancelar Consulta'}
+          {apt.status === 'IN_PROGRESS' && (
+            <button onClick={handleFinishConsulta} disabled={acting} className="btn-primary flex-1 text-sm bg-green-600 hover:bg-green-700 border-green-600">
+              {acting ? '…' : 'Finalizar Consulta'}
+            </button>
+          )}
+          {(apt.status === 'SCHEDULED' || apt.status === 'CONFIRMED' || apt.status === 'IN_PROGRESS') && (
+            <button onClick={handleCancel} disabled={acting}
+              className="flex-1 text-semantic-danger border border-semantic-danger hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              {acting ? '…' : 'Cancelar'}
             </button>
           )}
           {(apt.status === 'COMPLETED' || apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') && (
-            <button onClick={onClose} className="btn-outline flex-1">Fechar</button>
+            <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
           )}
         </div>
       </div>

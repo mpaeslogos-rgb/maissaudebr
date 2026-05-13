@@ -195,6 +195,20 @@ export async function medicalRecordsRoutes(app: FastifyInstance) {
         data,
         include: recordDetailInclude,
       })
+
+      const userId = (request.user as { sub?: string })?.sub ?? null
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'CREATE',
+          entity: 'MedicalRecord',
+          entityId: created.id,
+          metadata: { patientId: created.patientId, doctorId: created.doctorId, appointmentId: created.appointmentId },
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'] ?? null,
+        },
+      }).catch(() => {}) // audit não deve bloquear a resposta
+
       return reply.code(201).send(created)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -281,11 +295,31 @@ export async function medicalRecordsRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: body.error.flatten() })
 
     try {
+      // Carrega estado anterior para o log de auditoria
+      const before = await prisma.medicalRecord.findUnique({
+        where: { id: params.data.id },
+        select: { chiefComplaint: true, historyOfIllness: true, diagnosis: true, prescription: true, observations: true },
+      })
+
       const updated = await prisma.medicalRecord.update({
         where: { id: params.data.id },
         data: body.data,
         include: recordDetailInclude,
       })
+
+      const userId = (request.user as { sub?: string })?.sub ?? null
+      await prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'UPDATE',
+          entity: 'MedicalRecord',
+          entityId: updated.id,
+          metadata: { before, after: body.data },
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'] ?? null,
+        },
+      }).catch(() => {})
+
       return reply.send(updated)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
