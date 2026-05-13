@@ -381,30 +381,30 @@ export function payAccountPayable(id: string): Promise<{ data: AccountPayable }>
 // ─── Prontuários ──────────────────────────────────────────────────────────────
 
 export function getMedicalRecords(params?: {
-  page?: number
   limit?: number
   patientId?: string
   doctorId?: string
+  appointmentId?: string
 }): Promise<MedicalRecordListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)      query.set('page', String(params.page))
-  if (params?.limit)     query.set('limit', String(params.limit))
-  if (params?.patientId) query.set('patientId', params.patientId)
-  if (params?.doctorId)  query.set('doctorId', params.doctorId)
+  if (params?.limit)         query.set('take', String(params.limit))
+  if (params?.patientId)     query.set('patientId', params.patientId)
+  if (params?.doctorId)      query.set('doctorId', params.doctorId)
+  if (params?.appointmentId) query.set('appointmentId', params.appointmentId)
   const qs = query.toString()
   return apiGet<MedicalRecordListResponse>(`/medical-records${qs ? `?${qs}` : ''}`)
 }
 
-export function getMedicalRecord(id: string): Promise<{ data: MedicalRecord }> {
-  return apiGet<{ data: MedicalRecord }>(`/medical-records/${id}`)
+export function getMedicalRecord(id: string): Promise<MedicalRecord> {
+  return apiGet<MedicalRecord>(`/medical-records/${id}`)
 }
 
-export function createMedicalRecord(data: unknown): Promise<{ data: MedicalRecord }> {
-  return apiPost<{ data: MedicalRecord }>('/medical-records', data)
+export function createMedicalRecord(data: unknown): Promise<MedicalRecord> {
+  return apiPost<MedicalRecord>('/medical-records', data)
 }
 
-export function updateMedicalRecord(id: string, data: unknown): Promise<{ data: MedicalRecord }> {
-  return apiPut<{ data: MedicalRecord }>(`/medical-records/${id}`, data)
+export function updateMedicalRecord(id: string, data: unknown): Promise<MedicalRecord> {
+  return apiPatch<MedicalRecord>(`/medical-records/${id}`, data)
 }
 
 
