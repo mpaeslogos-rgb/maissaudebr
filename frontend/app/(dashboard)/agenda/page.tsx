@@ -390,11 +390,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
     /* Logo centralizado */
     .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
-    .logo-row  { display:flex; align-items:center; gap:10px; }
-    .logo-text { font-size:22pt; font-weight:bold; line-height:1; letter-spacing:-0.5px; }
-    .logo-text .plus-saude { color:#1B5E3F; }
-    .logo-text .br         { color:#0F3624; }
-    .logo-sub  { font-size:8pt; color:#555; margin-top:3px; letter-spacing:0.5px; }
+    .logo-img  { width:110px; height:110px; object-fit:contain; }
+    .logo-sub  { font-size:8pt; color:#555; margin-top:4px; letter-spacing:0.5px; }
 
     /* Linha separadora com info do médico */
     .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
@@ -441,19 +438,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   <!-- Logo centralizado -->
   <div class="logo-wrap">
-    <div class="logo-row">
-      <svg width="44" height="44" viewBox="0 0 100 100" fill="none">
-        <g stroke="#1B5E3F" stroke-width="3.5" stroke-linecap="round">
-          <line x1="22" y1="18" x2="32" y2="18" />
-          <line x1="27" y1="13" x2="27" y2="23" />
-        </g>
-        <path
-          d="M 38 32 C 28 32, 22 40, 22 50 C 22 62, 35 72, 50 84 C 65 72, 78 62, 78 50 C 78 40, 72 32, 62 32 C 56 32, 52 36, 50 40 C 48 36, 44 32, 38 32 Z"
-          stroke="#1B5E3F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"
-        />
-      </svg>
-      <span class="logo-text"><span class="plus-saude">+Saúde</span><span class="br">BR</span></span>
-    </div>
+    <img src="${window.location.origin}/logo.svg" alt="MaisSaúdeBR" class="logo-img" />
     <span class="logo-sub">${clinicName}</span>
   </div>
 
