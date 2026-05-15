@@ -29,7 +29,7 @@ import { usersRoutes } from './routes/users.routes'
 import { auditRoutes } from './routes/audit.routes'
 import { cashflowRoutes } from './routes/cashflow.routes'
 
-const app = Fastify({ logger: true })
+const app = Fastify({ logger: true, ignoreTrailingSlash: true })
 
 async function bootstrap() {
   const uploadsDir = path.resolve(process.cwd(), 'uploads')
