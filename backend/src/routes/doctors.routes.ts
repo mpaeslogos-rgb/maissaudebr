@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
-import { authenticate } from '../plugins/auth'
+import { requireRole, getPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 
@@ -43,10 +43,11 @@ const listQuerySchema = z.object({
 // ROTAS
 // ============================================================
 export async function doctorsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  // Todos podem listar/ver médicos; só ADMIN pode criar/editar/excluir
+  app.addHook('preHandler', requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST'))
 
   // POST /doctors — cria User + Doctor em transação atômica
-  app.post('/doctors', async (request, reply) => {
+  app.post('/doctors', { preHandler: requireRole('ADMIN') }, async (request, reply) => {
     const parsed = createDoctorSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.code(400).send({ error: parsed.error.flatten() })
@@ -158,7 +159,7 @@ export async function doctorsRoutes(app: FastifyInstance) {
   })
 
   // PATCH /doctors/:id
-  app.patch('/doctors/:id', async (request, reply) => {
+  app.patch('/doctors/:id', { preHandler: requireRole('ADMIN') }, async (request, reply) => {
     const params = idParamSchema.safeParse(request.params)
     const body = updateDoctorSchema.safeParse(request.body)
     if (!params.success) return reply.code(400).send({ error: params.error.flatten() })
@@ -194,7 +195,7 @@ export async function doctorsRoutes(app: FastifyInstance) {
   })
 
   // DELETE /doctors/:id — soft delete (desativa o User)
-  app.delete('/doctors/:id', async (request, reply) => {
+  app.delete('/doctors/:id', { preHandler: requireRole('ADMIN') }, async (request, reply) => {
     const parsed = idParamSchema.safeParse(request.params)
     if (!parsed.success) {
       return reply.code(400).send({ error: parsed.error.flatten() })

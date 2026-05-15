@@ -25,6 +25,9 @@ import { startReminderJobs } from './jobs/reminder.job'
 import { notificationsRoutes } from './routes/notifications.routes'
 import { examsRoutes } from './routes/exams.routes'
 import { cid10Routes } from './routes/cid10.routes'
+import { usersRoutes } from './routes/users.routes'
+import { auditRoutes } from './routes/audit.routes'
+import { cashflowRoutes } from './routes/cashflow.routes'
 
 const app = Fastify({ logger: true })
 
@@ -76,6 +79,9 @@ async function bootstrap() {
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
   await app.register(examsRoutes, { prefix: '/api/exams' })
   await app.register(cid10Routes, { prefix: '/api/cid10' })
+  await app.register(usersRoutes, { prefix: '/api/users' })
+  await app.register(auditRoutes, { prefix: '/api/audit-logs' })
+  await app.register(cashflowRoutes, { prefix: '/api/financeiro' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

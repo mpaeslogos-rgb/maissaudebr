@@ -3,7 +3,7 @@ import { z } from 'zod'
 import path from 'node:path'
 import fs from 'node:fs'
 import { randomUUID } from 'node:crypto'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 
 const ALLOWED_MIME = new Set([
@@ -19,7 +19,7 @@ const examQuerySchema = z.object({
 })
 
 export async function examsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN', 'DOCTOR'))
 
   // GET /api/exams?patientId=&medicalRecordId=
   app.get('/', async (request, reply) => {

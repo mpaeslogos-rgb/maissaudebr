@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { runReminders } from '../jobs/reminder.job'
 
 export async function notificationsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN'))
 
   // POST /api/notifications/reminders/trigger?day=today|tomorrow
   // Disparo manual para testes — não espera o cron

@@ -1,9 +1,11 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, AppointmentStatus } from '@prisma/client'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
+import { logAudit } from '../lib/audit'
+import type { JwtPayload } from '../plugins/auth'
 
 // ============================================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -136,7 +138,7 @@ const appointmentInclude = {
 // ROTAS
 // ============================================================
 export async function appointmentsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST'))
 
   // ---------------------------------------------------------
   // POST /appointments — agendar consulta
@@ -167,6 +169,8 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: { patientId, doctorId, startTime, endTime, reason, notes },
         include: appointmentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE', entity: 'Appointment', entityId: created.id, request })
       return reply.code(201).send(created)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -279,6 +283,9 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: body.data,
         include: appointmentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      const action = body.data.status ? `STATUS_${body.data.status}` : 'UPDATE'
+      logAudit({ userId: uid, action, entity: 'Appointment', entityId: updated.id, request })
       return reply.send(updated)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -324,6 +331,8 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: { status: 'CANCELLED' },
         include: appointmentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CANCEL', entity: 'Appointment', entityId: cancelled.id, request })
       return reply.send(cancelled)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

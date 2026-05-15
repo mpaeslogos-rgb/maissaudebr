@@ -270,16 +270,22 @@ export function confirmAppointment(id: string): Promise<{ data: Appointment }> {
 // ─── Pagamentos ───────────────────────────────────────────────────────────────
 
 export function getPayments(params?: {
-  page?: number
-  limit?: number
+  take?: number
+  skip?: number
   status?: string
   patientId?: string
+  from?: string
+  to?: string
+  overdueOnly?: boolean
 }): Promise<PaymentListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)      query.set('page', String(params.page))
-  if (params?.limit)     query.set('limit', String(params.limit))
-  if (params?.status)    query.set('status', params.status)
-  if (params?.patientId) query.set('patientId', params.patientId)
+  if (params?.take)        query.set('take', String(params.take))
+  if (params?.skip)        query.set('skip', String(params.skip))
+  if (params?.status)      query.set('status', params.status)
+  if (params?.patientId)   query.set('patientId', params.patientId)
+  if (params?.from)        query.set('from', params.from)
+  if (params?.to)          query.set('to', params.to)
+  if (params?.overdueOnly) query.set('overdueOnly', 'true')
   const qs = query.toString()
   return apiGet<PaymentListResponse>(`/payments${qs ? `?${qs}` : ''}`)
 }
@@ -357,16 +363,22 @@ export function getPaymentSummary(): Promise<PaymentSummary> {
 // ─── Contas a Pagar ───────────────────────────────────────────────────────────
 
 export function getAccountsPayable(params?: {
-  page?: number
-  limit?: number
+  take?: number
+  skip?: number
   status?: string
+  category?: string
   overdueOnly?: boolean
+  from?: string
+  to?: string
 }): Promise<AccountPayableListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)       query.set('page', String(params.page))
-  if (params?.limit)      query.set('limit', String(params.limit))
-  if (params?.status)     query.set('status', params.status)
+  if (params?.take)        query.set('take', String(params.take))
+  if (params?.skip)        query.set('skip', String(params.skip))
+  if (params?.status)      query.set('status', params.status)
+  if (params?.category)    query.set('category', params.category)
   if (params?.overdueOnly) query.set('overdueOnly', 'true')
+  if (params?.from)        query.set('from', params.from)
+  if (params?.to)          query.set('to', params.to)
   const qs = query.toString()
   return apiGet<AccountPayableListResponse>(`/accounts-payable${qs ? `?${qs}` : ''}`)
 }
@@ -463,4 +475,117 @@ export function uploadExam(formData: FormData): Promise<Exam> {
 
 export function deleteExam(id: string): Promise<void> {
   return apiDelete(`/api/exams/${id}`)
+}
+
+// ─── Usuários (ADMIN) ──────────────────────────────────────────────────────
+
+export function getUsers(params?: {
+  q?: string
+  role?: string
+  active?: boolean
+  take?: number
+  skip?: number
+}): Promise<{ data: import('./types').User[]; total: number; take: number; skip: number }> {
+  const sp = new URLSearchParams()
+  if (params?.q)      sp.set('q', params.q)
+  if (params?.role)   sp.set('role', params.role)
+  if (params?.active !== undefined) sp.set('active', String(params.active))
+  if (params?.take)   sp.set('take', String(params.take))
+  if (params?.skip)   sp.set('skip', String(params.skip))
+  const qs = sp.toString()
+  return apiGet(`/api/users${qs ? `?${qs}` : ''}`)
+}
+
+export function createUser(data: {
+  email: string
+  name: string
+  role: string
+  password: string
+}): Promise<import('./types').User> {
+  return apiPost('/api/users', data)
+}
+
+export function updateUser(id: string, data: {
+  name?: string
+  role?: string
+  isActive?: boolean
+}): Promise<import('./types').User> {
+  return apiPatch(`/api/users/${id}`, data)
+}
+
+export function resetUserPassword(id: string, password: string): Promise<{ success: boolean }> {
+  return apiPost(`/api/users/${id}/reset-password`, { password })
+}
+
+export function deactivateUser(id: string): Promise<void> {
+  return apiDelete(`/api/users/${id}`)
+}
+
+// ─── Audit Logs (ADMIN) ────────────────────────────────────────────────────
+
+export function getAuditLogs(params?: {
+  entity?: string
+  action?: string
+  userId?: string
+  search?: string
+  from?: string
+  to?: string
+  take?: number
+  skip?: number
+}): Promise<{ data: import('./types').AuditLog[]; total: number; take: number; skip: number }> {
+  const sp = new URLSearchParams()
+  if (params?.entity) sp.set('entity', params.entity)
+  if (params?.action) sp.set('action', params.action)
+  if (params?.userId) sp.set('userId', params.userId)
+  if (params?.search) sp.set('search', params.search)
+  if (params?.from)   sp.set('from',   params.from)
+  if (params?.to)     sp.set('to',     params.to)
+  if (params?.take)   sp.set('take',   String(params.take))
+  if (params?.skip)   sp.set('skip',   String(params.skip))
+  const qs = sp.toString()
+  return apiGet(`/api/audit-logs${qs ? `?${qs}` : ''}`)
+}
+
+// ─── Fluxo de Caixa ───────────────────────────────────────────────────────────
+
+export interface CashflowMonth {
+  month:           string
+  entradas:        number
+  saidas:          number
+  saldo:           number
+  saldoAcumulado:  number
+}
+
+export interface CashflowData {
+  months: CashflowMonth[]
+  totals: { entradas: number; saidas: number; saldo: number }
+  current: {
+    thisMonthEntradas:       number
+    thisMonthSaidas:         number
+    thisMonthSaldo:          number
+    pendingEntradas:         number
+    pendingEntradasCount:    number
+    pendingSaidas:           number
+    pendingSaidasCount:      number
+    overdueEntradas:         number
+    overdueEntradasCount:    number
+    overdueSaidas:           number
+    overdueSaidasCount:      number
+    upcoming30Entradas:      number
+    upcoming30EntradasCount: number
+    upcoming30Saidas:        number
+    upcoming30SaidasCount:   number
+  }
+}
+
+export function getCashflow(months = 12): Promise<CashflowData> {
+  return apiGet(`/api/financeiro/cashflow?months=${months}`)
+}
+
+export function getAuditLogsSummary(): Promise<{
+  byAction:    { action: string; count: number }[]
+  byEntity:    { entity: string; count: number }[]
+  recentUsers: { userId: string | null; name?: string; email?: string; lastAction: string; lastEntity: string; at: string }[]
+}> {
+  return apiGet('/api/audit-logs/summary')
 }

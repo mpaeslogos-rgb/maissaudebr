@@ -16,6 +16,34 @@ export interface LoginResponse {
   user: AuthUser
 }
 
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AuditLog {
+  id:        string
+  userId:    string | null
+  action:    string
+  entity:    string
+  entityId:  string | null
+  metadata:  unknown
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: string
+  user?: {
+    id:    string
+    name:  string
+    email: string
+    role:  UserRole
+  } | null
+}
+
 // ─── Paginação ───────────────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {

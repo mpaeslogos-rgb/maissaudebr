@@ -29,21 +29,16 @@ import {
   clearToken,
   getToken,
 } from "@/lib/api";
-import type { AuthUser } from "@/lib/types";
-
-// ─── Tipo do contexto ────────────────────────────────────────────────────────
+import type { AuthUser, UserRole } from "@/lib/types";
 
 interface AuthContextType {
-  /** Dados do usuário logado. null = não autenticado */
   user: AuthUser | null;
-  /** true enquanto verifica token salvo no localStorage (evita flash) */
   isLoading: boolean;
-  /** Faz login, salva token e redireciona para /dashboard */
   login: (email: string, password: string) => Promise<void>;
-  /** Limpa token, estado e redireciona para / (login) */
   logout: () => void;
-  /** true se há usuário logado */
   isAuthenticated: boolean;
+  hasRole: (...roles: UserRole[]) => boolean;
+  can: (...roles: UserRole[]) => boolean;
 }
 
 // ─── Criação do contexto ──────────────────────────────────────────────────────
@@ -107,6 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [router]
   );
 
+  const hasRole = useCallback((...roles: UserRole[]): boolean => {
+    if (!user) return false
+    return roles.includes(user.role)
+  }, [user])
+
   // ── Logout ─────────────────────────────────────────────────────────────────
   const logout = useCallback(() => {
     // Limpar token do localStorage
@@ -130,6 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!user,
+        hasRole,
+        can: hasRole,
       }}
     >
       {children}
