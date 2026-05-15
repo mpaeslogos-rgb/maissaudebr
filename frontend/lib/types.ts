@@ -242,6 +242,23 @@ export interface MedicalRecord {
   diagnosis?: string
   prescription?: string
   observations?: string
+  // Sinais vitais
+  bloodPressure?: string
+  heartRate?: number
+  temperature?: number
+  weight?: number
+  height?: number
+  oxygenSaturation?: number
+  // Histórico clínico
+  currentMedications?: string
+  pastConditions?: string
+  pastSurgeries?: string
+  familyHistory?: string
+  smokingStatus?: 'NEVER' | 'FORMER' | 'CURRENT'
+  alcoholStatus?: 'NEVER' | 'OCCASIONAL' | 'REGULAR'
+  physicalActivity?: 'SEDENTARY' | 'LIGHT' | 'MODERATE' | 'INTENSE'
+  specialtyData?: Record<string, unknown>
+  // OCR / Anexos
   attachmentUrl?: string
   ocrText?: string
   ocrSummary?: string

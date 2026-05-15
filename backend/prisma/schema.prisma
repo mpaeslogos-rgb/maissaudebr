@@ -260,11 +260,33 @@ model MedicalRecord {
   appointmentId   String?  @unique // 1:1 opcional com Appointment
   
   // Anamnese e diagnóstico
-  chiefComplaint  String?  // Queixa principal
-  historyOfIllness String? // História da doença atual
-  diagnosis       String?
-  prescription    String?  // Prescrição
-  observations    String?
+  chiefComplaint   String?  // Queixa principal
+  historyOfIllness String?  // História da doença atual
+  diagnosis        String?
+  prescription     String?  // Prescrição
+  observations     String?
+
+  // Sinais vitais
+  bloodPressure    String?  // ex: "120/80 mmHg"
+  heartRate        Int?     // bpm
+  temperature      Float?   // °C
+  weight           Float?   // kg
+  height           Float?   // cm
+  oxygenSaturation Float?   // %
+
+  // Histórico clínico estruturado
+  currentMedications String? // Medicamentos em uso
+  pastConditions     String? // Antecedentes pessoais
+  pastSurgeries      String? // Cirurgias anteriores
+  familyHistory      String? // Histórico familiar
+
+  // Hábitos de vida
+  smokingStatus    String?  // NEVER | FORMER | CURRENT
+  alcoholStatus    String?  // NEVER | OCCASIONAL | REGULAR
+  physicalActivity String?  // SEDENTARY | LIGHT | MODERATE | INTENSE
+
+  // Perguntas específicas da especialidade (JSON livre)
+  specialtyData    Json?
 
   // OCR / Anexos (resultados de exames extraídos via OpenAI)
   attachmentUrl   String?  // URL do arquivo original (se salvar storage)

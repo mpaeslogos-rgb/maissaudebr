@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
@@ -283,15 +283,85 @@ interface DetailPanelProps {
 }
 
 type ProntuarioForm = {
+  // Clínico
   chiefComplaint: string
   historyOfIllness: string
   diagnosis: string
   prescription: string
   observations: string
+  // Sinais vitais (strings para facilitar input livre)
+  bloodPressure: string
+  heartRate: string
+  temperature: string
+  weight: string
+  height: string
+  oxygenSaturation: string
+  // Histórico clínico
+  currentMedications: string
+  pastConditions: string
+  pastSurgeries: string
+  familyHistory: string
+  // Hábitos
+  smokingStatus: string
+  alcoholStatus: string
+  physicalActivity: string
 }
 
 const EMPTY_PRONTUARIO: ProntuarioForm = {
   chiefComplaint: '', historyOfIllness: '', diagnosis: '', prescription: '', observations: '',
+  bloodPressure: '', heartRate: '', temperature: '', weight: '', height: '', oxygenSaturation: '',
+  currentMedications: '', pastConditions: '', pastSurgeries: '', familyHistory: '',
+  smokingStatus: '', alcoholStatus: '', physicalActivity: '',
+}
+
+// Templates de anamnese por especialidade
+const SPECIALTY_TEMPLATES: Record<string, string> = {
+  Cardiologia: `Dor torácica: [ ] Não  [ ] Sim — tipo: ___ / irradiação: ___
+Dispneia: [ ] Não  [ ] Sim — [ ] repouso  [ ] esforço
+Palpitações: [ ] Não  [ ] Sim
+Edema MMII: [ ] Não  [ ] Sim
+Síncope / pré-síncope: [ ] Não  [ ] Sim
+HAS: [ ] Não  [ ] Sim — há ___ anos
+Diabetes: [ ] Não  [ ] Sim`,
+
+  Dermatologia: `Lesão: [ ] Mácula  [ ] Pápula  [ ] Placa  [ ] Vesícula  [ ] Outro: ___
+Localização: ___
+Tempo de evolução: ___
+Pruridosa: [ ] Não  [ ] Sim
+Fatores de melhora/piora: ___
+Tratamentos anteriores: ___
+Exposição solar intensa: [ ] Não  [ ] Sim`,
+
+  Ortopedia: `Região acometida: ___
+Mecanismo de lesão: ___
+Dor em repouso: [ ] Não  [ ] Sim — EVA: ___/10
+Dor ao movimento: [ ] Não  [ ] Sim — EVA: ___/10
+Limitação de amplitude: [ ] Não  [ ] Sim
+Parestesia: [ ] Não  [ ] Sim
+Trauma prévio na região: [ ] Não  [ ] Sim`,
+
+  Ginecologia: `DUM: ___  Ciclo: ___d  Duração: ___d
+Dismenorreia: [ ] Não  [ ] Sim
+Corrimento: [ ] Não  [ ] Sim — aspecto: ___
+Dispareunia: [ ] Não  [ ] Sim
+Última colpocitologia: ___  Resultado: ___
+Método contraceptivo: ___
+Gestações / Partos / Abortos: ___`,
+
+  Psiquiatria: `Humor predominante: [ ] Eutímico  [ ] Deprimido  [ ] Elevado  [ ] Irritável
+Sono: [ ] Normal  [ ] Insônia  [ ] Hipersônia
+Apetite: [ ] Normal  [ ] Reduzido  [ ] Aumentado
+Ideação suicida: [ ] Não  [ ] Passiva  [ ] Ativa
+Uso de substâncias: ___
+Medicação psiquiátrica atual: ___
+Último episódio / internação: ___`,
+
+  Endocrinologia: `Poliúria / Polidipsia: [ ] Não  [ ] Sim
+Perda / ganho de peso recente: [ ] Não  [ ] Sim — ___kg em ___meses
+Intolerância ao calor/frio: [ ] Não  [ ] Sim
+Diabetes: [ ] Não  [ ] Tipo 1  [ ] Tipo 2 — desde ___
+Dislipidemia: [ ] Não  [ ] Sim
+Última HbA1c: ___  Última glicemia de jejum: ___`,
 }
 
 function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps) {
@@ -308,6 +378,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   const [saveOk, setSaveOk]       = useState(false)
   const [saveErr, setSaveErr]     = useState('')
   const [clinicConfig, setClinicConfig] = useState<ClinicConfig | null>(null)
+  const [showVitals, setShowVitals]   = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
@@ -330,20 +402,49 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
       setRecord(current)
       if (current) {
         setForm({
-          chiefComplaint:   current.chiefComplaint   ?? '',
-          historyOfIllness: current.historyOfIllness ?? '',
-          diagnosis:        current.diagnosis        ?? '',
-          prescription:     current.prescription     ?? '',
-          observations:     current.observations     ?? '',
+          chiefComplaint:     current.chiefComplaint     ?? '',
+          historyOfIllness:   current.historyOfIllness   ?? '',
+          diagnosis:          current.diagnosis          ?? '',
+          prescription:       current.prescription       ?? '',
+          observations:       current.observations       ?? '',
+          bloodPressure:      current.bloodPressure      ?? '',
+          heartRate:          current.heartRate?.toString() ?? '',
+          temperature:        current.temperature?.toString() ?? '',
+          weight:             current.weight?.toString()   ?? '',
+          height:             current.height?.toString()   ?? '',
+          oxygenSaturation:   current.oxygenSaturation?.toString() ?? '',
+          currentMedications: current.currentMedications ?? '',
+          pastConditions:     current.pastConditions     ?? '',
+          pastSurgeries:      current.pastSurgeries      ?? '',
+          familyHistory:      current.familyHistory      ?? '',
+          smokingStatus:      current.smokingStatus      ?? '',
+          alcoholStatus:      current.alcoholStatus      ?? '',
+          physicalActivity:   current.physicalActivity   ?? '',
         })
+        // Expande seções se já tiver dados
+        if (current.bloodPressure || current.heartRate || current.weight) setShowVitals(true)
+        if (current.currentMedications || current.pastConditions) setShowHistory(true)
       }
       // Histórico: exclui a consulta atual
       setHistory(histRes.data.filter(r => r.appointmentId !== apt.id))
     }).catch(() => {}).finally(() => setLoadingRec(false))
   }, [tab, apt.id, apt.patientId])
 
-  function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+  function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setSaveOk(false)
+  }
+
+  function applySpecialtyTemplate() {
+    const specialty = apt.doctor.specialty
+    const template = Object.entries(SPECIALTY_TEMPLATES).find(([key]) =>
+      specialty.toLowerCase().includes(key.toLowerCase())
+    )?.[1]
+    if (template && !form.historyOfIllness.trim()) {
+      setForm(prev => ({ ...prev, historyOfIllness: template }))
+    } else if (template) {
+      setForm(prev => ({ ...prev, historyOfIllness: prev.historyOfIllness + '\n\n' + template }))
+    }
     setSaveOk(false)
   }
 
@@ -626,26 +727,97 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                   {saveOk && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2 text-sm">Prontuário salvo com sucesso.</div>}
                   {saveErr && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm">{saveErr}</div>}
 
-                  {/* Editor */}
+                  {/* ── Seção Clínica ── */}
                   {[
                     { name: 'chiefComplaint',   label: 'Queixa principal' },
-                    { name: 'historyOfIllness', label: 'História da doença atual' },
-                    { name: 'diagnosis',        label: 'Diagnóstico (CID)' },
-                    { name: 'prescription',     label: 'Prescrição / Conduta' },
-                    { name: 'observations',     label: 'Observações' },
+                    { name: 'observations',     label: 'Observações gerais' },
                   ].map(f => (
                     <div key={f.name}>
                       <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">{f.label}</label>
-                      <textarea
-                        name={f.name}
-                        value={form[f.name as keyof ProntuarioForm]}
-                        onChange={handleFormChange}
-                        rows={f.name === 'prescription' ? 4 : 3}
-                        className="input resize-none w-full text-sm"
-                        placeholder={`${f.label}…`}
-                      />
+                      <textarea name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} rows={2} className="input resize-none w-full text-sm" placeholder={`${f.label}…`} />
                     </div>
                   ))}
+
+                  {/* História da doença + template */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">História da doença atual</label>
+                      {SPECIALTY_TEMPLATES[Object.keys(SPECIALTY_TEMPLATES).find(k => apt.doctor.specialty.toLowerCase().includes(k.toLowerCase())) ?? ''] && (
+                        <button onClick={applySpecialtyTemplate} className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800 font-medium">
+                          <Sparkles size={12} /> Template {apt.doctor.specialty}
+                        </button>
+                      )}
+                    </div>
+                    <textarea name="historyOfIllness" value={form.historyOfIllness} onChange={handleFormChange} rows={4} className="input resize-none w-full text-sm font-mono" placeholder="História da doença atual…" />
+                  </div>
+
+                  {[
+                    { name: 'diagnosis',    label: 'Diagnóstico (CID)', rows: 2 },
+                    { name: 'prescription', label: 'Prescrição / Conduta', rows: 4 },
+                  ].map(f => (
+                    <div key={f.name}>
+                      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">{f.label}</label>
+                      <textarea name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} rows={f.rows} className="input resize-none w-full text-sm" placeholder={`${f.label}…`} />
+                    </div>
+                  ))}
+
+                  {/* ── Sinais Vitais (colapsável) ── */}
+                  <button onClick={() => setShowVitals(v => !v)} className="flex items-center justify-between w-full py-2 border-t border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wide hover:text-slate-700">
+                    <span className="flex items-center gap-1.5"><Activity size={13} /> Sinais Vitais</span>
+                    {showVitals ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {showVitals && (
+                    <div className="grid grid-cols-2 gap-3 pb-1">
+                      {[
+                        { name: 'bloodPressure',    label: 'PA (mmHg)',   placeholder: '120/80' },
+                        { name: 'heartRate',         label: 'FC (bpm)',    placeholder: '72' },
+                        { name: 'temperature',       label: 'Temp (°C)',   placeholder: '36.5' },
+                        { name: 'oxygenSaturation',  label: 'SpO₂ (%)',   placeholder: '98' },
+                        { name: 'weight',            label: 'Peso (kg)',   placeholder: '70' },
+                        { name: 'height',            label: 'Altura (cm)', placeholder: '170' },
+                      ].map(f => (
+                        <div key={f.name}>
+                          <label className="block text-xs text-slate-500 mb-0.5">{f.label}</label>
+                          <input type="text" name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} placeholder={f.placeholder} className="input w-full text-sm" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Histórico Clínico (colapsável) ── */}
+                  <button onClick={() => setShowHistory(h => !h)} className="flex items-center justify-between w-full py-2 border-t border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wide hover:text-slate-700">
+                    <span className="flex items-center gap-1.5"><ClipboardList size={13} /> Histórico Clínico</span>
+                    {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {showHistory && (
+                    <div className="space-y-3 pb-1">
+                      {[
+                        { name: 'currentMedications', label: 'Medicamentos em uso' },
+                        { name: 'pastConditions',      label: 'Antecedentes pessoais' },
+                        { name: 'pastSurgeries',       label: 'Cirurgias anteriores' },
+                        { name: 'familyHistory',       label: 'Histórico familiar' },
+                      ].map(f => (
+                        <div key={f.name}>
+                          <label className="block text-xs text-slate-500 mb-0.5">{f.label}</label>
+                          <textarea name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} rows={2} className="input resize-none w-full text-sm" placeholder={`${f.label}…`} />
+                        </div>
+                      ))}
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { name: 'smokingStatus', label: 'Tabagismo', opts: [['', '—'], ['NEVER', 'Nunca'], ['FORMER', 'Ex-tabagista'], ['CURRENT', 'Atual']] },
+                          { name: 'alcoholStatus', label: 'Álcool', opts: [['', '—'], ['NEVER', 'Nunca'], ['OCCASIONAL', 'Ocasional'], ['REGULAR', 'Regular']] },
+                          { name: 'physicalActivity', label: 'Atividade física', opts: [['', '—'], ['SEDENTARY', 'Sedentário'], ['LIGHT', 'Leve'], ['MODERATE', 'Moderada'], ['INTENSE', 'Intensa']] },
+                        ].map(f => (
+                          <div key={f.name}>
+                            <label className="block text-xs text-slate-500 mb-0.5">{f.label}</label>
+                            <select name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} className="input w-full text-xs">
+                              {f.opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary w-full">
                     {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}

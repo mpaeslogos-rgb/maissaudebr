@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Calendar,
   FileText, Pill, Clipboard, MessageSquare, Loader2, Printer,
-  FlaskConical, Upload, Trash2, ExternalLink, X
+  FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart
 } from "lucide-react";
 import Link from "next/link";
 import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, ClinicConfig } from "@/lib/api";
@@ -264,6 +264,42 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
               </p>
             </section>
 
+            {record.historyOfIllness && (
+              <section>
+                <div className="flex items-center gap-2 text-primary-700 font-bold mb-3 uppercase text-xs tracking-wider">
+                  <FileText size={18} className="text-primary-400" /> História da Doença Atual
+                </div>
+                <pre className="text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100 whitespace-pre-wrap text-sm leading-relaxed font-sans">
+                  {record.historyOfIllness}
+                </pre>
+              </section>
+            )}
+
+            {/* Sinais Vitais */}
+            {(record.bloodPressure || record.heartRate || record.temperature || record.weight) && (
+              <section>
+                <div className="flex items-center gap-2 text-primary-700 font-bold mb-3 uppercase text-xs tracking-wider">
+                  <Activity size={18} className="text-primary-400" /> Sinais Vitais
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'PA', value: record.bloodPressure, unit: 'mmHg' },
+                    { label: 'FC', value: record.heartRate, unit: 'bpm' },
+                    { label: 'Temp', value: record.temperature, unit: '°C' },
+                    { label: 'SpO₂', value: record.oxygenSaturation, unit: '%' },
+                    { label: 'Peso', value: record.weight, unit: 'kg' },
+                    { label: 'Altura', value: record.height, unit: 'cm' },
+                  ].filter(v => v.value != null).map(v => (
+                    <div key={v.label} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">{v.label}</p>
+                      <p className="text-lg font-bold text-slate-800">{v.value}</p>
+                      <p className="text-[10px] text-slate-400">{v.unit}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section>
               <div className="flex items-center gap-2 text-primary-700 font-bold mb-3 uppercase text-xs tracking-wider">
                 <Clipboard size={18} className="text-primary-400" /> Diagnóstico
@@ -281,6 +317,35 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                 {record.prescription || "Sem prescrição de medicamentos."}
               </div>
             </section>
+
+            {/* Histórico Clínico */}
+            {(record.currentMedications || record.pastConditions || record.pastSurgeries || record.familyHistory) && (
+              <section>
+                <div className="flex items-center gap-2 text-primary-700 font-bold mb-3 uppercase text-xs tracking-wider">
+                  <Heart size={18} className="text-primary-400" /> Histórico Clínico
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Medicamentos em uso', value: record.currentMedications },
+                    { label: 'Antecedentes pessoais', value: record.pastConditions },
+                    { label: 'Cirurgias anteriores', value: record.pastSurgeries },
+                    { label: 'Histórico familiar', value: record.familyHistory },
+                  ].filter(i => i.value).map(i => (
+                    <div key={i.label}>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{i.label}</p>
+                      <p className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">{i.value}</p>
+                    </div>
+                  ))}
+                  {(record.smokingStatus || record.alcoholStatus || record.physicalActivity) && (
+                    <div className="flex gap-3 flex-wrap">
+                      {record.smokingStatus && <span className="text-xs bg-slate-100 px-2 py-1 rounded-full text-slate-600">Tabagismo: {{ NEVER: 'Nunca', FORMER: 'Ex-tabagista', CURRENT: 'Atual' }[record.smokingStatus]}</span>}
+                      {record.alcoholStatus && <span className="text-xs bg-slate-100 px-2 py-1 rounded-full text-slate-600">Álcool: {{ NEVER: 'Nunca', OCCASIONAL: 'Ocasional', REGULAR: 'Regular' }[record.alcoholStatus]}</span>}
+                      {record.physicalActivity && <span className="text-xs bg-slate-100 px-2 py-1 rounded-full text-slate-600">Atividade: {{ SEDENTARY: 'Sedentário', LIGHT: 'Leve', MODERATE: 'Moderada', INTENSE: 'Intensa' }[record.physicalActivity]}</span>}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
           </div>
         </div>
 
