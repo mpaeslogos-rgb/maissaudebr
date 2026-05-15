@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma2'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 
 const listQuerySchema = z.object({
   search: z.string().optional(),
@@ -14,8 +14,7 @@ const transferSchema = z.object({
 })
 
 export async function chatRoutes(app: FastifyInstance) {
-  // Todas as rotas exigem autenticação
-  app.addHook('onRequest', authenticate)
+  app.addHook('onRequest', requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST'))
 
   // ----- LISTAR CHATS -----
   app.get('/chats', async (request, reply) => {

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import axios from 'axios'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 
 const sendSchema = z.object({
@@ -10,7 +10,7 @@ const sendSchema = z.object({
 })
 
 export async function whatsappRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
   // POST /api/whatsapp/send — envia mensagem via Evolution API
   app.post('/send', async (request, reply) => {

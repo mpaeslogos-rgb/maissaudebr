@@ -2,7 +2,9 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma2'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
+import { logAudit } from '../lib/audit'
 import * as XLSX from 'xlsx'
 
 // ============================================
@@ -50,8 +52,8 @@ const listQuerySchema = z.object({
 // ============================================
 
 export async function patientsRoutes(app: FastifyInstance) {
-  // Todas as rotas exigem autenticação
-  app.addHook('onRequest', authenticate)
+  // ADMIN e RECEPTIONIST podem criar/editar/excluir; DOCTOR pode apenas consultar
+  app.addHook('onRequest', requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST'))
 
   // ----- LISTAR (com busca opcional e paginação) -----
   app.get('/patients', async (request, reply) => {
@@ -120,6 +122,8 @@ export async function patientsRoutes(app: FastifyInstance) {
 
     try {
       const patient = await prisma.patient.create({ data: parsed.data })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE', entity: 'Patient', entityId: patient.id, request })
       return reply.code(201).send(patient)
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -148,6 +152,8 @@ export async function patientsRoutes(app: FastifyInstance) {
         where: { id },
         data: parsed.data,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'UPDATE', entity: 'Patient', entityId: patient.id, request })
       return patient
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {

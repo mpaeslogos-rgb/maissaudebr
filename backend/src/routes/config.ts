@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 
 interface ConfigBody {
@@ -119,7 +120,7 @@ function formatError(error: any) {
 }
 
 export async function configRoutes(app: FastifyInstance) {
-  app.get('/api/config', async (_request: FastifyRequest, reply: FastifyReply) => {
+  app.get('/api/config', { preHandler: requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST') }, async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
       const config = await prisma.config.upsert({
         where: {
@@ -142,12 +143,10 @@ export async function configRoutes(app: FastifyInstance) {
 
   app.put(
     '/api/config',
-    async (
-      request: FastifyRequest<{ Body: ConfigBody }>,
-      reply: FastifyReply
-    ) => {
+    { preHandler: requireRole('ADMIN') },
+    async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        const body = normalizeConfigBody(request.body || {})
+        const body = normalizeConfigBody((request.body as ConfigBody) || {})
 
         const config = await prisma.config.upsert({
           where: {

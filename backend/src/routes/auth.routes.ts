@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma2'
+import { logAudit } from '../lib/audit'
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -49,11 +50,13 @@ export async function authRoutes(app: FastifyInstance) {
 
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user || !user.isActive) {
+      logAudit({ userId: null, action: 'LOGIN_FAILED', entity: 'User', metadata: { email }, request })
       return reply.code(401).send({ error: 'Credenciais invalidas' })
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) {
+      logAudit({ userId: user.id, action: 'LOGIN_FAILED', entity: 'User', entityId: user.id, request })
       return reply.code(401).send({ error: 'Credenciais invalidas' })
     }
 
@@ -61,6 +64,8 @@ export async function authRoutes(app: FastifyInstance) {
       { sub: user.id, role: user.role, name: user.name },
       { expiresIn: '8h' }
     )
+
+    logAudit({ userId: user.id, action: 'LOGIN', entity: 'User', entityId: user.id, request })
 
     return reply.send({
       token,

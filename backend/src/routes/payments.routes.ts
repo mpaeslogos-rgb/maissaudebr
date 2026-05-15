@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, PaymentMethod, PaymentStatus } from '@prisma/client'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 
@@ -121,7 +121,7 @@ const paymentInclude = {
 // ROTAS
 // ============================================================
 export async function paymentsRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
   // ---------------------------------------------------------
   // POST /payments — criar cobrança

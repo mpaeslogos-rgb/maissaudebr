@@ -365,6 +365,88 @@ Dislipidemia: [ ] Não  [ ] Sim
 Última HbA1c: ___  Última glicemia de jejum: ___`,
 }
 
+interface ReceituarioParams {
+  doctorName: string
+  crm: string
+  specialty: string
+  patName: string
+  patCpf?: string
+  prescription: string
+  dateStr: string
+  logoUrl: string
+  clinicName?: string
+}
+
+function buildReceituarioHtml(p: ReceituarioParams): string {
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Receituário — ${p.patName}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 18mm 20mm 32mm; max-width: 210mm; }
+    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
+    .logo-img  { width:110px; height:110px; object-fit:contain; }
+    .logo-sub  { font-size:8pt; color:#555; margin-top:4px; letter-spacing:0.5px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
+    .header-left p  { font-size:9.5pt; color:#333; line-height:1.6; }
+    .header-left strong { color:#1B5E3F; }
+    .header-right   { text-align:right; font-size:9pt; color:#666; }
+    .title { text-align:center; font-size:13pt; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin:0 0 16px; color:#1B5E3F; }
+    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; background:#fafafa; }
+    .patient-box p { font-size:10pt; }
+    .patient-box span { font-weight:bold; }
+    .section-label { font-size:8pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; color:#555; border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:10px; }
+    .prescription  { min-height:180px; white-space:pre-wrap; font-size:11pt; line-height:1.7; margin-bottom:40px; }
+    .sign-area { border-top:1px solid #1B5E3F; padding-top:16px; display:flex; justify-content:flex-end; }
+    .sign-block { text-align:center; min-width:230px; }
+    .sign-line  { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
+    .sign-block p { font-size:10pt; line-height:1.6; }
+    .sign-block .name { font-weight:bold; }
+    .date-line { margin-top:24px; font-size:10pt; text-align:right; color:#555; }
+    .page-footer { position:fixed; bottom:0; left:0; right:0; border-top:1px solid #ccc; padding:6px 20mm; text-align:center; font-size:7.5pt; color:#777; background:#fff; line-height:1.5; }
+    @media print { body { padding:15mm 15mm 28mm; } @page { size:A4 portrait; margin:10mm; } }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="${p.logoUrl}" alt="MaisSaúdeBR" class="logo-img" />
+    <span class="logo-sub">${p.clinicName ?? 'MaisSaúdeBR'}</span>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <p><strong>Dr(a). ${p.doctorName}</strong><br>${p.specialty}<br>CRM ${p.crm}</p>
+    </div>
+    <div class="header-right"><p>Teleconsulta / Consulta Presencial</p></div>
+  </div>
+  <div class="title">Receituário</div>
+  <div class="patient-box">
+    <p><span>Paciente:</span> ${p.patName}</p>
+    <p><span>CPF:</span> ${p.patCpf ?? '—'}</p>
+    <p><span>Data:</span> ${p.dateStr}</p>
+  </div>
+  <div class="section-label">Prescrição</div>
+  <div class="prescription">${p.prescription.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+  <div class="sign-area">
+    <div class="sign-block">
+      <div class="sign-line">
+        <p class="name">Dr(a). ${p.doctorName}</p>
+        <p>CRM ${p.crm} &nbsp;·&nbsp; ${p.specialty}</p>
+      </div>
+    </div>
+  </div>
+  <p class="date-line">${p.dateStr.charAt(0).toUpperCase() + p.dateStr.slice(1)}</p>
+  <div class="page-footer">
+    <strong>+SaúdeBR</strong> — MAIS SAUDE SERVIÇO DE TELEMEDICINA LTDA &nbsp;|&nbsp;
+    CNPJ: 56.990.029/0001-12 &nbsp;|&nbsp;
+    R. Acre, 820 Cj. 610 — Vieiralves — Manaus / AM &nbsp; CEP: 69053-130
+  </div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`
+}
+
 function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps) {
   const [tab, setTab]     = useState<'resumo' | 'prontuario'>('resumo')
   const [acting, setActing] = useState(false)
@@ -381,6 +463,15 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   const [clinicConfig, setClinicConfig] = useState<ClinicConfig | null>(null)
   const [showVitals, setShowVitals]   = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+
+  // Histórico: consulta selecionada para visualização
+  const [selectedHistory, setSelectedHistory] = useState<MedicalRecord | null>(null)
+
+  // Controle de saída e PiP
+  const [isDirty,          setIsDirty]          = useState(false)
+  const [showExitConfirm,  setShowExitConfirm]  = useState(false)
+  const [showPip,          setShowPip]          = useState(false)
+  const [pipMinimized,     setPipMinimized]     = useState(false)
 
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
@@ -431,9 +522,18 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     }).catch(() => {}).finally(() => setLoadingRec(false))
   }, [tab, apt.id, apt.patientId])
 
+  // Ativa PiP automaticamente ao entrar no prontuário durante teleconsulta ativa
+  useEffect(() => {
+    if (tab === 'prontuario' && apt.status === 'IN_PROGRESS') {
+      setShowPip(true)
+      setPipMinimized(false)
+    }
+  }, [tab, apt.status])
+
   function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
     setSaveOk(false)
+    setIsDirty(true)
   }
 
   function applySpecialtyTemplate() {
@@ -464,6 +564,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
         setRecord(created)
       }
       setSaveOk(true)
+      setIsDirty(false)
     } catch (err: unknown) {
       setSaveErr(err instanceof Error ? err.message : 'Erro ao salvar.')
     } finally {
@@ -471,122 +572,32 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     }
   }
 
+  async function handleSaveAndExit() {
+    await handleSaveProntuario()
+    setShowExitConfirm(false)
+    onClose()
+  }
+
+  function requestClose() {
+    if (isDirty && tab === 'prontuario') {
+      setShowExitConfirm(true)
+    } else {
+      onClose()
+    }
+  }
+
   function printReceituario() {
-    const clinicName   = clinicConfig?.clinicName || 'Clínica Médica'
-    const doctorName   = apt.doctor.user.name
-    const crm          = `${apt.doctor.crm}-${apt.doctor.crmState}`
-    const specialty    = apt.doctor.specialty
-    const patName      = apt.patient.fullName
-    const patCpf       = apt.patient.cpf
-    const dateStr      = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-    const prescription = form.prescription || '(Prescrição não informada)'
-
-    const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Receituário — ${patName}</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 18mm 20mm 32mm; max-width: 210mm; }
-
-    /* Logo centralizado */
-    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
-    .logo-img  { width:110px; height:110px; object-fit:contain; }
-    .logo-sub  { font-size:8pt; color:#555; margin-top:4px; letter-spacing:0.5px; }
-
-    /* Linha separadora com info do médico */
-    .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
-    .header-left p  { font-size:9.5pt; color:#333; line-height:1.6; }
-    .header-left strong { color:#1B5E3F; }
-    .header-right   { text-align:right; font-size:9pt; color:#666; }
-
-    .title { text-align:center; font-size:13pt; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin:0 0 16px; color:#1B5E3F; }
-
-    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; background:#fafafa; }
-    .patient-box p { font-size:10pt; }
-    .patient-box span { font-weight:bold; }
-
-    .section-label { font-size:8pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; color:#555; border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:10px; }
-    .prescription  { min-height:180px; white-space:pre-wrap; font-size:11pt; line-height:1.7; margin-bottom:40px; }
-
-    .sign-area { border-top:1px solid #1B5E3F; padding-top:16px; display:flex; justify-content:flex-end; }
-    .sign-block { text-align:center; min-width:230px; }
-    .sign-line  { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
-    .sign-block p { font-size:10pt; line-height:1.6; }
-    .sign-block .name { font-weight:bold; }
-    .date-line { margin-top:24px; font-size:10pt; text-align:right; color:#555; }
-
-    /* Rodapé institucional fixo na base da página */
-    .page-footer {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      border-top: 1px solid #ccc;
-      padding: 6px 20mm;
-      text-align: center;
-      font-size: 7.5pt;
-      color: #777;
-      background: #fff;
-      line-height: 1.5;
-    }
-
-    @media print {
-      body { padding:15mm 15mm 28mm; }
-      @page { size:A4 portrait; margin:10mm; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Logo centralizado -->
-  <div class="logo-wrap">
-    <img src="${window.location.origin}/logo.svg" alt="MaisSaúdeBR" class="logo-img" />
-    <span class="logo-sub">${clinicName}</span>
-  </div>
-
-  <!-- Cabeçalho com dados do médico -->
-  <div class="header">
-    <div class="header-left">
-      <p><strong>Dr(a). ${doctorName}</strong><br>${specialty}<br>CRM ${crm}</p>
-    </div>
-    <div class="header-right">
-      <p>Teleconsulta / Consulta Presencial</p>
-    </div>
-  </div>
-
-  <div class="title">Receituário</div>
-
-  <div class="patient-box">
-    <p><span>Paciente:</span> ${patName}</p>
-    <p><span>CPF:</span> ${patCpf}</p>
-    <p><span>Data:</span> ${dateStr}</p>
-  </div>
-
-  <div class="section-label">Prescrição</div>
-  <div class="prescription">${prescription.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-
-  <div class="sign-area">
-    <div class="sign-block">
-      <div class="sign-line">
-        <p class="name">Dr(a). ${doctorName}</p>
-        <p>CRM ${crm} &nbsp;·&nbsp; ${specialty}</p>
-      </div>
-    </div>
-  </div>
-
-  <p class="date-line">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</p>
-
-  <!-- Rodapé institucional -->
-  <div class="page-footer">
-    <strong>+SaúdeBR</strong> — MAIS SAUDE SERVIÇO DE TELEMEDICINA LTDA &nbsp;|&nbsp;
-    CNPJ: 56.990.029/0001-12 &nbsp;|&nbsp;
-    R. Acre, 820 Cj. 610 — Vieiralves — Manaus / AM &nbsp; CEP: 69053-130
-  </div>
-
-  <script>window.onload = function(){ window.print(); }<\/script>
-</body>
-</html>`
-
+    const html = buildReceituarioHtml({
+      doctorName:  apt.doctor.user.name,
+      crm:         `${apt.doctor.crm}-${apt.doctor.crmState}`,
+      specialty:   apt.doctor.specialty,
+      patName:     apt.patient.fullName,
+      patCpf:      apt.patient.cpf,
+      prescription: form.prescription || '(Prescrição não informada)',
+      dateStr:     new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+      logoUrl:     `${window.location.origin}/logo.svg`,
+      clinicName:  clinicConfig?.clinicName,
+    })
     const win = window.open('', '_blank', 'width=820,height=1000')
     if (win) { win.document.write(html); win.document.close() }
   }
@@ -607,13 +618,13 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   }
 
   async function handleStartConsulta() {
-    // Abre vídeo em nova aba e muda status para IN_PROGRESS
-    window.open(videoUrl, '_blank')
     try {
       await updateAppointment(apt.id, { status: 'IN_PROGRESS' })
       onRefresh()
+      setShowPip(true)
+      setPipMinimized(false)
       setTab('prontuario')
-    } catch { /* silencioso — já abriu a sala */ }
+    } catch { /* silencioso */ }
   }
 
   async function handleFinishConsulta() {
@@ -628,8 +639,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   return (
     <>
-      <div onClick={onClose} className="fixed inset-0 bg-black/40 z-40" />
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col">
+      <div onClick={requestClose} className="fixed inset-0 bg-black/40 z-40" />
+      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col relative">
 
         {/* Cabeçalho */}
         <div className="p-5 border-b border-surface-border flex items-center justify-between shrink-0">
@@ -637,7 +648,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
             <h2 className="text-lg font-bold text-slate-800">{apt.patient.fullName}</h2>
             <p className="text-xs text-slate-400">{apt.doctor.specialty} · {start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-cream-100 rounded-lg text-slate-500"><X size={20} /></button>
+          <button onClick={requestClose} className="p-2 hover:bg-cream-100 rounded-lg text-slate-500"><X size={20} /></button>
         </div>
 
         {/* Tabs */}
@@ -840,9 +851,14 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     </div>
                   )}
 
-                  <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary w-full">
-                    {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary flex-1">
+                      {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
+                    </button>
+                    <button onClick={requestClose} className="btn-outline px-4 text-sm text-slate-600 hover:text-red-600 hover:border-red-300">
+                      Sair
+                    </button>
+                  </div>
 
                   {form.prescription.trim() && (
                     <button
@@ -861,12 +877,19 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                       </p>
                       <div className="space-y-2">
                         {history.map(h => (
-                          <div key={h.id} className="bg-cream-50 border border-surface-border rounded-lg p-3">
+                          <button
+                            key={h.id}
+                            onClick={() => setSelectedHistory(h)}
+                            className="w-full text-left bg-cream-50 hover:bg-primary-50 border border-surface-border hover:border-primary-200 rounded-lg p-3 transition-colors group"
+                          >
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-medium text-slate-600">
                                 {new Date(h.createdAt).toLocaleDateString('pt-BR')}
                               </span>
-                              <span className="text-xs text-slate-400">{h.doctor?.specialty}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400">{h.doctor?.specialty}</span>
+                                <ChevronRight size={13} className="text-slate-300 group-hover:text-primary-500 transition-colors" />
+                              </div>
                             </div>
                             {h.diagnosis && (
                               <p className="text-xs text-slate-700"><span className="font-medium">Diagnóstico:</span> {h.diagnosis}</p>
@@ -874,7 +897,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                             {h.chiefComplaint && (
                               <p className="text-xs text-slate-500 mt-0.5 truncate">{h.chiefComplaint}</p>
                             )}
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -884,6 +907,105 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
             </div>
           )}
         </div>
+
+        {/* ── Overlay: detalhe de consulta anterior ── */}
+        {selectedHistory && (
+          <div className="absolute inset-0 bg-white z-10 flex flex-col">
+            {/* Cabeçalho */}
+            <div className="p-4 border-b border-surface-border flex items-center gap-3 shrink-0">
+              <button onClick={() => setSelectedHistory(null)} className="p-1.5 hover:bg-cream-100 rounded-lg text-slate-500">
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate">{apt.patient.fullName}</p>
+                <p className="text-xs text-slate-400">
+                  {new Date(selectedHistory.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  {selectedHistory.doctor?.specialty ? ` · ${selectedHistory.doctor.specialty}` : ''}
+                  {selectedHistory.doctor?.user?.name ? ` · Dr(a). ${selectedHistory.doctor.user.name}` : ''}
+                </p>
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full shrink-0">
+                Consulta anterior
+              </span>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {[
+                { label: 'Queixa principal',           value: selectedHistory.chiefComplaint },
+                { label: 'Observações gerais',         value: selectedHistory.observations },
+                { label: 'História da doença atual',   value: selectedHistory.historyOfIllness },
+                { label: 'Diagnóstico (CID-10)',        value: selectedHistory.diagnosis },
+                { label: 'Prescrição / Conduta',       value: selectedHistory.prescription },
+              ].filter(f => f.value).map(f => (
+                <div key={f.label}>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">{f.label}</p>
+                  <p className="text-sm text-slate-800 whitespace-pre-wrap bg-cream-50 rounded-lg px-3 py-2 border border-surface-border">{f.value}</p>
+                </div>
+              ))}
+
+              {/* Sinais Vitais */}
+              {(selectedHistory.bloodPressure || selectedHistory.heartRate || selectedHistory.temperature || selectedHistory.oxygenSaturation || selectedHistory.weight || selectedHistory.height) && (
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><Activity size={11} /> Sinais Vitais</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'PA',    value: selectedHistory.bloodPressure,              unit: 'mmHg' },
+                      { label: 'FC',    value: selectedHistory.heartRate?.toString(),       unit: 'bpm'  },
+                      { label: 'Temp',  value: selectedHistory.temperature?.toString(),     unit: '°C'   },
+                      { label: 'SpO₂', value: selectedHistory.oxygenSaturation?.toString(),unit: '%'    },
+                      { label: 'Peso',  value: selectedHistory.weight?.toString(),          unit: 'kg'   },
+                      { label: 'Altura',value: selectedHistory.height?.toString(),          unit: 'cm'   },
+                    ].filter(v => v.value).map(v => (
+                      <div key={v.label} className="bg-cream-50 rounded-lg p-2 border border-surface-border text-center">
+                        <p className="text-[10px] text-slate-400 mb-0.5">{v.label}</p>
+                        <p className="text-sm font-semibold text-slate-700">{v.value} <span className="text-[10px] font-normal text-slate-400">{v.unit}</span></p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Histórico clínico */}
+              {(selectedHistory.currentMedications || selectedHistory.pastConditions || selectedHistory.pastSurgeries || selectedHistory.familyHistory) && (
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5"><ClipboardList size={11} /> Histórico Clínico</p>
+                  {[
+                    { label: 'Medicamentos em uso',   value: selectedHistory.currentMedications },
+                    { label: 'Antecedentes pessoais', value: selectedHistory.pastConditions },
+                    { label: 'Cirurgias anteriores',  value: selectedHistory.pastSurgeries },
+                    { label: 'Histórico familiar',    value: selectedHistory.familyHistory },
+                  ].filter(f => f.value).map(f => (
+                    <div key={f.label} className="mb-2">
+                      <p className="text-[10px] text-slate-400 mb-0.5">{f.label}</p>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap bg-cream-50 rounded px-2 py-1.5 border border-surface-border">{f.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Imprimir receituário da consulta histórica */}
+              {selectedHistory.prescription?.trim() && (
+                <button
+                  onClick={() => {
+                    const h = selectedHistory
+                    const doctorName = h.doctor?.user?.name ?? apt.doctor.user.name
+                    const crm = `${h.doctor?.crm ?? apt.doctor.crm}-${h.doctor?.crmState ?? apt.doctor.crmState}`
+                    const specialty = h.doctor?.specialty ?? apt.doctor.specialty
+                    const patName = apt.patient.fullName
+                    const dateStr = new Date(h.createdAt).toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+                    const html = buildReceituarioHtml({ doctorName, crm, specialty, patName, prescription: h.prescription!, dateStr, logoUrl: `${window.location.origin}/logo.svg` })
+                    const win = window.open('', '_blank', 'width=820,height=1000')
+                    if (win) { win.document.write(html); win.document.close() }
+                  }}
+                  className="btn-outline w-full flex items-center justify-center gap-2 text-sm"
+                >
+                  <Printer size={15} /> Imprimir Receituário desta consulta
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Rodapé com ações */}
         <div className="p-5 border-t border-surface-border flex gap-2 shrink-0">
@@ -908,6 +1030,87 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
           )}
         </div>
       </div>
+
+      {/* ── Modal de confirmação de saída ── */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
+            <h3 className="text-base font-bold text-slate-800">Sair do prontuário</h3>
+            <p className="text-sm text-slate-600">
+              Você tem alterações não salvas. Deseja salvar antes de sair?
+            </p>
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={handleSaveAndExit}
+                disabled={saving}
+                className="btn-primary w-full text-sm"
+              >
+                {saving ? 'Salvando…' : 'Salvar e sair'}
+              </button>
+              <button
+                onClick={() => { setShowExitConfirm(false); setIsDirty(false); onClose() }}
+                className="btn-outline w-full text-sm text-red-600 hover:bg-red-50 hover:border-red-300"
+              >
+                Sair sem salvar
+              </button>
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="text-sm text-slate-500 hover:text-slate-700 py-1"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PiP: vídeo flutuante durante teleconsulta ── */}
+      {showPip && apt.status === 'IN_PROGRESS' && (
+        pipMinimized ? (
+          <button
+            onClick={() => setPipMinimized(false)}
+            className="fixed bottom-6 right-6 z-[70] flex items-center gap-2 bg-primary-700 text-white px-4 py-2.5 rounded-full shadow-xl text-sm font-medium hover:bg-primary-800 transition-colors"
+          >
+            <Video size={16} />
+            Consulta em andamento
+          </button>
+        ) : (
+          <div className="fixed bottom-6 right-6 z-[70] w-80 rounded-2xl overflow-hidden shadow-2xl border border-primary-200 flex flex-col bg-slate-900">
+            <div className="flex items-center justify-between px-3 py-2 bg-primary-700 text-white text-xs font-medium shrink-0">
+              <span className="flex items-center gap-1.5"><Video size={13} /> Teleconsulta em andamento</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => window.open(videoUrl, '_blank')}
+                  title="Abrir em nova aba"
+                  className="p-1 hover:bg-primary-600 rounded"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </button>
+                <button
+                  onClick={() => setPipMinimized(true)}
+                  title="Minimizar"
+                  className="p-1 hover:bg-primary-600 rounded"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <button
+                  onClick={() => setShowPip(false)}
+                  title="Fechar vídeo"
+                  className="p-1 hover:bg-red-600 rounded"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={videoUrl}
+              allow="camera; microphone; display-capture; fullscreen; autoplay"
+              className="w-full h-52 border-0"
+              title="Teleconsulta"
+            />
+          </div>
+        )
+      )}
     </>
   )
 }

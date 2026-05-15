@@ -30,8 +30,8 @@ export default function RelatoriosPage() {
         const [p, a, pay, acc] = await Promise.all([
           getPatients({ limit: 1000 }),
           getAppointments({ limit: 1000 }),
-          getPayments({ limit: 1000 }),
-          getAccountsPayable({ limit: 1000 }),
+          getPayments({ take: 100 }),
+          getAccountsPayable({ take: 100 }),
         ]);
         setData({
           patients: p.data,

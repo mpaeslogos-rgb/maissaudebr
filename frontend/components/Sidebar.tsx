@@ -1,6 +1,3 @@
-// components/Sidebar.tsx
-// Adicionado botão de logout na parte inferior
-
 "use client";
 
 import Link from "next/link";
@@ -18,23 +15,39 @@ import {
   FileText,
   LogOut,
   Stethoscope,
+  ShieldCheck,
+  ClipboardList,
 } from "lucide-react";
+import type { UserRole } from "@/lib/types";
 
-const menu = [
+interface MenuItem {
+  href: string
+  label: string
+  icon: React.ElementType
+  roles?: UserRole[]
+}
+
+const menu: MenuItem[] = [
   { href: "/dashboard",     label: "Início",         icon: Home },
-  { href: "/chats",         label: "Chats",          icon: MessageSquare },
-  { href: "/agenda",        label: "Agenda",         icon: Calendar },
-  { href: "/pacientes",     label: "Pacientes",      icon: Users },
-  { href: "/medicos",       label: "Médicos",        icon: Stethoscope },
-  { href: "/prontuarios",   label: "Prontuários",    icon: FileText },
-  { href: "/financeiro",    label: "Financeiro",     icon: DollarSign },
-  { href: "/relatorios",    label: "Relatórios",     icon: BarChart3 },
-  { href: "/configuracoes", label: "Configurações",  icon: Settings },
+  { href: "/chats",         label: "Chats",          icon: MessageSquare,  roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/agenda",        label: "Agenda",         icon: Calendar,       roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/pacientes",     label: "Pacientes",      icon: Users,          roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/medicos",       label: "Médicos",        icon: Stethoscope,    roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/prontuarios",   label: "Prontuários",    icon: FileText,       roles: ['ADMIN', 'DOCTOR'] },
+  { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },
+  { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,      roles: ['ADMIN'] },
+  { href: "/configuracoes", label: "Configurações",  icon: Settings,       roles: ['ADMIN'] },
+  { href: "/admin/usuarios",    label: "Usuários",    icon: ShieldCheck,    roles: ['ADMIN'] },
+  { href: "/admin/audit-logs", label: "Logs",         icon: ClipboardList,  roles: ['ADMIN'] },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user, hasRole } = useAuth();
+
+  const visible = menu.filter(item =>
+    !item.roles || hasRole(...item.roles)
+  )
 
   return (
     <aside className="w-64 bg-white border-r border-surface-border flex flex-col">
@@ -45,7 +58,7 @@ export function Sidebar() {
 
       {/* Navegação */}
       <nav className="flex-1 p-4 space-y-1">
-        {menu.map((item) => {
+        {visible.map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);
           return (
@@ -65,8 +78,14 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Rodapé com versão e logout */}
+      {/* Rodapé com usuário e logout */}
       <div className="p-4 border-t border-surface-border bg-cream-50">
+        {user && (
+          <div className="mb-3 px-3">
+            <p className="text-xs font-medium text-slate-700 truncate">{user.name}</p>
+            <p className="text-xs text-slate-400">{user.role}</p>
+          </div>
+        )}
         <button
           onClick={logout}
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-2"

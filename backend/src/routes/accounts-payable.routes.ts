@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, AccountPayableStatus } from '@prisma/client'
-import { authenticate } from '../plugins/auth'
+import { requireRole } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 
@@ -81,7 +81,7 @@ function isValidTransition(from: AccountPayableStatus, to: AccountPayableStatus)
 // ROTAS
 // ============================================================
 export async function accountsPayableRoutes(app: FastifyInstance) {
-  app.addHook('preHandler', authenticate)
+  app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
   // ---------------------------------------------------------
   // POST /accounts-payable — criar despesa
