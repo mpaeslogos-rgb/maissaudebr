@@ -23,6 +23,7 @@ import { configRoutes } from './routes/config'
 import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
 import { startReminderJobs } from './jobs/reminder.job'
 import { notificationsRoutes } from './routes/notifications.routes'
+import { examsRoutes } from './routes/exams.routes'
 
 const app = Fastify({ logger: true })
 
@@ -72,6 +73,7 @@ async function bootstrap() {
   await app.register(whatsappRoutes, { prefix: '/api/whatsapp' })
   await app.register(configRoutes)
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
+  await app.register(examsRoutes, { prefix: '/api/exams' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

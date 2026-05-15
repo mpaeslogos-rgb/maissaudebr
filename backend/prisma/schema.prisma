@@ -195,6 +195,7 @@ model Patient {
   medicalRecords  MedicalRecord[]
   payments        Payment[]
   chats           Chat[]
+  exams           Exam[]
 
   @@index([cpf])
   @@index([fullName])
@@ -276,11 +277,49 @@ model MedicalRecord {
   patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor       Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  exams        Exam[]
 
   @@index([patientId])
   @@index([doctorId])
   @@index([appointmentId])
   @@map("medical_records")
+}
+
+// ============================================
+// EXAMES E RESULTADOS
+// ============================================
+
+enum ExamType {
+  LABORATORY
+  IMAGING
+  REPORT
+  OTHER
+}
+
+model Exam {
+  id              String    @id @default(cuid())
+  patientId       String
+  medicalRecordId String?
+
+  name            String
+  type            ExamType  @default(OTHER)
+  fileUrl         String?
+  fileName        String?
+  fileSize        Int?
+  mimeType        String?
+  ocrText         String?
+  notes           String?
+  examDate        DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  medicalRecord MedicalRecord? @relation(fields: [medicalRecordId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([medicalRecordId])
+  @@map("exams")
 }
 
 // ============================================

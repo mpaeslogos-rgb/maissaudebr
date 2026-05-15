@@ -11,6 +11,7 @@ import type {
   MedicalRecordListResponse, MedicalRecord,
   ChatListResponse, Chat, ChatMessage,
   ApiError,
+  Exam,
 } from './types'
 
 // ─── URL base ────────────────────────────────────────────────────────────────
@@ -445,4 +446,21 @@ export function ocrAttachToMedicalRecord(
     `/ocr/medical-records/${id}`,
     formData
   )
+}
+
+// ─── Exames ───────────────────────────────────────────────────────────────────
+
+export function getExams(params: { patientId?: string; medicalRecordId?: string }): Promise<{ data: Exam[]; total: number }> {
+  const qs = new URLSearchParams()
+  if (params.patientId)       qs.set('patientId',       params.patientId)
+  if (params.medicalRecordId) qs.set('medicalRecordId', params.medicalRecordId)
+  return apiGet<{ data: Exam[]; total: number }>(`/api/exams?${qs}`)
+}
+
+export function uploadExam(formData: FormData): Promise<Exam> {
+  return apiUpload<Exam>('/api/exams', formData)
+}
+
+export function deleteExam(id: string): Promise<void> {
+  return apiDelete(`/api/exams/${id}`)
 }

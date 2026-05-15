@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Calendar,
-  FileText, Pill, Clipboard, MessageSquare, Loader2, Printer
+  FileText, Pill, Clipboard, MessageSquare, Loader2, Printer,
+  FlaskConical, Upload, Trash2, ExternalLink, X
 } from "lucide-react";
 import Link from "next/link";
-import { getMedicalRecord, getClinicConfig, ClinicConfig } from "@/lib/api";
-import { MedicalRecord } from "@/lib/types";
+import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, ClinicConfig } from "@/lib/api";
+import { MedicalRecord, Exam, ExamType, EXAM_TYPE_LABEL } from "@/lib/types";
 
 interface PageProps {
   params: {
@@ -21,6 +22,12 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [clinicConfig, setClinicConfig] = useState<ClinicConfig | null>(null);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [uploadingExam, setUploadingExam] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadForm, setUploadForm] = useState({ name: '', type: 'OTHER' as ExamType, notes: '', examDate: '' });
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getClinicConfig().then(setClinicConfig).catch(() => {})
@@ -34,6 +41,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
         const recordData = response.data || response;
         if (recordData && (recordData.id || recordData.chiefComplaint)) {
           setRecord(recordData);
+          loadExams(recordData.patientId, recordData.id);
         } else {
           setError("Os dados retornados pelo servidor são inválidos.");
         }
@@ -123,6 +131,43 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
 
     const win = window.open('', '_blank', 'width=820,height=1000')
     if (win) { win.document.write(html); win.document.close() }
+  }
+
+  async function loadExams(patientId: string, medicalRecordId: string) {
+    try {
+      const res = await getExams({ patientId, medicalRecordId })
+      setExams(res.data)
+    } catch { /* silencioso */ }
+  }
+
+  async function handleUploadExam() {
+    if (!record || !uploadFile || !uploadForm.name.trim()) return
+    setUploadingExam(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', uploadFile)
+      fd.append('patientId', record.patientId)
+      fd.append('medicalRecordId', record.id)
+      fd.append('name', uploadForm.name.trim())
+      fd.append('type', uploadForm.type)
+      if (uploadForm.notes)    fd.append('notes', uploadForm.notes)
+      if (uploadForm.examDate) fd.append('examDate', uploadForm.examDate)
+      const newExam = await uploadExam(fd)
+      setExams(prev => [newExam, ...prev])
+      setShowUploadModal(false)
+      setUploadForm({ name: '', type: 'OTHER', notes: '', examDate: '' })
+      setUploadFile(null)
+    } catch { /* silencioso */ } finally {
+      setUploadingExam(false)
+    }
+  }
+
+  async function handleDeleteExam(examId: string) {
+    if (!confirm('Remover este exame?')) return
+    try {
+      await deleteExam(examId)
+      setExams(prev => prev.filter(e => e.id !== examId))
+    } catch { /* silencioso */ }
   }
 
   if (loading) return (
@@ -238,7 +283,149 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
             </section>
           </div>
         </div>
+
+        {/* Seção de Exames */}
+        <div className="border-t border-slate-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-primary-700 font-bold uppercase text-xs tracking-wider">
+              <FlaskConical size={18} className="text-primary-400" /> Exames e Resultados
+            </div>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-lg transition-colors"
+            >
+              <Upload size={14} /> Anexar Exame
+            </button>
+          </div>
+
+          {exams.length === 0 ? (
+            <p className="text-sm text-slate-400 italic">Nenhum exame anexado a esta consulta.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {exams.map(exam => (
+                <div key={exam.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <FileText size={20} className="text-primary-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{exam.name}</p>
+                    <p className="text-xs text-slate-500">{EXAM_TYPE_LABEL[exam.type]}{exam.examDate ? ` · ${new Date(exam.examDate).toLocaleDateString('pt-BR')}` : ''}</p>
+                    {exam.notes && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{exam.notes}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {exam.fileUrl && (
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${exam.fileUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors"
+                        title="Abrir arquivo"
+                      >
+                        <ExternalLink size={15} />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleDeleteExam(exam.id)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                      title="Remover exame"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Modal de upload */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-slate-800">Anexar Exame</h2>
+              <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Nome do Exame *</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Hemograma Completo"
+                  value={uploadForm.name}
+                  onChange={e => setUploadForm(f => ({ ...f, name: e.target.value }))}
+                  className="input w-full"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Tipo</label>
+                  <select
+                    value={uploadForm.type}
+                    onChange={e => setUploadForm(f => ({ ...f, type: e.target.value as ExamType }))}
+                    className="input w-full"
+                  >
+                    {(Object.entries(EXAM_TYPE_LABEL) as [ExamType, string][]).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Data do Exame</label>
+                  <input
+                    type="date"
+                    value={uploadForm.examDate}
+                    onChange={e => setUploadForm(f => ({ ...f, examDate: e.target.value }))}
+                    className="input w-full"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
+                <textarea
+                  placeholder="Resultado resumido ou observações..."
+                  value={uploadForm.notes}
+                  onChange={e => setUploadForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={2}
+                  className="input w-full resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Arquivo *</label>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center cursor-pointer hover:border-primary-400 transition-colors"
+                >
+                  {uploadFile ? (
+                    <p className="text-sm text-primary-600 font-medium">{uploadFile.name}</p>
+                  ) : (
+                    <p className="text-sm text-slate-400">Clique para selecionar (PDF, JPEG, PNG)</p>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  className="hidden"
+                  onChange={e => setUploadFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t">
+              <button onClick={() => setShowUploadModal(false)} className="btn-secondary text-sm">Cancelar</button>
+              <button
+                onClick={handleUploadExam}
+                disabled={uploadingExam || !uploadFile || !uploadForm.name.trim()}
+                className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {uploadingExam ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                {uploadingExam ? 'Enviando...' : 'Salvar Exame'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
