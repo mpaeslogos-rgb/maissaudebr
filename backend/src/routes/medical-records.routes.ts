@@ -19,6 +19,26 @@ import { extractUniqueViolationFields } from '../lib/prisma-errors'
 // Por que limites generosos? Prontuário pode ter texto longo (anamnese, prescrição...).
 const longText = z.string().max(10_000).optional()
 
+const vitalSchema = {
+  bloodPressure:    z.string().max(20).optional(),
+  heartRate:        z.coerce.number().int().min(1).max(400).optional(),
+  temperature:      z.coerce.number().min(30).max(45).optional(),
+  weight:           z.coerce.number().min(1).max(500).optional(),
+  height:           z.coerce.number().min(20).max(300).optional(),
+  oxygenSaturation: z.coerce.number().min(0).max(100).optional(),
+}
+
+const historySchema = {
+  currentMedications: longText,
+  pastConditions:     longText,
+  pastSurgeries:      longText,
+  familyHistory:      longText,
+  smokingStatus:      z.enum(['NEVER', 'FORMER', 'CURRENT']).optional(),
+  alcoholStatus:      z.enum(['NEVER', 'OCCASIONAL', 'REGULAR']).optional(),
+  physicalActivity:   z.enum(['SEDENTARY', 'LIGHT', 'MODERATE', 'INTENSE']).optional(),
+  specialtyData:      z.record(z.unknown()).optional(),
+}
+
 const createSchema = z.object({
   patientId: z.string().min(1, 'patientId obrigatório'),
   doctorId: z.string().min(1, 'doctorId obrigatório'),
@@ -28,6 +48,8 @@ const createSchema = z.object({
   diagnosis: longText,
   prescription: longText,
   observations: longText,
+  ...vitalSchema,
+  ...historySchema,
   // Permite criar já com OCR (caso da rota /ocr criar prontuário direto)
   attachmentUrl: z.string().url().optional(),
   ocrText: z.string().max(50_000).optional(),
@@ -36,12 +58,13 @@ const createSchema = z.object({
 
 const updateSchema = z.object({
   // patientId/doctorId/appointmentId NÃO podem ser alterados após criação
-  // (manteria histórico inconsistente — quer corrigir? cria outro registro)
   chiefComplaint: longText,
   historyOfIllness: longText,
   diagnosis: longText,
   prescription: longText,
   observations: longText,
+  ...vitalSchema,
+  ...historySchema,
   attachmentUrl: z.string().url().nullable().optional(),
   ocrText: z.string().max(50_000).nullable().optional(),
   ocrSummary: z.string().max(10_000).nullable().optional(),
