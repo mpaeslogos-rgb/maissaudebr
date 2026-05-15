@@ -258,6 +258,34 @@ export interface MedicalRecord {
 
 export type MedicalRecordListResponse = PaginatedResponse<MedicalRecord>
 
+// ─── Exames ───────────────────────────────────────────────────────────────────
+
+export type ExamType = 'LABORATORY' | 'IMAGING' | 'REPORT' | 'OTHER'
+
+export const EXAM_TYPE_LABEL: Record<ExamType, string> = {
+  LABORATORY: 'Laboratorial',
+  IMAGING:    'Imagem',
+  REPORT:     'Laudo',
+  OTHER:      'Outro',
+}
+
+export interface Exam {
+  id:              string
+  patientId:       string
+  medicalRecordId?: string
+  name:            string
+  type:            ExamType
+  fileUrl?:        string
+  fileName?:       string
+  fileSize?:       number
+  mimeType?:       string
+  ocrText?:        string
+  notes?:          string
+  examDate?:       string
+  createdAt:       string
+  updatedAt:       string
+}
+
 // ─── Erros da API ─────────────────────────────────────────────────────────────
 
 export interface ApiError {
