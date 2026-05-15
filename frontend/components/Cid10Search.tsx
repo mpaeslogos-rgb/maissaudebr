@@ -92,7 +92,7 @@ export function Cid10Search({ onSelect, placeholder = 'Buscar CID-10 por código
 
       {open && query.trim().length >= 2 && results.length === 0 && !loading && (
         <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg px-4 py-3 text-sm text-slate-400">
-          Nenhum resultado para "{query}"
+          Nenhum resultado para &quot;{query}&quot;
         </div>
       )}
     </div>
