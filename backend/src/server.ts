@@ -21,6 +21,8 @@ import { chatRoutes as aiChatRoutes } from './routes/chat'
 import { whatsappRoutes } from './routes/whatsapp.routes'
 import { configRoutes } from './routes/config'
 import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
+import { startReminderJobs } from './jobs/reminder.job'
+import { notificationsRoutes } from './routes/notifications.routes'
 
 const app = Fastify({ logger: true })
 
@@ -69,6 +71,7 @@ async function bootstrap() {
   await app.register(aiChatRoutes, { prefix: '/api' })
   await app.register(whatsappRoutes, { prefix: '/api/whatsapp' })
   await app.register(configRoutes)
+  await app.register(notificationsRoutes, { prefix: '/api/notifications' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'
@@ -79,6 +82,8 @@ async function bootstrap() {
     console.log('=== ROTAS REGISTRADAS ===')
     console.log(app.printRoutes())
   }
+
+  startReminderJobs()
 
   try {
     await app.listen({ port: PORT, host: HOST })
