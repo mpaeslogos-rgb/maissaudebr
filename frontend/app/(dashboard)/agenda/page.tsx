@@ -18,6 +18,7 @@ import {
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
+import { Cid10Search } from '@/components/Cid10Search'
 
 // ─── Helpers de status ───────────────────────────────────────────────────────
 
@@ -751,15 +752,35 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     <textarea name="historyOfIllness" value={form.historyOfIllness} onChange={handleFormChange} rows={4} className="input resize-none w-full text-sm font-mono" placeholder="História da doença atual…" />
                   </div>
 
-                  {[
-                    { name: 'diagnosis',    label: 'Diagnóstico (CID)', rows: 2 },
-                    { name: 'prescription', label: 'Prescrição / Conduta', rows: 4 },
-                  ].map(f => (
-                    <div key={f.name}>
-                      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">{f.label}</label>
-                      <textarea name={f.name} value={form[f.name as keyof ProntuarioForm]} onChange={handleFormChange} rows={f.rows} className="input resize-none w-full text-sm" placeholder={`${f.label}…`} />
-                    </div>
-                  ))}
+                  {/* Diagnóstico com busca CID-10 */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">Diagnóstico (CID-10)</label>
+                    <Cid10Search
+                      onSelect={entry => {
+                        const tag = `${entry.code} — ${entry.description}`
+                        setForm(prev => ({
+                          ...prev,
+                          diagnosis: prev.diagnosis
+                            ? prev.diagnosis + '\n' + tag
+                            : tag,
+                        }))
+                        setSaveOk(false)
+                      }}
+                    />
+                    <textarea
+                      name="diagnosis"
+                      value={form.diagnosis}
+                      onChange={handleFormChange}
+                      rows={2}
+                      className="input resize-none w-full text-sm mt-1.5 font-mono"
+                      placeholder="Diagnóstico(s) selecionados aparecerão aqui…"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">Prescrição / Conduta</label>
+                    <textarea name="prescription" value={form.prescription} onChange={handleFormChange} rows={4} className="input resize-none w-full text-sm" placeholder="Prescrição / Conduta…" />
+                  </div>
 
                   {/* ── Sinais Vitais (colapsável) ── */}
                   <button onClick={() => setShowVitals(v => !v)} className="flex items-center justify-between w-full py-2 border-t border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wide hover:text-slate-700">

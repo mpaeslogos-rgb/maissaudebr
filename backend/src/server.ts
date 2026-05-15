@@ -24,6 +24,7 @@ import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
 import { startReminderJobs } from './jobs/reminder.job'
 import { notificationsRoutes } from './routes/notifications.routes'
 import { examsRoutes } from './routes/exams.routes'
+import { cid10Routes } from './routes/cid10.routes'
 
 const app = Fastify({ logger: true })
 
@@ -74,6 +75,7 @@ async function bootstrap() {
   await app.register(configRoutes)
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
   await app.register(examsRoutes, { prefix: '/api/exams' })
+  await app.register(cid10Routes, { prefix: '/api/cid10' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'
