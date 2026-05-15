@@ -245,9 +245,10 @@ export interface MedicalRecord {
   attachmentUrl?: string
   ocrText?: string
   ocrSummary?: string
-  patient: { fullName: string }
+  patient: { fullName: string; cpf?: string }
   doctor: {
     crm: string
+    crmState?: string
     specialty: string
     user?: { name: string; email: string }
   }

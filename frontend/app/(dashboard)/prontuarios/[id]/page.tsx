@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  ArrowLeft, Calendar, User, Stethoscope, 
-  FileText, Pill, Clipboard, MessageSquare, Loader2 
+import {
+  ArrowLeft, Calendar,
+  FileText, Pill, Clipboard, MessageSquare, Loader2, Printer
 } from "lucide-react";
 import Link from "next/link";
-import { getMedicalRecord } from "@/lib/api";
+import { getMedicalRecord, getClinicConfig, ClinicConfig } from "@/lib/api";
 import { MedicalRecord } from "@/lib/types";
 
 interface PageProps {
@@ -20,35 +20,110 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const [record, setRecord] = useState<MedicalRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [clinicConfig, setClinicConfig] = useState<ClinicConfig | null>(null);
+
+  useEffect(() => {
+    getClinicConfig().then(setClinicConfig).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!id) return;
 
-    console.log("Iniciando busca do prontuário ID:", id);
-
     getMedicalRecord(id)
       .then((response: any) => {
-        console.log("Resposta bruta do backend:", response);
-
-        // LÓGICA DEFENSIVA:
-        // Se o seu backend devolver o objeto direto, usamos 'response'.
-        // Se ele devolver envelopado, usamos 'response.data'.
         const recordData = response.data || response;
-
-        // Verificação de segurança: o dado tem cara de prontuário?
         if (recordData && (recordData.id || recordData.chiefComplaint)) {
           setRecord(recordData);
         } else {
-          console.error("Estrutura de dados inesperada:", recordData);
           setError("Os dados retornados pelo servidor são inválidos.");
         }
       })
-      .catch((err) => {
-        console.error("Erro na requisição:", err);
-        setError("Não foi possível conectar ao servidor ou o prontuário não existe.");
-      })
+      .catch(() => setError("Não foi possível conectar ao servidor ou o prontuário não existe."))
       .finally(() => setLoading(false));
   }, [id]);
+
+  function printReceituario() {
+    if (!record) return;
+    const clinicName   = clinicConfig?.clinicName || 'Clínica Médica'
+    const doctorName   = record.doctor?.user?.name || 'Médico(a)'
+    const crm          = record.doctor?.crm ? `${record.doctor.crm}${record.doctor.crmState ? '-' + record.doctor.crmState : ''}` : ''
+    const specialty    = record.doctor?.specialty || ''
+    const patName      = record.patient?.fullName || ''
+    const patCpf       = record.patient?.cpf || ''
+    const dateStr      = new Date(record.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    const prescription = record.prescription || '(Prescrição não informada)'
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Receituário — ${patName}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 18mm 20mm 32mm; max-width: 210mm; }
+    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
+    .logo-img  { width:110px; height:110px; object-fit:contain; }
+    .logo-sub  { font-size:8pt; color:#555; margin-top:4px; letter-spacing:0.5px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
+    .header-left p  { font-size:9.5pt; color:#333; line-height:1.6; }
+    .header-left strong { color:#1B5E3F; }
+    .header-right   { text-align:right; font-size:9pt; color:#666; }
+    .title { text-align:center; font-size:13pt; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin:0 0 16px; color:#1B5E3F; }
+    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; background:#fafafa; }
+    .patient-box p { font-size:10pt; }
+    .patient-box span { font-weight:bold; }
+    .section-label { font-size:8pt; font-weight:bold; text-transform:uppercase; letter-spacing:1px; color:#555; border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:10px; }
+    .prescription  { min-height:180px; white-space:pre-wrap; font-size:11pt; line-height:1.7; margin-bottom:40px; }
+    .sign-area { border-top:1px solid #1B5E3F; padding-top:16px; display:flex; justify-content:flex-end; }
+    .sign-block { text-align:center; min-width:230px; }
+    .sign-line  { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
+    .sign-block p { font-size:10pt; line-height:1.6; }
+    .sign-block .name { font-weight:bold; }
+    .date-line { margin-top:24px; font-size:10pt; text-align:right; color:#555; }
+    .page-footer { position:fixed; bottom:0; left:0; right:0; border-top:1px solid #ccc; padding:6px 20mm; text-align:center; font-size:7.5pt; color:#777; background:#fff; line-height:1.5; }
+    @media print { body { padding:15mm 15mm 28mm; } @page { size:A4 portrait; margin:10mm; } }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="${window.location.origin}/logo.svg" alt="MaisSaúdeBR" class="logo-img" />
+    <span class="logo-sub">${clinicName}</span>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <p><strong>Dr(a). ${doctorName}</strong><br>${specialty}<br>CRM ${crm}</p>
+    </div>
+    <div class="header-right"><p>Teleconsulta / Consulta Presencial</p></div>
+  </div>
+  <div class="title">Receituário</div>
+  <div class="patient-box">
+    <p><span>Paciente:</span> ${patName}</p>
+    <p><span>CPF:</span> ${patCpf}</p>
+    <p><span>Data:</span> ${dateStr}</p>
+  </div>
+  <div class="section-label">Prescrição</div>
+  <div class="prescription">${prescription.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+  <div class="sign-area">
+    <div class="sign-block">
+      <div class="sign-line">
+        <p class="name">Dr(a). ${doctorName}</p>
+        <p>CRM ${crm} &nbsp;·&nbsp; ${specialty}</p>
+      </div>
+    </div>
+  </div>
+  <p class="date-line">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</p>
+  <div class="page-footer">
+    <strong>+SaúdeBR</strong> — MAIS SAUDE SERVIÇO DE TELEMEDICINA LTDA &nbsp;|&nbsp;
+    CNPJ: 56.990.029/0001-12 &nbsp;|&nbsp;
+    R. Acre, 820 Cj. 610 — Vieiralves — Manaus / AM &nbsp; CEP: 69053-130
+  </div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=820,height=1000')
+    if (win) { win.document.write(html); win.document.close() }
+  }
 
   if (loading) return (
     <div className="flex h-64 items-center justify-center">
@@ -93,8 +168,18 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                 </span>
               </div>
             </div>
-            <div className="bg-white border border-surface-border px-3 py-2 rounded text-xs font-mono text-slate-400">
-              ID: {record.id}
+            <div className="flex items-center gap-3">
+              {record.prescription && (
+                <button
+                  onClick={printReceituario}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Printer size={16} /> Imprimir Receituário
+                </button>
+              )}
+              <div className="bg-white border border-surface-border px-3 py-2 rounded text-xs font-mono text-slate-400">
+                ID: {record.id}
+              </div>
             </div>
           </div>
         </div>
