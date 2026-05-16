@@ -1,4 +1,4 @@
-# v2 — includes users/audit/cashflow/exams/cid10 routes
+# v3 — cid10 accent normalization fix
 FROM node:22-slim
 
 WORKDIR /app
