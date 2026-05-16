@@ -215,7 +215,10 @@ export async function medicalRecordsRoutes(app: FastifyInstance) {
       }
 
       const created = await prisma.medicalRecord.create({
-        data,
+        data: {
+          ...data,
+          specialtyData: data.specialtyData as Prisma.InputJsonValue | undefined,
+        },
         include: recordDetailInclude,
       })
 
@@ -326,7 +329,10 @@ export async function medicalRecordsRoutes(app: FastifyInstance) {
 
       const updated = await prisma.medicalRecord.update({
         where: { id: params.data.id },
-        data: body.data,
+        data: {
+          ...body.data,
+          specialtyData: body.data.specialtyData as Prisma.InputJsonValue | undefined,
+        },
         include: recordDetailInclude,
       })
 
