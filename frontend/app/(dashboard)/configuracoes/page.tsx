@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getToken } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -82,6 +83,7 @@ export default function ConfiguracoesPage() {
 
         const response = await fetch(`${API_URL}/api/config`, {
           cache: 'no-store',
+          headers: { Authorization: `Bearer ${getToken() ?? ''}` },
         })
 
         if (!response.ok) {
@@ -124,6 +126,7 @@ export default function ConfiguracoesPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken() ?? ''}`,
         },
         body: JSON.stringify(config),
       })

@@ -168,6 +168,22 @@ export async function patientsRoutes(app: FastifyInstance) {
     }
   })
 
+  // ----- EXCLUIR -----
+  app.delete('/patients/:id', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    try {
+      await prisma.patient.delete({ where: { id } })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'DELETE', entity: 'Patient', entityId: id, request })
+      return reply.code(204).send()
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return reply.code(404).send({ error: 'Paciente não encontrado' })
+      }
+      throw error
+    }
+  })
+
   // ----- IMPORTAR EM MASSA (Excel) -----
   app.post('/patients/bulk-import', async (request, reply) => {
     const data = await request.file()

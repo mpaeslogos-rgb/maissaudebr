@@ -34,6 +34,14 @@ function genderLabel(g: Gender) {
   return 'Outro'
 }
 
+function formatCpf(value: string): string {
+  const d = value.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`
+  if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`
+  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`
+}
+
 // ─── Tipos do formulário ─────────────────────────────────────────────────────
 
 interface PatientForm {
@@ -87,7 +95,8 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: name === 'cpf' ? formatCpf(value) : value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {

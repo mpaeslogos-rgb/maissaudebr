@@ -184,7 +184,7 @@ export function createPatient(data: Partial<Patient>): Promise<{ data: Patient }
 }
 
 export function updatePatient(id: string, data: Partial<Patient>): Promise<{ data: Patient }> {
-  return apiPut<{ data: Patient }>(`/patients/${id}`, data)
+  return apiPatch<{ data: Patient }>(`/patients/${id}`, data)
 }
 
 export function deletePatient(id: string): Promise<{ message: string }> {

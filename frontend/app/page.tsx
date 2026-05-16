@@ -147,9 +147,13 @@ export default function LoginPage() {
                 />
                 <span className="text-slate-600">Lembrar-me</span>
               </label>
-              <a href="#" className="text-primary-600 font-medium">
+              <button
+                type="button"
+                onClick={() => alert('Para redefinir sua senha, contate o administrador do sistema.')}
+                className="text-primary-600 font-medium hover:underline"
+              >
                 Esqueceu a senha?
-              </a>
+              </button>
             </div>
 
             {/* Botão submit */}

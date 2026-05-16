@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { getDoctors, createDoctor, updateDoctor, deleteDoctor } from '@/lib/api'
 import { Doctor } from '@/lib/types'
 
@@ -56,6 +57,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
   const [form, setForm] = useState<DoctorCreateForm>(EMPTY_CREATE)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -127,7 +129,12 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Senha de acesso <span className="text-red-500">*</span>
               </label>
-              <input type="password" name="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" className="input" />
+              <div className="relative">
+                <input type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" className="input pr-10" />
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
           </div>
 

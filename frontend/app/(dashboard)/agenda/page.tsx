@@ -40,8 +40,8 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
   NO_SHOW:     'Não compareceu',
 }
 
-// Horas exibidas na grade (8h às 19h)
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8)
+// Horas exibidas na grade (8h às 20h)
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8)
 
 // ─── Utilitários de data ─────────────────────────────────────────────────────
 
@@ -639,8 +639,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   return (
     <>
-      <div onClick={requestClose} className="fixed inset-0 bg-black/40 z-40" />
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col relative">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={requestClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
 
         {/* Cabeçalho */}
         <div className="p-5 border-b border-surface-border flex items-center justify-between shrink-0">
@@ -860,14 +860,13 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     </button>
                   </div>
 
-                  {form.prescription.trim() && (
-                    <button
-                      onClick={printReceituario}
-                      className="btn-outline w-full flex items-center justify-center gap-2 text-sm"
-                    >
-                      <Printer size={15} /> Imprimir Receituário
-                    </button>
-                  )}
+                  <button
+                    onClick={printReceituario}
+                    disabled={!form.prescription.trim()}
+                    className="btn-outline w-full flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Printer size={15} /> Imprimir Receituário
+                  </button>
 
                   {/* Histórico do paciente */}
                   {history.length > 0 && (
@@ -1029,6 +1028,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
             <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
           )}
         </div>
+      </div>
       </div>
 
       {/* ── Modal de confirmação de saída ── */}
