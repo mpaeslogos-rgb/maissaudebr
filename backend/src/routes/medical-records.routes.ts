@@ -36,7 +36,7 @@ const historySchema = {
   smokingStatus:      z.enum(['NEVER', 'FORMER', 'CURRENT']).optional(),
   alcoholStatus:      z.enum(['NEVER', 'OCCASIONAL', 'REGULAR']).optional(),
   physicalActivity:   z.enum(['SEDENTARY', 'LIGHT', 'MODERATE', 'INTENSE']).optional(),
-  specialtyData:      z.record(z.unknown()).optional(),
+  specialtyData:      z.record(z.string(), z.unknown()).optional(),
 }
 
 const createSchema = z.object({
