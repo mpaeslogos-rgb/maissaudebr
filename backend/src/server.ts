@@ -29,7 +29,7 @@ import { usersRoutes } from './routes/users.routes'
 import { auditRoutes } from './routes/audit.routes'
 import { cashflowRoutes } from './routes/cashflow.routes'
 
-const app = Fastify({ logger: true, ignoreTrailingSlash: true })
+const app = Fastify({ logger: true })
 
 async function bootstrap() {
   const uploadsDir = path.resolve(process.cwd(), 'uploads')
@@ -77,11 +77,11 @@ async function bootstrap() {
   await app.register(whatsappRoutes, { prefix: '/api/whatsapp' })
   await app.register(configRoutes)
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
-  await app.register(examsRoutes, { prefix: '/api/exams' })
-  await app.register(cid10Routes, { prefix: '/api/cid10' })
-  await app.register(usersRoutes, { prefix: '/api/users' })
-  await app.register(auditRoutes, { prefix: '/api/audit-logs' })
-  await app.register(cashflowRoutes, { prefix: '/api/financeiro' })
+  await app.register(examsRoutes, { prefix: '/api' })
+  await app.register(cid10Routes, { prefix: '/api' })
+  await app.register(usersRoutes, { prefix: '/api' })
+  await app.register(auditRoutes, { prefix: '/api' })
+  await app.register(cashflowRoutes, { prefix: '/api' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

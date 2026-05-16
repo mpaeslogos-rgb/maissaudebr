@@ -46,7 +46,7 @@ export async function usersRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN'))
 
   // GET /api/users
-  app.get('/', async (request, reply) => {
+  app.get('/users', async (request, reply) => {
     const parsed = listQuerySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
@@ -72,7 +72,7 @@ export async function usersRoutes(app: FastifyInstance) {
   })
 
   // GET /api/users/:id
-  app.get('/:id', async (request, reply) => {
+  app.get('/users/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
 
     const user = await prisma.user.findUnique({ where: { id }, select: SELECT_USER })
@@ -81,7 +81,7 @@ export async function usersRoutes(app: FastifyInstance) {
   })
 
   // POST /api/users
-  app.post('/', async (request, reply) => {
+  app.post('/users', async (request, reply) => {
     const parsed = createSchema.safeParse(request.body)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
@@ -104,7 +104,7 @@ export async function usersRoutes(app: FastifyInstance) {
   })
 
   // PATCH /api/users/:id
-  app.patch('/:id', async (request, reply) => {
+  app.patch('/users/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     const parsed = updateSchema.safeParse(request.body)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
@@ -126,7 +126,7 @@ export async function usersRoutes(app: FastifyInstance) {
   })
 
   // POST /api/users/:id/reset-password
-  app.post('/:id/reset-password', async (request, reply) => {
+  app.post('/users/:id/reset-password', async (request, reply) => {
     const { id } = request.params as { id: string }
     const parsed = resetPasswordSchema.safeParse(request.body)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
@@ -146,7 +146,7 @@ export async function usersRoutes(app: FastifyInstance) {
   })
 
   // DELETE /api/users/:id — desativa em vez de remover (soft delete)
-  app.delete('/:id', async (request, reply) => {
+  app.delete('/users/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
 
     try {
