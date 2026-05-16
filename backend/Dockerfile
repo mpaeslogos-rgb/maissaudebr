@@ -1,4 +1,4 @@
-# v4 — audit logging on all write routes
+# v5 — add DELETE /patients/:id route
 FROM node:22-slim
 
 WORKDIR /app
