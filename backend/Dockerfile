@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:20.18-slim
 
 WORKDIR /app
 
@@ -12,10 +12,6 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 RUN npm install
-
-# Cache bust: invalidate layers below when source changes
-ARG CACHEBUST=20260515-v2
-RUN echo "Cache bust: $CACHEBUST"
 
 COPY . .
 
