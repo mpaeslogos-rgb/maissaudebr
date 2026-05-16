@@ -97,7 +97,7 @@ async function bootstrap() {
 
   try {
     await app.listen({ port: PORT, host: HOST })
-    console.log(`Backend rodando em http://localhost:${PORT}`)
+    console.log(`Backend rodando em http://localhost:${PORT} (v2 — with users/audit/cashflow routes)`)
   } catch (err) {
     app.log.error(err)
     process.exit(1)
