@@ -3,8 +3,10 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { requireRole, getPayload } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
+import { logAudit } from '../lib/audit'
 
 // ============================================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -84,6 +86,8 @@ export async function doctorsRoutes(app: FastifyInstance) {
         return doctor
       })
 
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE_DOCTOR', entity: 'Doctor', entityId: result.id, request })
       return reply.code(201).send(result)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -176,6 +180,8 @@ export async function doctorsRoutes(app: FastifyInstance) {
           user: { select: { id: true, name: true, email: true } },
         },
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'UPDATE_DOCTOR', entity: 'Doctor', entityId: updated.id, request })
       return reply.send(updated)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -213,6 +219,8 @@ export async function doctorsRoutes(app: FastifyInstance) {
         data: { isActive: false },
       })
 
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'DEACTIVATE_DOCTOR', entity: 'Doctor', entityId: parsed.data.id, request })
       return reply.code(204).send()
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

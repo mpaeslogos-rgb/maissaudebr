@@ -2,8 +2,10 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, PaymentMethod, PaymentStatus } from '@prisma/client'
 import { requireRole } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
+import { logAudit } from '../lib/audit'
 
 // ============================================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -181,6 +183,8 @@ export async function paymentsRoutes(app: FastifyInstance) {
         },
         include: paymentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE_PAYMENT', entity: 'Payment', entityId: created.id, request })
       return reply.code(201).send(created)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -411,6 +415,8 @@ export async function paymentsRoutes(app: FastifyInstance) {
         },
         include: paymentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'PAY_PAYMENT', entity: 'Payment', entityId: paid.id, request })
       return reply.send(paid)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
@@ -446,6 +452,8 @@ export async function paymentsRoutes(app: FastifyInstance) {
         data: { status: 'REFUNDED' },
         include: paymentInclude,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'REFUND_PAYMENT', entity: 'Payment', entityId: refunded.id, request })
       return reply.send(refunded)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
