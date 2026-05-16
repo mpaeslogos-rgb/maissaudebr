@@ -19,7 +19,7 @@ export async function auditRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN'))
 
   // GET /api/audit-logs
-  app.get('/', async (request, reply) => {
+  app.get('/audit-logs', async (request, reply) => {
     const parsed = listQuerySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
@@ -58,7 +58,7 @@ export async function auditRoutes(app: FastifyInstance) {
   })
 
   // GET /api/audit-logs/summary — contagem por ação e entidade nos últimos 30 dias
-  app.get('/summary', async (_request, reply) => {
+  app.get('/audit-logs/summary', async (_request, reply) => {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
     const [byAction, byEntity, recentUsers] = await Promise.all([
@@ -104,7 +104,7 @@ export async function auditRoutes(app: FastifyInstance) {
   })
 
   // GET /api/audit-logs/:id
-  app.get('/:id', async (request, reply) => {
+  app.get('/audit-logs/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
 
     const log = await prisma.auditLog.findUnique({

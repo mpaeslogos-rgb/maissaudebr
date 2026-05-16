@@ -10,7 +10,7 @@ const querySchema = z.object({
 export async function cid10Routes(app: FastifyInstance) {
   // GET /api/cid10?q=hipertensão&limit=10
   // Público — não requer autenticação (dados abertos)
-  app.get('/', async (request, reply) => {
+  app.get('/cid10', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: 'Parâmetro "q" obrigatório (mínimo 2 caracteres).' })
     const { q, limit } = parsed.data

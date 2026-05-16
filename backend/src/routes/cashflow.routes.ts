@@ -29,7 +29,7 @@ export async function cashflowRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
   // GET /api/financeiro/cashflow?months=12
-  app.get('/cashflow', async (request, reply) => {
+  app.get('/financeiro/cashflow', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 

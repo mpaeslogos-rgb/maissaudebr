@@ -22,7 +22,7 @@ export async function examsRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN', 'DOCTOR'))
 
   // GET /api/exams?patientId=&medicalRecordId=
-  app.get('/', async (request, reply) => {
+  app.get('/exams', async (request, reply) => {
     const parsed = examQuerySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
@@ -50,7 +50,7 @@ export async function examsRoutes(app: FastifyInstance) {
   })
 
   // POST /api/exams — upload de arquivo + metadados
-  app.post('/', async (request, reply) => {
+  app.post('/exams', async (request, reply) => {
     const data = await request.file()
     if (!data) return reply.code(400).send({ error: 'Nenhum arquivo enviado.' })
 
@@ -105,7 +105,7 @@ export async function examsRoutes(app: FastifyInstance) {
   })
 
   // DELETE /api/exams/:id
-  app.delete('/:id', async (request, reply) => {
+  app.delete('/exams/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
 
     const exam = await prisma.exam.findUnique({ where: { id } })
