@@ -1,4 +1,4 @@
-# v3 — cid10 accent normalization fix
+# v4 — audit logging on all write routes
 FROM node:22-slim
 
 WORKDIR /app
