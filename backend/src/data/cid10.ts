@@ -372,12 +372,16 @@ export const CID10: Cid10Entry[] = [
   { code: 'Z87.3', description: 'História pessoal de doença do sistema musculoesquelético' },
 ]
 
+function normalize(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
 export function searchCid10(query: string, limit = 20): Cid10Entry[] {
   if (!query || query.trim().length < 2) return []
-  const q = query.trim().toLowerCase()
+  const q = normalize(query.trim())
   const results: Cid10Entry[] = []
   for (const entry of CID10) {
-    if (entry.code.toLowerCase().startsWith(q) || entry.description.toLowerCase().includes(q)) {
+    if (entry.code.toLowerCase().startsWith(q) || normalize(entry.description).includes(q)) {
       results.push(entry)
       if (results.length >= limit) break
     }
