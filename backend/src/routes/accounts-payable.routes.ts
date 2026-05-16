@@ -2,8 +2,10 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { Prisma, AccountPayableStatus } from '@prisma/client'
 import { requireRole } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
+import { logAudit } from '../lib/audit'
 
 // ============================================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -96,6 +98,8 @@ export async function accountsPayableRoutes(app: FastifyInstance) {
       const created = await prisma.accountPayable.create({
         data: parsed.data,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE_ACCOUNT_PAYABLE', entity: 'AccountPayable', entityId: created.id, request })
       return reply.code(201).send(created)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -290,6 +294,8 @@ export async function accountsPayableRoutes(app: FastifyInstance) {
           ...(body.data.notes ? { notes: body.data.notes } : {}),
         },
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'PAY_ACCOUNT_PAYABLE', entity: 'AccountPayable', entityId: paid.id, request })
       return reply.send(paid)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
@@ -326,6 +332,8 @@ export async function accountsPayableRoutes(app: FastifyInstance) {
         where: { id: parsed.data.id },
         data: { status: 'CANCELLED' },
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CANCEL_ACCOUNT_PAYABLE', entity: 'AccountPayable', entityId: cancelled.id, request })
       return reply.send(cancelled)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

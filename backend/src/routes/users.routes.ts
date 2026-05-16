@@ -3,7 +3,9 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { requireRole } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
+import { logAudit } from '../lib/audit'
 
 const roleEnum = z.enum(['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'])
 
@@ -93,6 +95,8 @@ export async function usersRoutes(app: FastifyInstance) {
         data: { email, name, role, passwordHash },
         select: SELECT_USER,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'CREATE_USER', entity: 'User', entityId: user.id, request })
       return reply.code(201).send(user)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -115,6 +119,8 @@ export async function usersRoutes(app: FastifyInstance) {
         data: parsed.data,
         select: SELECT_USER,
       })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'UPDATE_USER', entity: 'User', entityId: id, request })
       return reply.send(user)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
@@ -135,6 +141,8 @@ export async function usersRoutes(app: FastifyInstance) {
 
     try {
       await prisma.user.update({ where: { id }, data: { passwordHash } })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'RESET_PASSWORD', entity: 'User', entityId: id, request })
       return reply.send({ success: true })
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
@@ -151,6 +159,8 @@ export async function usersRoutes(app: FastifyInstance) {
 
     try {
       await prisma.user.update({ where: { id }, data: { isActive: false } })
+      const uid = (request.user as JwtPayload)?.sub ?? null
+      logAudit({ userId: uid, action: 'DEACTIVATE_USER', entity: 'User', entityId: id, request })
       return reply.code(204).send()
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

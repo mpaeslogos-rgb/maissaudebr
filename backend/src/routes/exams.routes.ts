@@ -4,7 +4,9 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import { requireRole } from '../plugins/auth'
+import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
+import { logAudit } from '../lib/audit'
 
 const ALLOWED_MIME = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
@@ -101,6 +103,8 @@ export async function examsRoutes(app: FastifyInstance) {
       },
     })
 
+    const uid = (request.user as JwtPayload)?.sub ?? null
+    logAudit({ userId: uid, action: 'CREATE_EXAM', entity: 'Exam', entityId: exam.id, request })
     return reply.code(201).send(exam)
   })
 
@@ -118,6 +122,8 @@ export async function examsRoutes(app: FastifyInstance) {
     }
 
     await prisma.exam.delete({ where: { id } })
+    const uid = (request.user as JwtPayload)?.sub ?? null
+    logAudit({ userId: uid, action: 'DELETE_EXAM', entity: 'Exam', entityId: id, request })
     return reply.code(204).send()
   })
 }
