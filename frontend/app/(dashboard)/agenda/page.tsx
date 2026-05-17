@@ -1319,7 +1319,7 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
+    <div className="space-y-4 flex flex-col" style={{ minHeight: 0 }}>
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
         <div>
@@ -1419,8 +1419,8 @@ export default function AgendaPage() {
 
       {/* Grade semanal */}
       {viewMode === 'week' && (
-        <div className="card flex-1 overflow-hidden p-0">
-          <div className="overflow-auto h-full">
+        <div className="card overflow-hidden p-0 min-h-[480px]">
+          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
             <div className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[800px]">
 
               {/* Cabeçalho dos dias */}
