@@ -1,12 +1,6 @@
-// app/(dashboard)/layout.tsx
-// Layout protegido — só renderiza se o usuário estiver autenticado
-// Por quê aqui e não em cada página?
-// Um único guard aqui protege TODAS as rotas do grupo (dashboard)
-// automaticamente: /dashboard, /pacientes, /agenda, etc.
-
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -20,18 +14,14 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // Só redireciona DEPOIS de terminar de verificar o localStorage
-    // (isLoading = false). Sem isso, haveria flash de redirect
-    // mesmo para usuários logados.
     if (!isLoading && !isAuthenticated) {
       router.push("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // ── Tela de carregamento inicial ───────────────────────────────────────────
-  // Exibida enquanto verifica token no localStorage
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream-100">
@@ -43,18 +33,16 @@ export default function DashboardLayout({
     );
   }
 
-  // ── Não autenticado — não renderiza nada (redirect em andamento) ───────────
   if (!isAuthenticated) {
     return null;
   }
 
-  // ── Autenticado — renderiza o layout normal ────────────────────────────────
   return (
-    <div className="flex h-screen bg-cream-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <div className="flex h-screen bg-cream-100 overflow-hidden">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

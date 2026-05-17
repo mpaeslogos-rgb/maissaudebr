@@ -340,8 +340,8 @@ export default function AdminUsuariosPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Usuário</th>
