@@ -1,4 +1,4 @@
-# v7 — WhatsApp webhook + real chat messages
+# v8 — full appointment booking tools in webhook AI
 FROM node:22-slim
 
 WORKDIR /app
