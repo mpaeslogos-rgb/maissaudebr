@@ -1,4 +1,4 @@
-# v9 — patient recognition + doctor names in webhook AI
+# v10 — aiPaused field + toggle-ai endpoint + pause button in chat UI
 FROM node:22-slim
 
 WORKDIR /app

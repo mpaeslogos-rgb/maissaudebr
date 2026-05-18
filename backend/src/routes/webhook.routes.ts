@@ -356,7 +356,7 @@ export async function webhookRoutes(app: FastifyInstance) {
     const phone = String(body.phone)
     const message = String(body.text.message)
 
-    await prisma.chat.upsert({
+    const chat = await prisma.chat.upsert({
       where: { phone },
       update: { lastMessageAt: new Date() },
       create: { phone, lastMessageAt: new Date() },
@@ -365,6 +365,6 @@ export async function webhookRoutes(app: FastifyInstance) {
     await prisma.chatLog.create({ data: { phone, message, isUser: true } })
 
     reply.send({ ok: true })
-    processWithAI(phone, message)
+    if (!chat.aiPaused) processWithAI(phone, message)
   })
 }

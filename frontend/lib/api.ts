@@ -340,6 +340,10 @@ export function getChatMessages(chatId: string): Promise<{ data: { id: string; r
   return apiGet(`/api/chats/${chatId}/messages`)
 }
 
+export function toggleChatAI(chatId: string): Promise<{ data: Chat }> {
+  return apiPost<{ data: Chat }>(`/api/chats/${chatId}/toggle-ai`, {})
+}
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
 export interface Contact {

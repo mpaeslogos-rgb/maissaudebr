@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, getContacts, sendWhatsAppMessage, getChatMessages } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -344,6 +344,18 @@ export default function ChatsPage() {
     }
   }
 
+  const handleToggleAI = async () => {
+    if (!activeChat) return
+    try {
+      const res = await toggleChatAI(activeChat.id)
+      const updated = res.data
+      setActiveChat(prev => prev ? { ...prev, aiPaused: updated.aiPaused } : null)
+      setChats(prev => prev.map(c => c.id === updated.id ? { ...c, aiPaused: updated.aiPaused } : c))
+    } catch (error) {
+      console.error('Erro ao alternar IA:', error)
+    }
+  }
+
   const handleTransfer = async (doctorId: string) => {
     if (!activeChat) return
     try {
@@ -445,18 +457,31 @@ export default function ChatsPage() {
                   {activeChat.patient ? activeChat.patient.fullName : 'Paciente não identificado'}
                 </p>
               </div>
-              <select
-                className="input text-sm max-w-[220px]"
-                onChange={e => e.target.value && handleTransfer(e.target.value)}
-                defaultValue=""
-              >
-                <option value="">Transferir para médico…</option>
-                {doctors.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {d.specialty} — {d.user?.name ?? d.crm}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleToggleAI}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeChat.aiPaused
+                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                  title={activeChat.aiPaused ? 'IA pausada — clique para reativar' : 'IA ativa — clique para pausar'}
+                >
+                  {activeChat.aiPaused ? '⏸ IA Pausada' : '▶ IA Ativa'}
+                </button>
+                <select
+                  className="input text-sm max-w-[220px]"
+                  onChange={e => e.target.value && handleTransfer(e.target.value)}
+                  defaultValue=""
+                >
+                  <option value="">Transferir para médico…</option>
+                  {doctors.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.specialty} — {d.user?.name ?? d.crm}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Mensagens */}

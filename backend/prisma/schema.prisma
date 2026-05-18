@@ -453,9 +453,10 @@ model ChatLog {
 model Chat {
   id          String      @id @default(cuid())
   phone       String      @unique
-  patientId   String?     // Link para paciente se identificado
-  status      ChatStatus  @default(ACTIVE) // ACTIVE, TRANSFERRED_TO_DOCTOR, CLOSED
-  transferredToDoctorId String? // ID do médico para quem foi transferido
+  patientId   String?
+  status      ChatStatus  @default(ACTIVE)
+  aiPaused    Boolean     @default(false)
+  transferredToDoctorId String?
   lastMessageAt DateTime  @default(now())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
