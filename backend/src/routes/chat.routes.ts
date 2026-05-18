@@ -100,6 +100,21 @@ export async function chatRoutes(app: FastifyInstance) {
     return { data: chat }
   })
 
+  // ----- PAUSAR / RETOMAR IA -----
+  app.post('/chats/:id/toggle-ai', async (request, reply) => {
+    const { id } = request.params as { id: string }
+
+    const chat = await prisma.chat.findUnique({ where: { id } })
+    if (!chat) return reply.code(404).send({ error: 'Chat não encontrado' })
+
+    const updated = await prisma.chat.update({
+      where: { id },
+      data: { aiPaused: !chat.aiPaused },
+    })
+
+    return { data: updated }
+  })
+
   // ----- FECHAR CHAT -----
   app.post('/chats/:id/close', async (request, reply) => {
     const { id } = request.params as { id: string }

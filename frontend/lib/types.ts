@@ -106,6 +106,7 @@ export interface Chat {
   phone: string
   patientId?: string
   status: ChatStatus
+  aiPaused: boolean
   transferredToDoctorId?: string
   lastMessageAt: string
   createdAt: string
