@@ -254,6 +254,8 @@ export default function ChatsPage() {
   useEffect(() => {
     loadChats()
     loadDoctors()
+    const interval = setInterval(loadChats, 10000)
+    return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
