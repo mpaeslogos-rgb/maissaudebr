@@ -336,6 +336,10 @@ export function transferChat(chatId: string, doctorId: string): Promise<{ data: 
   return apiPost<{ data: Chat }>(`/api/chats/${chatId}/transfer`, { doctorId })
 }
 
+export function getChatMessages(chatId: string): Promise<{ data: { id: string; role: 'user' | 'assistant'; content: string; timestamp: string }[] }> {
+  return apiGet(`/api/chats/${chatId}/messages`)
+}
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
 export interface Contact {
