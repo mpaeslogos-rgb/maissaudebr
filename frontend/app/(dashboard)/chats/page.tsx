@@ -402,7 +402,7 @@ export default function ChatsPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] bg-white rounded-xl border border-surface-border overflow-hidden">
+    <div className="flex h-full max-h-full bg-white rounded-xl border border-surface-border overflow-hidden">
       {/* ── Lista de chats ─────────────────────────────────────── */}
       <div className="w-72 border-r border-surface-border flex flex-col shrink-0">
         <div className="p-4 border-b border-surface-border flex items-center justify-between">
