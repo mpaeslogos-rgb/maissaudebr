@@ -482,12 +482,12 @@ export default function ChatsPage() {
                   disabled={isTogglingAI}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 ${
                     activeChat.aiPaused
-                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   }`}
-                  title={activeChat.aiPaused ? 'IA pausada — clique para reativar' : 'IA ativa — clique para pausar'}
+                  title={activeChat.aiPaused ? 'Clique para reativar a IA' : 'Clique para pausar a IA'}
                 >
-                  {isTogglingAI ? '…' : activeChat.aiPaused ? '⏸ IA Pausada' : '▶ IA Ativa'}
+                  {isTogglingAI ? '…' : activeChat.aiPaused ? '▶ Retomar IA' : '⏸ Pausar IA'}
                 </button>
                 {activeChat.status === 'TRANSFERRED_TO_DOCTOR' ? (
                   <button
