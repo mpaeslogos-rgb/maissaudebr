@@ -1,4 +1,4 @@
-# v6 — Z-API WhatsApp integration
+# v7 — WhatsApp webhook + real chat messages
 FROM node:22-slim
 
 WORKDIR /app
