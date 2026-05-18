@@ -1,4 +1,4 @@
-# v5 — add DELETE /patients/:id route
+# v6 — Z-API WhatsApp integration
 FROM node:22-slim
 
 WORKDIR /app
