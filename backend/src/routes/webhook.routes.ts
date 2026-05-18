@@ -273,7 +273,7 @@ async function callWithTools(messages: any[], phone: string, depth = 0): Promise
 
   if (choice.finish_reason === 'tool_calls' && msg.tool_calls?.length) {
     messages.push(msg)
-    for (const tc of msg.tool_calls) {
+    for (const tc of (msg.tool_calls as any[])) {
       const args = JSON.parse(tc.function.arguments || '{}')
       const result = await executeTool(tc.function.name, args, phone)
       messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) })

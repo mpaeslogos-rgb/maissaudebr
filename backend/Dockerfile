@@ -1,4 +1,4 @@
-# v10 — aiPaused field + toggle-ai endpoint + pause button in chat UI
+# v11 — fix TS2339 ChatCompletionMessageCustomToolCall
 FROM node:22-slim
 
 WORKDIR /app
