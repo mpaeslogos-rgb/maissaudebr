@@ -41,16 +41,21 @@ function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date) {
 
 async function findDoctorsBySpecialty(specialty: string) {
   const normalized = specialty.trim()
+  const select = {
+    id: true, specialty: true, crm: true, consultationFee: true, phone: true,
+    user: { select: { name: true } },
+  }
   let doctors = await prisma.doctor.findMany({
     where: { specialty: { contains: normalized } },
-    select: { id: true, specialty: true, crm: true, consultationFee: true },
+    select,
     orderBy: { specialty: 'asc' },
   })
   if (doctors.length > 0) return doctors
   const tokens = normalized.split(/\s+/).filter(t => t.length >= 4)
+  if (tokens.length === 0) return []
   return prisma.doctor.findMany({
     where: { OR: tokens.map(token => ({ specialty: { contains: token } })) },
-    select: { id: true, specialty: true, crm: true, consultationFee: true },
+    select,
     orderBy: { specialty: 'asc' },
   })
 }
@@ -64,7 +69,7 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
   if (requestedDate < today) return { status: 'error', code: 'PAST_DATE', message: 'Data no passado. Peça uma nova data.' }
 
   const doctors = await findDoctorsBySpecialty(params.specialty)
-  if (doctors.length === 0) return { status: 'success', code: 'NO_DOCTORS_FOUND', slots: [], message: 'Sem médicos para essa especialidade.' }
+  if (doctors.length === 0) return { status: 'success', code: 'NO_DOCTORS_FOUND', slots: [], message: 'Sem médicos cadastrados para essa especialidade.' }
 
   const doctorIds = doctors.map(d => d.id)
   const startOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), 0, 0, 0, 0)
@@ -93,7 +98,14 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
       const slotEnd = addMinutes(slotStart, 30)
       if (slotEnd > workEnd) break
       if (!docBlocked.some(a => rangesOverlap(slotStart, slotEnd, a.startTime, a.endTime))) {
-        rawSlots.push({ doctorId: doctor.id, specialty: doctor.specialty, time: formatHHMM(slotStart), isoStart: slotStart.toISOString() })
+        rawSlots.push({
+          doctorId: doctor.id,
+          doctorName: doctor.user?.name ?? `CRM ${doctor.crm}`,
+          specialty: doctor.specialty,
+          consultationFee: doctor.consultationFee,
+          time: formatHHMM(slotStart),
+          isoStart: slotStart.toISOString(),
+        })
       }
       slotStart = addMinutes(slotStart, 30)
     }
@@ -104,17 +116,42 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
   for (const slot of rawSlots) if (!unique.has(slot.time)) unique.set(slot.time, slot)
   const slots = Array.from(unique.values()).slice(0, 12)
 
-  return { status: 'success', code: slots.length > 0 ? 'SLOTS_FOUND' : 'NO_SLOTS_FOUND', date: params.date, specialty: params.specialty, slots, message: slots.length > 0 ? 'Horários disponíveis.' : 'Sem horários livres.' }
+  return {
+    status: 'success',
+    code: slots.length > 0 ? 'SLOTS_FOUND' : 'NO_SLOTS_FOUND',
+    date: params.date,
+    specialty: params.specialty,
+    slots,
+    message: slots.length > 0 ? 'Horários disponíveis.' : 'Sem horários livres para esta data.',
+  }
+}
+
+// ─── Busca paciente cadastrado ────────────────────────────────────────────────
+
+async function findPatientByPhone(phone: string) {
+  const digits = phone.replace(/\D/g, '')
+  const patient = await prisma.patient.findFirst({
+    where: { phone: { contains: digits } },
+    include: {
+      _count: { select: { appointments: true } },
+      appointments: {
+        orderBy: { startTime: 'desc' },
+        take: 1,
+        include: { doctor: { select: { specialty: true, user: { select: { name: true } } } } },
+      },
+    },
+  })
+  return patient
 }
 
 // ─── Tools ───────────────────────────────────────────────────────────────────
 
 const tools = [
-  { type: 'function', function: { name: 'verificar_agenda', description: 'Verifica horários disponíveis reais no sistema.', parameters: { type: 'object', properties: { date: { type: 'string', description: 'Data YYYY-MM-DD' }, specialty: { type: 'string' } }, required: ['date', 'specialty'] } } },
-  { type: 'function', function: { name: 'salvar_lead_pre_agendamento', description: 'Salva os dados do paciente. Retorna leadId obrigatório para criar pré-agendamento.', parameters: { type: 'object', properties: { name: { type: 'string' }, phone: { type: 'string' }, specialty: { type: 'string' } }, required: ['name', 'phone', 'specialty'] } } },
-  { type: 'function', function: { name: 'criar_pre_agendamento', description: 'Cria o pré-agendamento após o paciente escolher o horário.', parameters: { type: 'object', properties: { leadId: { type: 'string' }, doctorId: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }, specialty: { type: 'string' } }, required: ['leadId', 'doctorId', 'date', 'time', 'specialty'] } } },
-  { type: 'function', function: { name: 'registrar_intencao_atendimento', description: 'Registra a intenção da conversa.', parameters: { type: 'object', properties: { intent: { type: 'string', enum: ['agendamento', 'pagamento', 'urgencia', 'humano', 'duvida_telemedicina'] } }, required: ['intent'] } } },
-  { type: 'function', function: { name: 'buscar_paciente_por_telefone', description: 'Busca dados do paciente pelo telefone.', parameters: { type: 'object', properties: { phone: { type: 'string' } }, required: ['phone'] } } },
+  { type: 'function', function: { name: 'verificar_agenda', description: 'Verifica horários e médicos disponíveis no sistema para uma especialidade e data.', parameters: { type: 'object', properties: { date: { type: 'string', description: 'Data YYYY-MM-DD' }, specialty: { type: 'string', description: 'Especialidade médica' } }, required: ['date', 'specialty'] } } },
+  { type: 'function', function: { name: 'salvar_lead_pre_agendamento', description: 'Salva dados do paciente e retorna leadId obrigatório para criar pré-agendamento.', parameters: { type: 'object', properties: { name: { type: 'string' }, phone: { type: 'string' }, specialty: { type: 'string' } }, required: ['name', 'phone', 'specialty'] } } },
+  { type: 'function', function: { name: 'criar_pre_agendamento', description: 'Cria o pré-agendamento após paciente confirmar horário e médico.', parameters: { type: 'object', properties: { leadId: { type: 'string' }, doctorId: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }, specialty: { type: 'string' } }, required: ['leadId', 'doctorId', 'date', 'time', 'specialty'] } } },
+  { type: 'function', function: { name: 'registrar_intencao_atendimento', description: 'Registra a intenção principal da conversa.', parameters: { type: 'object', properties: { intent: { type: 'string', enum: ['agendamento', 'pagamento', 'urgencia', 'humano', 'duvida_telemedicina'] } }, required: ['intent'] } } },
+  { type: 'function', function: { name: 'buscar_especialidades_disponiveis', description: 'Lista todas as especialidades médicas disponíveis na clínica.', parameters: { type: 'object', properties: {} } } },
 ]
 
 // ─── Execução das ferramentas ─────────────────────────────────────────────────
@@ -126,16 +163,21 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
     }
 
     if (name === 'salvar_lead_pre_agendamento') {
-      const name_ = String(args.name || '').trim()
+      const leadName = String(args.name || '').trim()
       const leadPhone = String(args.phone || phone).trim()
       const specialty = String(args.specialty || '').trim()
+
+      // Se paciente já cadastrado, usa o nome do cadastro
+      const patient = await findPatientByPhone(leadPhone)
+      const finalName = patient?.fullName || leadName
+
       let lead = await prisma.lead.findFirst({ where: { phone: leadPhone }, orderBy: { createdAt: 'desc' } })
       if (lead) {
-        lead = await prisma.lead.update({ where: { id: lead.id }, data: { name: name_, specialty, status: 'PENDING_SCHEDULING' } })
+        lead = await prisma.lead.update({ where: { id: lead.id }, data: { name: finalName, specialty, status: 'PENDING_SCHEDULING' } })
       } else {
-        lead = await prisma.lead.create({ data: { name: name_, phone: leadPhone, specialty, status: 'PENDING_SCHEDULING' } })
+        lead = await prisma.lead.create({ data: { name: finalName, phone: leadPhone, specialty, status: 'PENDING_SCHEDULING' } })
       }
-      return { status: 'success', leadId: lead.id, message: 'Lead salvo. Use este leadId no pré-agendamento.' }
+      return { status: 'success', leadId: lead.id, message: `Lead salvo para ${finalName}. Use este leadId no pré-agendamento.` }
     }
 
     if (name === 'criar_pre_agendamento') {
@@ -143,10 +185,19 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
       if (!leadId || !doctorId || !date || !time) {
         return { status: 'error', message: 'Faltam dados: leadId, doctorId, date ou time.' }
       }
+      // Verifica se médico existe
+      const doctor = await prisma.doctor.findUnique({ where: { id: doctorId }, include: { user: { select: { name: true } } } })
+      if (!doctor) return { status: 'error', message: 'Médico não encontrado.' }
+
       const preAppt = await prisma.preAppointment.create({
-        data: { leadId, doctorId, date, time, specialty: specialty || '' }
+        data: { leadId, doctorId, date, time, specialty: specialty || doctor.specialty }
       })
-      return { status: 'success', preAppointmentId: preAppt.id, message: 'Pré-agendamento confirmado no sistema!' }
+      return {
+        status: 'success',
+        preAppointmentId: preAppt.id,
+        doctorName: doctor.user?.name ?? `CRM ${doctor.crm}`,
+        message: `Pré-agendamento confirmado com ${doctor.user?.name ?? doctor.crm} para ${date} às ${time}!`,
+      }
     }
 
     if (name === 'registrar_intencao_atendimento') {
@@ -154,14 +205,14 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
       return { status: 'success' }
     }
 
-    if (name === 'buscar_paciente_por_telefone') {
-      const digits = String(args.phone || '').replace(/\D/g, '')
-      const patient = await prisma.patient.findFirst({ where: { phone: { contains: digits } } })
-      if (patient) {
-        const count = await prisma.appointment.count({ where: { patientId: patient.id } })
-        return { status: 'success', patient: { id: patient.id, name: patient.fullName, cpf: patient.cpf, appointmentsCount: count } }
-      }
-      return { status: 'not_found', message: 'Paciente não encontrado.' }
+    if (name === 'buscar_especialidades_disponiveis') {
+      const doctors = await prisma.doctor.findMany({
+        where: { user: { isActive: true } },
+        select: { specialty: true, user: { select: { name: true } } },
+        orderBy: { specialty: 'asc' },
+      })
+      const especialidades = [...new Set(doctors.map(d => d.specialty))].filter(Boolean)
+      return { status: 'success', especialidades, total: especialidades.length }
     }
 
     return { status: 'error', message: `Ferramenta desconhecida: ${name}` }
@@ -172,13 +223,14 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(config: any) {
+function buildSystemPrompt(config: any, patientContext: string) {
   const today = getLocalDateISO()
   const clinicName = cleanValue(config?.clinicName, 'maissaudebr')
   return `Você é a atendente virtual oficial da clínica "${clinicName}", atendendo pelo WhatsApp.
 
 DATA DE REFERÊNCIA: ${today} (use para calcular "amanhã", "semana que vem", etc.)
 
+${patientContext ? `PACIENTE IDENTIFICADO:\n${patientContext}\n` : ''}
 DADOS DA CLÍNICA:
 - WhatsApp: ${cleanValue(config?.whatsappNumber)}
 - Pix: ${cleanValue(config?.pixKey)}
@@ -186,24 +238,26 @@ DADOS DA CLÍNICA:
 
 FLUXO OBRIGATÓRIO DE AGENDAMENTO:
 1. Paciente pede agendamento
-2. Colete: nome completo, especialidade e telefone
-3. Use IMEDIATAMENTE "salvar_lead_pre_agendamento" para gerar o leadId
-4. Use "verificar_agenda" para mostrar horários disponíveis
-5. Paciente escolhe o horário
-6. Use IMEDIATAMENTE "criar_pre_agendamento" com leadId, doctorId, date e time
-7. Confirme o agendamento e informe instruções de pagamento se houver
+2. Se já identificado, confirme o nome. Se não, colete nome completo, especialidade e telefone
+3. Use "salvar_lead_pre_agendamento" para gerar o leadId
+4. Use "verificar_agenda" para mostrar horários e médicos disponíveis (inclui nome do médico)
+5. Apresente os horários com nome do médico para o paciente escolher
+6. Use "criar_pre_agendamento" com leadId, doctorId, date e time
+7. Confirme com nome do médico, data e horário. Informe instruções de pagamento se houver
 
 REGRAS:
+- Se o paciente já está identificado, chame-o pelo primeiro nome desde a primeira mensagem
 - Nunca use "criar_pre_agendamento" sem ter o leadId
-- Não invente horários nem médicos — use apenas os retornados pela agenda
-- Seja breve e acolhedora
+- Use apenas médicos e horários retornados pela ferramenta — nunca invente
+- Use "buscar_especialidades_disponiveis" se o paciente não souber qual especialidade precisa
+- Seja breve, acolhedora e profissional
 - Para urgências, ofereça transferir para atendente humano`.trim()
 }
 
 // ─── IA com ferramentas (loop não-streaming) ──────────────────────────────────
 
 async function callWithTools(messages: any[], phone: string, depth = 0): Promise<string | null> {
-  if (depth > 5) return 'Desculpe, tive dificuldade em processar sua solicitação. Um atendente entrará em contato.'
+  if (depth > 5) return 'Desculpe, tive dificuldade em processar sua solicitação. Um atendente entrará em contato em breve.'
 
   const response = await openai.chat.completions.create({
     model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
@@ -232,8 +286,19 @@ async function callWithTools(messages: any[], phone: string, depth = 0): Promise
 
 async function processWithAI(phone: string, userMessage: string) {
   try {
+    // Identifica paciente pelo telefone antes de tudo
+    const patient = await findPatientByPhone(phone)
+    let patientContext = ''
+    if (patient) {
+      const lastAppt = patient.appointments[0]
+      patientContext = `Nome: ${patient.fullName} | CPF: ${patient.cpf} | ${patient._count.appointments} consulta(s) realizada(s)`
+      if (lastAppt) {
+        patientContext += ` | Última consulta: ${lastAppt.doctor?.specialty ?? ''} com ${lastAppt.doctor?.user?.name ?? ''}`
+      }
+    }
+
     const config = await prisma.config.findFirst()
-    const systemPrompt = buildSystemPrompt(config)
+    const systemPrompt = buildSystemPrompt(config, patientContext)
 
     const history = await prisma.chatLog.findMany({
       where: { phone, intent: null },
