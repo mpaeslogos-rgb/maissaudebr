@@ -101,12 +101,15 @@ export type DoctorListResponse = PaginatedResponse<Doctor>
 
 export type ChatStatus = 'ACTIVE' | 'TRANSFERRED_TO_DOCTOR' | 'CLOSED'
 
+export type SchedulingStatus = 'agendado' | 'em_andamento' | 'cancelado' | 'sem_agendamento'
+
 export interface Chat {
   id: string
   phone: string
   patientId?: string
   status: ChatStatus
   aiPaused: boolean
+  schedulingStatus: SchedulingStatus
   transferredToDoctorId?: string
   lastMessageAt: string
   createdAt: string

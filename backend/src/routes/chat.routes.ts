@@ -47,7 +47,48 @@ export async function chatRoutes(app: FastifyInstance) {
       prisma.chat.count({ where }),
     ])
 
-    return { data: chats, total, take, skip }
+    // Compute scheduling status for each chat in a single batch
+    const phones = chats.map(c => c.phone)
+    const [leads, preAppts] = phones.length > 0
+      ? await Promise.all([
+          prisma.lead.findMany({ where: { phone: { in: phones } }, select: { id: true, phone: true, status: true } }),
+          prisma.preAppointment.findMany({
+            where: { leadId: { in: await prisma.lead.findMany({ where: { phone: { in: phones } }, select: { id: true } }).then(ls => ls.map(l => l.id)) } },
+            select: { leadId: true, status: true },
+          }),
+        ])
+      : [[], []]
+
+    const leadsByPhone = new Map<string, typeof leads>()
+    for (const lead of leads) {
+      const list = leadsByPhone.get(lead.phone) ?? []
+      list.push(lead)
+      leadsByPhone.set(lead.phone, list)
+    }
+
+    type SchedulingStatus = 'agendado' | 'em_andamento' | 'cancelado' | 'sem_agendamento'
+
+    const data = chats.map(chat => {
+      const chatLeads = leadsByPhone.get(chat.phone) ?? []
+      let schedulingStatus: SchedulingStatus = 'sem_agendamento'
+
+      if (chatLeads.length > 0) {
+        const leadIds = new Set(chatLeads.map(l => l.id))
+        const chatPreAppts = preAppts.filter(p => leadIds.has(p.leadId))
+
+        if (chatPreAppts.some(p => p.status === 'CONFIRMED' || p.status === 'PENDING')) {
+          schedulingStatus = 'agendado'
+        } else if (chatPreAppts.some(p => p.status === 'CANCELLED')) {
+          schedulingStatus = 'cancelado'
+        } else {
+          schedulingStatus = 'em_andamento'
+        }
+      }
+
+      return { ...chat, schedulingStatus }
+    })
+
+    return { data, total, take, skip }
   })
 
   // ----- BUSCAR CHAT POR ID -----
