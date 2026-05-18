@@ -248,7 +248,6 @@ export default function ChatsPage() {
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showNewMessage, setShowNewMessage] = useState(false)
-  const [patientTypes, setPatientTypes] = useState<Record<string, string>>({})
   const [isTogglingAI, setIsTogglingAI] = useState(false)
   const [toggleError, setToggleError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -289,13 +288,6 @@ export default function ChatsPage() {
     try {
       const res = await getChats({ limit: 50 })
       setChats(res.data)
-
-      const types: Record<string, string> = {}
-      for (const chat of res.data) {
-        types[chat.id] = await getPatientType(chat)
-      }
-      setPatientTypes(types)
-
       setActiveChat(prev => {
         if (!prev) return res.data[0] ?? null
         return res.data.find(c => c.id === prev.id) ?? prev
@@ -384,19 +376,6 @@ export default function ChatsPage() {
     }
   }
 
-  const getPatientType = async (chat: Chat) => {
-    if (!chat.patientId) return 'novo'
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/appointments?patientId=${chat.patientId}&take=1`
-      )
-      const data = await response.json()
-      return data.data && data.data.length > 0 ? 'retorno' : 'antigo-convertido'
-    } catch {
-      return 'retorno'
-    }
-  }
-
   if (loading) {
     return <div className="flex justify-center items-center h-64 text-slate-500">Carregando chats…</div>
   }
@@ -435,17 +414,25 @@ export default function ChatsPage() {
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                    patientTypes[chat.id] === 'novo'
-                      ? 'bg-green-100 text-green-700'
-                      : patientTypes[chat.id] === 'retorno'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-purple-100 text-purple-700'
-                  }`}>
-                    {patientTypes[chat.id] ?? '…'}
-                  </span>
+                  {chat.schedulingStatus === 'agendado' && (
+                    <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-green-100 text-green-700">
+                      Agendado
+                    </span>
+                  )}
+                  {chat.schedulingStatus === 'em_andamento' && (
+                    <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-yellow-100 text-yellow-700">
+                      Em andamento
+                    </span>
+                  )}
+                  {chat.schedulingStatus === 'cancelado' && (
+                    <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-red-100 text-red-700">
+                      Desistiu
+                    </span>
+                  )}
                   {chat.status === 'TRANSFERRED_TO_DOCTOR' && (
-                    <span className="text-xs text-amber-600">Transferido</span>
+                    <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-amber-100 text-amber-700">
+                      Transferido
+                    </span>
                   )}
                 </div>
               </div>
