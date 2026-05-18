@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(xargs grep -l \"SECRETARY\\\\|JWT\\\\|jwtDecode\\\\|fastify-jwt\")",
+      "Bash(xargs grep -l \"declare module\\\\|FastifyJWT\\\\|SECRETARY\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")"
+    ]
+  }
+}
