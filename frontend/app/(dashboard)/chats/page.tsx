@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, getContacts, sendWhatsAppMessage } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, getContacts, sendWhatsAppMessage, getChatMessages } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -257,14 +257,25 @@ export default function ChatsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    if (activeChat) {
-      setMessages([
-        { role: 'assistant', content: 'Olá! Como posso ajudar?', timestamp: new Date() },
-        { role: 'user', content: 'Gostaria de agendar uma consulta.', timestamp: new Date() },
-      ])
+  const loadMessages = useCallback(async (chat: Chat) => {
+    try {
+      const res = await getChatMessages(chat.id)
+      setMessages(res.data.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.timestamp),
+      })))
+    } catch {
+      setMessages([])
     }
-  }, [activeChat])
+  }, [])
+
+  useEffect(() => {
+    if (!activeChat) return
+    loadMessages(activeChat)
+    const interval = setInterval(() => loadMessages(activeChat), 5000)
+    return () => clearInterval(interval)
+  }, [activeChat, loadMessages])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

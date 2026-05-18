@@ -111,4 +111,27 @@ export async function chatRoutes(app: FastifyInstance) {
 
     return { data: chat }
   })
+
+  // ----- MENSAGENS DO CHAT -----
+  app.get('/chats/:id/messages', async (request, reply) => {
+    const { id } = request.params as { id: string }
+
+    const chat = await prisma.chat.findUnique({ where: { id } })
+    if (!chat) return reply.code(404).send({ error: 'Chat não encontrado' })
+
+    const messages = await prisma.chatLog.findMany({
+      where: { phone: chat.phone },
+      orderBy: { createdAt: 'asc' },
+      take: 100,
+    })
+
+    return {
+      data: messages.map(m => ({
+        id: m.id,
+        role: m.isUser ? 'user' : 'assistant',
+        content: m.message,
+        timestamp: m.createdAt,
+      })),
+    }
+  })
 }

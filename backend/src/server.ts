@@ -19,6 +19,7 @@ import { ocrRoutes } from './routes/ocr.routes'
 import { chatRoutes } from './routes/chat.routes'
 import { chatRoutes as aiChatRoutes } from './routes/chat'
 import { whatsappRoutes } from './routes/whatsapp.routes'
+import { webhookRoutes } from './routes/webhook.routes'
 import { configRoutes } from './routes/config'
 import { boletosOcrRoutes } from './routes/boletos-ocr.routes'
 import { startReminderJobs } from './jobs/reminder.job'
@@ -75,6 +76,7 @@ async function bootstrap() {
   await app.register(chatRoutes, { prefix: '/api' })
   await app.register(aiChatRoutes, { prefix: '/api' })
   await app.register(whatsappRoutes, { prefix: '/api/whatsapp' })
+  await app.register(webhookRoutes, { prefix: '/api/whatsapp' })
   await app.register(configRoutes)
   await app.register(notificationsRoutes, { prefix: '/api/notifications' })
   await app.register(examsRoutes, { prefix: '/api' })
