@@ -156,6 +156,18 @@ export async function chatRoutes(app: FastifyInstance) {
     return { data: updated }
   })
 
+  // ----- RETORNAR CHAT (desfazer transferência) -----
+  app.post('/chats/:id/return', async (request, reply) => {
+    const { id } = request.params as { id: string }
+
+    const chat = await prisma.chat.update({
+      where: { id },
+      data: { status: 'ACTIVE', transferredToDoctorId: null },
+    })
+
+    return { data: chat }
+  })
+
   // ----- FECHAR CHAT -----
   app.post('/chats/:id/close', async (request, reply) => {
     const { id } = request.params as { id: string }

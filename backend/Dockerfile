@@ -1,4 +1,4 @@
-# v11 — fix TS2339 ChatCompletionMessageCustomToolCall
+# v12 — scheduling status badges + return (un-transfer) chat endpoint
 FROM node:22-slim
 
 WORKDIR /app
