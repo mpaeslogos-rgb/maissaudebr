@@ -249,6 +249,8 @@ export default function ChatsPage() {
   const [loading, setLoading] = useState(true)
   const [showNewMessage, setShowNewMessage] = useState(false)
   const [patientTypes, setPatientTypes] = useState<Record<string, string>>({})
+  const [isTogglingAI, setIsTogglingAI] = useState(false)
+  const [toggleError, setToggleError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -294,9 +296,10 @@ export default function ChatsPage() {
       }
       setPatientTypes(types)
 
-      if (res.data.length > 0 && !activeChat) {
-        setActiveChat(res.data[0])
-      }
+      setActiveChat(prev => {
+        if (!prev) return res.data[0] ?? null
+        return res.data.find(c => c.id === prev.id) ?? prev
+      })
     } catch (error) {
       console.error('Erro ao carregar chats:', error)
     } finally {
@@ -345,14 +348,20 @@ export default function ChatsPage() {
   }
 
   const handleToggleAI = async () => {
-    if (!activeChat) return
+    if (!activeChat || isTogglingAI) return
+    setIsTogglingAI(true)
+    setToggleError('')
     try {
       const res = await toggleChatAI(activeChat.id)
       const updated = res.data
       setActiveChat(prev => prev ? { ...prev, aiPaused: updated.aiPaused } : null)
       setChats(prev => prev.map(c => c.id === updated.id ? { ...c, aiPaused: updated.aiPaused } : c))
-    } catch (error) {
-      console.error('Erro ao alternar IA:', error)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao alternar IA'
+      setToggleError(msg)
+      setTimeout(() => setToggleError(''), 4000)
+    } finally {
+      setIsTogglingAI(false)
     }
   }
 
@@ -457,17 +466,22 @@ export default function ChatsPage() {
                   {activeChat.patient ? activeChat.patient.fullName : 'Paciente não identificado'}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-1">
+                {toggleError && (
+                  <span className="text-xs text-red-600">{toggleError}</span>
+                )}
+                <div className="flex items-center gap-2">
                 <button
                   onClick={handleToggleAI}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  disabled={isTogglingAI}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 ${
                     activeChat.aiPaused
                       ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                       : 'bg-green-100 text-green-700 hover:bg-green-200'
                   }`}
                   title={activeChat.aiPaused ? 'IA pausada — clique para reativar' : 'IA ativa — clique para pausar'}
                 >
-                  {activeChat.aiPaused ? '⏸ IA Pausada' : '▶ IA Ativa'}
+                  {isTogglingAI ? '…' : activeChat.aiPaused ? '⏸ IA Pausada' : '▶ IA Ativa'}
                 </button>
                 <select
                   className="input text-sm max-w-[220px]"
@@ -481,6 +495,7 @@ export default function ChatsPage() {
                     </option>
                   ))}
                 </select>
+                </div>
               </div>
             </div>
 
