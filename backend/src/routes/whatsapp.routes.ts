@@ -12,20 +12,20 @@ const sendSchema = z.object({
 export async function whatsappRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
-  // POST /api/whatsapp/send — envia mensagem via Evolution API
+  // POST /api/whatsapp/send — envia mensagem via Z-API
   app.post('/send', async (request, reply) => {
     const parsed = sendSchema.safeParse(request.body)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
     const { to, message } = parsed.data
 
-    const EVOLUTION_URL = process.env.EVOLUTION_API_URL?.replace(/\/$/, '')
-    const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY
-    const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE
+    const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID
+    const ZAPI_TOKEN = process.env.ZAPI_TOKEN
+    const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN
 
-    if (!EVOLUTION_URL || !EVOLUTION_KEY || !EVOLUTION_INSTANCE) {
+    if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) {
       return reply.code(503).send({
-        error: 'WhatsApp não configurado. Adicione EVOLUTION_API_URL, EVOLUTION_API_KEY e EVOLUTION_INSTANCE nas variáveis de ambiente do Railway.',
+        error: 'WhatsApp não configurado. Adicione ZAPI_INSTANCE_ID, ZAPI_TOKEN e ZAPI_CLIENT_TOKEN nas variáveis de ambiente do Railway.',
       })
     }
 
@@ -35,9 +35,9 @@ export async function whatsappRoutes(app: FastifyInstance) {
 
     try {
       const { data } = await axios.post(
-        `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,
-        { number: phone, text: message },
-        { headers: { apikey: EVOLUTION_KEY, 'Content-Type': 'application/json' } }
+        `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
+        { phone, message },
+        { headers: { 'Client-Token': ZAPI_CLIENT_TOKEN, 'Content-Type': 'application/json' } }
       )
       return reply.send({ success: true, data })
     } catch (err: unknown) {
