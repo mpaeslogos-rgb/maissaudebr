@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -376,6 +376,25 @@ export default function ChatsPage() {
     }
   }
 
+  const handleReturn = async () => {
+    if (!activeChat) return
+    try {
+      await returnChat(activeChat.id)
+      setChats(prev =>
+        prev.map(c =>
+          c.id === activeChat.id
+            ? { ...c, status: 'ACTIVE' as const, transferredToDoctorId: undefined }
+            : c
+        )
+      )
+      setActiveChat(prev =>
+        prev ? { ...prev, status: 'ACTIVE' as const, transferredToDoctorId: undefined } : null
+      )
+    } catch (error) {
+      console.error('Erro ao retornar chat:', error)
+    }
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center h-64 text-slate-500">Carregando chats…</div>
   }
@@ -470,18 +489,27 @@ export default function ChatsPage() {
                 >
                   {isTogglingAI ? '…' : activeChat.aiPaused ? '⏸ IA Pausada' : '▶ IA Ativa'}
                 </button>
-                <select
-                  className="input text-sm max-w-[220px]"
-                  onChange={e => e.target.value && handleTransfer(e.target.value)}
-                  defaultValue=""
-                >
-                  <option value="">Transferir para médico…</option>
-                  {doctors.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.specialty} — {d.user?.name ?? d.crm}
-                    </option>
-                  ))}
-                </select>
+                {activeChat.status === 'TRANSFERRED_TO_DOCTOR' ? (
+                  <button
+                    onClick={handleReturn}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                  >
+                    ↩ Retornar chat
+                  </button>
+                ) : (
+                  <select
+                    className="input text-sm max-w-[220px]"
+                    onChange={e => e.target.value && handleTransfer(e.target.value)}
+                    defaultValue=""
+                  >
+                    <option value="">Transferir para médico…</option>
+                    {doctors.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.specialty} — {d.user?.name ?? d.crm}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 </div>
               </div>
             </div>

@@ -344,6 +344,10 @@ export function toggleChatAI(chatId: string): Promise<{ data: Chat }> {
   return apiPost<{ data: Chat }>(`/api/chats/${chatId}/toggle-ai`, {})
 }
 
+export function returnChat(chatId: string): Promise<{ data: Chat }> {
+  return apiPost<{ data: Chat }>(`/api/chats/${chatId}/return`, {})
+}
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
 export interface Contact {
