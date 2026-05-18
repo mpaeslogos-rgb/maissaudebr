@@ -20,12 +20,33 @@ function formatDate(iso: string) {
 
 function calcAge(birthDate: string) {
   if (!birthDate) return '—'
+  const raw = birthDate.split('T')[0]
+  const [by, bm, bd] = raw.split('-').map(Number)
   const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return `${age} anos`
+  const ty = today.getFullYear()
+  const tm = today.getMonth() + 1
+  const td = today.getDate()
+
+  let years = ty - by
+  let months = tm - bm
+  let days = td - bd
+
+  if (days < 0) {
+    months--
+    const prevMonth = new Date(ty, tm - 1, 0) // último dia do mês anterior
+    days += prevMonth.getDate()
+  }
+  if (months < 0) {
+    years--
+    months += 12
+  }
+
+  const parts: string[] = []
+  if (years > 0)  parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`)
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`)
+  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`)
+
+  return parts.join(', ')
 }
 
 function genderLabel(g: Gender) {
