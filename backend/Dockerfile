@@ -1,4 +1,4 @@
-# v16 — fix: timezone UTC-3 para slots e agendamentos WhatsApp
+# v17 — fix: agenda usa dados do paciente atendido, não do contato WhatsApp
 FROM node:22-slim
 
 WORKDIR /app
