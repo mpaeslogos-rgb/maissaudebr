@@ -1,4 +1,4 @@
-# v13 — fix: WhatsApp AI scheduling (leadId context + slot blocking)
+# v14 — feat: WhatsApp AI creates real Appointment in agenda
 FROM node:22-slim
 
 WORKDIR /app
