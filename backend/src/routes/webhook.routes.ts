@@ -75,16 +75,10 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
   const startOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), 0, 0, 0, 0)
   const endOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate() + 1, 0, 0, 0, 0)
 
-  const [appointments, preAppointments] = await Promise.all([
-    prisma.appointment.findMany({
-      where: { doctorId: { in: doctorIds }, startTime: { gte: startOfDay, lt: endOfDay } },
-      select: { doctorId: true, startTime: true, endTime: true, status: true },
-    }),
-    prisma.preAppointment.findMany({
-      where: { doctorId: { in: doctorIds }, date: params.date, status: { not: 'CANCELLED' } },
-      select: { doctorId: true, time: true },
-    }),
-  ])
+  const appointments = await prisma.appointment.findMany({
+    where: { doctorId: { in: doctorIds }, startTime: { gte: startOfDay, lt: endOfDay } },
+    select: { doctorId: true, startTime: true, endTime: true, status: true },
+  })
 
   const blocked = new Map<string, { startTime: Date; endTime: Date }[]>()
   for (const app of appointments) {
@@ -93,15 +87,6 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
     const list = blocked.get(app.doctorId) ?? []
     list.push({ startTime: app.startTime, endTime: app.endTime })
     blocked.set(app.doctorId, list)
-  }
-  // Pré-agendamentos WhatsApp também bloqueiam o slot
-  for (const pre of preAppointments) {
-    const [hh, mm] = pre.time.split(':').map(Number)
-    const slotStart = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), hh, mm, 0, 0)
-    const slotEnd = addMinutes(slotStart, 30)
-    const list = blocked.get(pre.doctorId) ?? []
-    list.push({ startTime: slotStart, endTime: slotEnd })
-    blocked.set(pre.doctorId, list)
   }
 
   const rawSlots: any[] = []
