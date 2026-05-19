@@ -100,10 +100,10 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
     if (!patient) return EMPTY_FORM
     return {
       fullName: patient.fullName,
-      cpf: patient.cpf,
+      cpf: patient.cpf ?? '',
       // birthDate vem como "1990-05-20T00:00:00.000Z", pegamos só a data
-      birthDate: patient.birthDate.split('T')[0],
-      gender: patient.gender,
+      birthDate: patient.birthDate ? patient.birthDate.split('T')[0] : '',
+      gender: patient.gender ?? 'MALE',
       phone: patient.phone,
       email: patient.email ?? '',
       address: patient.address ?? '',

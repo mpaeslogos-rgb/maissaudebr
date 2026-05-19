@@ -200,18 +200,53 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
       if (!leadId || !doctorId || !date || !time) {
         return { status: 'error', message: 'Faltam dados: leadId, doctorId, date ou time.' }
       }
-      // Verifica se médico existe
+
       const doctor = await prisma.doctor.findUnique({ where: { id: doctorId }, include: { user: { select: { name: true } } } })
       if (!doctor) return { status: 'error', message: 'Médico não encontrado.' }
 
+      const lead = await prisma.lead.findUnique({ where: { id: leadId } })
+      if (!lead) return { status: 'error', message: 'Lead não encontrado.' }
+
+      // Cria pré-agendamento (registro de rastreamento)
       const preAppt = await prisma.preAppointment.create({
         data: { leadId, doctorId, date, time, specialty: specialty || doctor.specialty }
       })
+
+      // Busca ou cria paciente pelo telefone para criar Appointment real na agenda
+      const digits = lead.phone.replace(/\D/g, '')
+      let patient = await prisma.patient.findFirst({ where: { phone: { contains: digits } } })
+      if (!patient) {
+        patient = await prisma.patient.create({
+          data: { fullName: lead.name, phone: lead.phone }
+        })
+      }
+
+      // Calcula startTime e endTime (30 min de duração)
+      const [hh, mm] = time.split(':').map(Number)
+      const [year, month, day] = date.split('-').map(Number)
+      const startTime = new Date(year, month - 1, day, hh, mm, 0, 0)
+      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000)
+
+      await prisma.appointment.create({
+        data: {
+          patientId: patient.id,
+          doctorId,
+          startTime,
+          endTime,
+          status: 'SCHEDULED',
+          reason: `Agendado via WhatsApp — ${specialty || doctor.specialty}`,
+        }
+      })
+
+      // Atualiza status do lead para agendado
+      await prisma.lead.update({ where: { id: leadId }, data: { status: 'SCHEDULED' } })
+
+      const doctorName = doctor.user?.name ?? `CRM ${doctor.crm}`
       return {
         status: 'success',
         preAppointmentId: preAppt.id,
-        doctorName: doctor.user?.name ?? `CRM ${doctor.crm}`,
-        message: `Pré-agendamento confirmado com ${doctor.user?.name ?? doctor.crm} para ${date} às ${time}!`,
+        doctorName,
+        message: `Consulta agendada com ${doctorName} para ${date} às ${time}! O horário está confirmado na agenda da clínica.`,
       }
     }
 
