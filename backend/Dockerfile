@@ -1,4 +1,4 @@
-# v12 — scheduling status badges + return (un-transfer) chat endpoint
+# v13 — fix: WhatsApp AI scheduling (leadId context + slot blocking)
 FROM node:22-slim
 
 WORKDIR /app
