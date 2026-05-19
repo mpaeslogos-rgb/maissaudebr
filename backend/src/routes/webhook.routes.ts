@@ -165,8 +165,8 @@ async function findPatientByPhone(phone: string) {
 
 const tools = [
   { type: 'function', function: { name: 'verificar_agenda', description: 'Verifica horários e médicos disponíveis no sistema para uma especialidade e data.', parameters: { type: 'object', properties: { date: { type: 'string', description: 'Data YYYY-MM-DD' }, specialty: { type: 'string', description: 'Especialidade médica' } }, required: ['date', 'specialty'] } } },
-  { type: 'function', function: { name: 'salvar_lead_pre_agendamento', description: 'Salva dados do paciente e retorna leadId obrigatório para criar pré-agendamento.', parameters: { type: 'object', properties: { name: { type: 'string' }, phone: { type: 'string' }, specialty: { type: 'string' } }, required: ['name', 'phone', 'specialty'] } } },
-  { type: 'function', function: { name: 'criar_pre_agendamento', description: 'Cria o pré-agendamento após paciente confirmar horário e médico.', parameters: { type: 'object', properties: { leadId: { type: 'string' }, doctorId: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }, specialty: { type: 'string' } }, required: ['leadId', 'doctorId', 'date', 'time', 'specialty'] } } },
+  { type: 'function', function: { name: 'salvar_lead_pre_agendamento', description: 'Salva dados do PACIENTE QUE SERÁ ATENDIDO (não o contato do WhatsApp) e retorna leadId obrigatório para criar agendamento.', parameters: { type: 'object', properties: { name: { type: 'string', description: 'Nome completo do paciente que será atendido' }, phone: { type: 'string', description: 'Telefone do WhatsApp para rastreamento do chat' }, specialty: { type: 'string' }, patientPhone: { type: 'string', description: 'Telefone do paciente que será atendido, se diferente do contato WhatsApp' } }, required: ['name', 'phone', 'specialty'] } } },
+  { type: 'function', function: { name: 'criar_pre_agendamento', description: 'Cria o agendamento na agenda após paciente confirmar horário e médico.', parameters: { type: 'object', properties: { leadId: { type: 'string' }, doctorId: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }, specialty: { type: 'string' }, patientName: { type: 'string', description: 'Nome completo do paciente que será atendido' }, patientPhone: { type: 'string', description: 'Telefone do paciente que será atendido' } }, required: ['leadId', 'doctorId', 'date', 'time', 'specialty', 'patientName'] } } },
   { type: 'function', function: { name: 'registrar_intencao_atendimento', description: 'Registra a intenção principal da conversa.', parameters: { type: 'object', properties: { intent: { type: 'string', enum: ['agendamento', 'pagamento', 'urgencia', 'humano', 'duvida_telemedicina'] } }, required: ['intent'] } } },
   { type: 'function', function: { name: 'buscar_especialidades_disponiveis', description: 'Lista todas as especialidades médicas disponíveis na clínica.', parameters: { type: 'object', properties: {} } } },
 ]
@@ -214,12 +214,37 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
         data: { leadId, doctorId, date, time, specialty: specialty || doctor.specialty }
       })
 
-      // Busca ou cria paciente pelo telefone para criar Appointment real na agenda
-      const digits = lead.phone.replace(/\D/g, '')
-      let patient = await prisma.patient.findFirst({ where: { phone: { contains: digits } } })
+      // Busca paciente pelo nome ou telefone do paciente atendido (não o contato WhatsApp)
+      const patientName = String(args.patientName || lead.name).trim()
+      const patientPhone = String(args.patientPhone || '').trim()
+
+      let patient = null
+
+      // 1. Busca por telefone do paciente (se informado e diferente do contato)
+      if (patientPhone) {
+        const patDigits = patientPhone.replace(/\D/g, '')
+        patient = await prisma.patient.findFirst({ where: { phone: { contains: patDigits } } })
+      }
+
+      // 2. Busca por nome exato no cadastro
       if (!patient) {
+        patient = await prisma.patient.findFirst({
+          where: { fullName: { equals: patientName, mode: 'insensitive' } },
+        })
+      }
+
+      // 3. Busca parcial por nome (ex: "Eduardo" encontra "Eduardo Paes")
+      if (!patient) {
+        patient = await prisma.patient.findFirst({
+          where: { fullName: { contains: patientName, mode: 'insensitive' } },
+        })
+      }
+
+      // 4. Cria novo cadastro de paciente se não encontrado
+      if (!patient) {
+        const phoneForPatient = patientPhone || lead.phone
         patient = await prisma.patient.create({
-          data: { fullName: lead.name, phone: lead.phone }
+          data: { fullName: patientName, phone: phoneForPatient }
         })
       }
 
@@ -286,19 +311,20 @@ ${patientContext ? `PACIENTE IDENTIFICADO:\n${patientContext}\n` : ''}${leadCont
 - Valor padrão consulta: ${cleanValue(config?.defaultConsultationFee)}
 
 FLUXO OBRIGATÓRIO DE AGENDAMENTO:
-1. Paciente pede agendamento
-2. Se já identificado, confirme o nome. Se não, colete nome completo, especialidade e telefone
-3. Use "salvar_lead_pre_agendamento" para gerar o leadId (ou use o leadId já fornecido acima)
-4. Use "verificar_agenda" para mostrar horários e médicos disponíveis (inclui nome do médico e doctorId)
-5. Apresente os horários com nome do médico para o paciente escolher
-6. Use "criar_pre_agendamento" com leadId, doctorId, date e time
-7. Confirme com nome do médico, data e horário. Informe instruções de pagamento se houver
+1. Sempre pergunte: "Para quem é a consulta?" — o contato do WhatsApp pode ser um familiar, secretária ou o próprio paciente
+2. Colete o nome completo do paciente que SERÁ ATENDIDO e a especialidade desejada
+3. Se o telefone do paciente for diferente do contato WhatsApp, peça o telefone dele
+4. Use "salvar_lead_pre_agendamento" com o nome do PACIENTE (não do contato) — ou use o leadId já fornecido acima
+5. Use "verificar_agenda" para mostrar horários e médicos disponíveis
+6. Apresente os horários com nome do médico para escolha
+7. Use "criar_pre_agendamento" passando leadId, doctorId, date, time e obrigatoriamente patientName (nome do paciente) e patientPhone (se disponível)
+8. Confirme com nome do médico, data e horário. Informe instruções de pagamento se houver
 
 REGRAS:
+- NUNCA assuma que o contato WhatsApp é o paciente — sempre pergunte quem será atendido
 - Se leadId já está fornecido em LEAD ATIVO acima, use-o diretamente — não chame salvar_lead_pre_agendamento novamente
-- Se o paciente já está identificado, chame-o pelo primeiro nome desde a primeira mensagem
-- Nunca use "criar_pre_agendamento" sem ter o leadId e o doctorId
-- Para obter o doctorId, sempre use verificar_agenda e pegue o doctorId do slot escolhido pelo paciente
+- Nunca use "criar_pre_agendamento" sem patientName
+- Para obter o doctorId, sempre use verificar_agenda e pegue o doctorId do slot escolhido
 - Use apenas médicos e horários retornados pela ferramenta — nunca invente
 - Use "buscar_especialidades_disponiveis" se o paciente não souber qual especialidade precisa
 - Seja breve, acolhedora e profissional
