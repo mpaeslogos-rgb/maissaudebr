@@ -502,9 +502,9 @@ export default function PacientesPage() {
                       <tr key={p.id} className="hover:bg-cream-100 transition-colors">
                         <td className="py-3 font-medium text-slate-800">{p.fullName}</td>
                         <td className="py-3 text-slate-600">{p.cpf}</td>
-                        <td className="py-3 text-slate-600">{formatDate(p.birthDate)}</td>
-                        <td className="py-3 text-slate-600">{calcAge(p.birthDate)}</td>
-                        <td className="py-3 text-slate-600">{genderLabel(p.gender)}</td>
+                        <td className="py-3 text-slate-600">{p.birthDate ? formatDate(p.birthDate) : '—'}</td>
+                        <td className="py-3 text-slate-600">{p.birthDate ? calcAge(p.birthDate) : '—'}</td>
+                        <td className="py-3 text-slate-600">{p.gender ? genderLabel(p.gender) : '—'}</td>
                         <td className="py-3 text-slate-600">{p.phone}</td>
                         <td className="py-3 text-slate-600">{p.email ?? '—'}</td>
                         <td className="py-3">
