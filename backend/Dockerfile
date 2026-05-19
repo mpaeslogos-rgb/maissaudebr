@@ -1,4 +1,4 @@
-# v14 — feat: WhatsApp AI creates real Appointment in agenda
+# v15 — fix: remove false slot blocking from PreAppointments
 FROM node:22-slim
 
 WORKDIR /app
