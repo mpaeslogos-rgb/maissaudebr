@@ -223,15 +223,14 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(config: any, patientContext: string) {
+function buildSystemPrompt(config: any, patientContext: string, leadContext: string) {
   const today = getLocalDateISO()
   const clinicName = cleanValue(config?.clinicName, 'maissaudebr')
   return `Você é a atendente virtual oficial da clínica "${clinicName}", atendendo pelo WhatsApp.
 
 DATA DE REFERÊNCIA: ${today} (use para calcular "amanhã", "semana que vem", etc.)
 
-${patientContext ? `PACIENTE IDENTIFICADO:\n${patientContext}\n` : ''}
-DADOS DA CLÍNICA:
+${patientContext ? `PACIENTE IDENTIFICADO:\n${patientContext}\n` : ''}${leadContext ? `${leadContext}\n` : ''}DADOS DA CLÍNICA:
 - WhatsApp: ${cleanValue(config?.whatsappNumber)}
 - Pix: ${cleanValue(config?.pixKey)}
 - Valor padrão consulta: ${cleanValue(config?.defaultConsultationFee)}
@@ -239,15 +238,17 @@ DADOS DA CLÍNICA:
 FLUXO OBRIGATÓRIO DE AGENDAMENTO:
 1. Paciente pede agendamento
 2. Se já identificado, confirme o nome. Se não, colete nome completo, especialidade e telefone
-3. Use "salvar_lead_pre_agendamento" para gerar o leadId
-4. Use "verificar_agenda" para mostrar horários e médicos disponíveis (inclui nome do médico)
+3. Use "salvar_lead_pre_agendamento" para gerar o leadId (ou use o leadId já fornecido acima)
+4. Use "verificar_agenda" para mostrar horários e médicos disponíveis (inclui nome do médico e doctorId)
 5. Apresente os horários com nome do médico para o paciente escolher
 6. Use "criar_pre_agendamento" com leadId, doctorId, date e time
 7. Confirme com nome do médico, data e horário. Informe instruções de pagamento se houver
 
 REGRAS:
+- Se leadId já está fornecido em LEAD ATIVO acima, use-o diretamente — não chame salvar_lead_pre_agendamento novamente
 - Se o paciente já está identificado, chame-o pelo primeiro nome desde a primeira mensagem
-- Nunca use "criar_pre_agendamento" sem ter o leadId
+- Nunca use "criar_pre_agendamento" sem ter o leadId e o doctorId
+- Para obter o doctorId, sempre use verificar_agenda e pegue o doctorId do slot escolhido pelo paciente
 - Use apenas médicos e horários retornados pela ferramenta — nunca invente
 - Use "buscar_especialidades_disponiveis" se o paciente não souber qual especialidade precisa
 - Seja breve, acolhedora e profissional
@@ -297,9 +298,19 @@ async function processWithAI(phone: string, userMessage: string) {
       }
     }
 
-    const config = await prisma.config.findFirst()
-    const systemPrompt = buildSystemPrompt(config, patientContext)
+    // Busca lead ativo para este telefone — fornece leadId ao AI sem precisar re-chamar salvar_lead
+    const existingLead = await prisma.lead.findFirst({
+      where: { phone },
+      orderBy: { createdAt: 'desc' },
+    })
+    const leadContext = existingLead
+      ? `LEAD ATIVO: leadId=${existingLead.id} | nome=${existingLead.name} | especialidade=${existingLead.specialty || 'não informada'} | status=${existingLead.status}`
+      : ''
 
+    const config = await prisma.config.findFirst()
+    const systemPrompt = buildSystemPrompt(config, patientContext, leadContext)
+
+    // Busca histórico — a mensagem atual já foi salva antes desta chamada, está no histórico
     const history = await prisma.chatLog.findMany({
       where: { phone, intent: null },
       orderBy: { createdAt: 'desc' },
@@ -312,7 +323,6 @@ async function processWithAI(phone: string, userMessage: string) {
         role: log.isUser ? 'user' : 'assistant',
         content: log.message,
       })),
-      { role: 'user', content: userMessage },
     ]
 
     const aiResponse = await callWithTools(messages, phone)
