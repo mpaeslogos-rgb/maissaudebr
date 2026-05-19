@@ -60,9 +60,9 @@ export type Gender = 'MALE' | 'FEMALE' | 'OTHER'
 export interface Patient {
   id: string
   fullName: string
-  cpf: string
-  birthDate: string
-  gender: Gender
+  cpf?: string
+  birthDate?: string
+  gender?: Gender
   phone: string
   email?: string
   address?: string
@@ -149,7 +149,7 @@ export interface Appointment {
   patient: {
     id: string
     fullName: string
-    cpf: string
+    cpf?: string
     phone: string
     email?: string
   }

@@ -162,10 +162,10 @@ model Patient {
   id          String    @id @default(cuid())
   userId      String?   @unique // Opcional: paciente pode não ter login
   fullName    String
-  cpf         String    @unique
+  cpf         String?   @unique  // Opcional para pacientes criados via WhatsApp
   rg          String?
-  birthDate   DateTime
-  gender      Gender
+  birthDate   DateTime?          // Opcional para pacientes criados via WhatsApp
+  gender      Gender?            // Opcional para pacientes criados via WhatsApp
   email       String?
   phone       String
   

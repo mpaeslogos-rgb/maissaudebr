@@ -592,7 +592,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
       crm:         `${apt.doctor.crm}-${apt.doctor.crmState}`,
       specialty:   apt.doctor.specialty,
       patName:     apt.patient.fullName,
-      patCpf:      apt.patient.cpf,
+      patCpf:      apt.patient.cpf ?? 'Não cadastrado',
       prescription: form.prescription || '(Prescrição não informada)',
       dateStr:     new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
       logoUrl:     `${window.location.origin}/logo.svg`,
