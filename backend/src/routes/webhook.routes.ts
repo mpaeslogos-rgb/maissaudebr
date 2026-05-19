@@ -7,9 +7,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// Fuso horário da clínica: UTC-3 (horário de Brasília, sem horário de verão desde 2019)
+const CLINIC_UTC_OFFSET = -3
+
+// Data atual no fuso da clínica (YYYY-MM-DD)
 function getLocalDateISO() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const localMs = Date.now() + CLINIC_UTC_OFFSET * 3600000
+  const d = new Date(localMs)
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
 }
 
 function cleanValue(value: string | null | undefined, fallback = 'Não informado') {
@@ -21,16 +26,26 @@ function parseISODateOnly(dateStr: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr)
   if (!match) return null
   const year = Number(match[1]), month = Number(match[2]) - 1, day = Number(match[3])
-  const date = new Date(year, month, day, 0, 0, 0, 0)
-  return (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) ? date : null
+  // Representa meia-noite no fuso da clínica como UTC
+  return new Date(Date.UTC(year, month, day, -CLINIC_UTC_OFFSET, 0, 0, 0))
 }
 
 function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60 * 1000)
 }
 
-function formatHHMM(date: Date) {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+// Converte data+hora no fuso da clínica para UTC (para salvar no banco)
+function clinicLocalToUTC(dateStr: string, timeStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const [hh, mm] = timeStr.split(':').map(Number)
+  return new Date(Date.UTC(year, month - 1, day, hh - CLINIC_UTC_OFFSET, mm, 0, 0))
+}
+
+// Formata um Date UTC como HH:MM no fuso da clínica
+function formatClinicHHMM(utcDate: Date): string {
+  const localMs = utcDate.getTime() + CLINIC_UTC_OFFSET * 3600000
+  const d = new Date(localMs)
+  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
 }
 
 function rangesOverlap(startA: Date, endA: Date, startB: Date, endB: Date) {
@@ -72,8 +87,9 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
   if (doctors.length === 0) return { status: 'success', code: 'NO_DOCTORS_FOUND', slots: [], message: 'Sem médicos cadastrados para essa especialidade.' }
 
   const doctorIds = doctors.map(d => d.id)
-  const startOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), 0, 0, 0, 0)
-  const endOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate() + 1, 0, 0, 0, 0)
+  // Intervalo do dia no fuso da clínica (UTC-3) convertido para UTC
+  const startOfDay = clinicLocalToUTC(params.date, '00:00')
+  const endOfDay = clinicLocalToUTC(params.date, '24:00')
 
   const appointments = await prisma.appointment.findMany({
     where: { doctorId: { in: doctorIds }, startTime: { gte: startOfDay, lt: endOfDay } },
@@ -92,8 +108,9 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
   const rawSlots: any[] = []
   for (const doctor of doctors) {
     const docBlocked = blocked.get(doctor.id) ?? []
-    let slotStart = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), 8, 0, 0, 0)
-    const workEnd = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate(), 18, 0, 0, 0)
+    // Horário comercial 08:00–18:00 no fuso da clínica → UTC
+    let slotStart = clinicLocalToUTC(params.date, '08:00')
+    const workEnd = clinicLocalToUTC(params.date, '18:00')
     while (slotStart < workEnd) {
       const slotEnd = addMinutes(slotStart, 30)
       if (slotEnd > workEnd) break
@@ -103,7 +120,7 @@ async function getAvailableScheduleForSpecialty(params: { date: string; specialt
           doctorName: doctor.user?.name ?? `CRM ${doctor.crm}`,
           specialty: doctor.specialty,
           consultationFee: doctor.consultationFee,
-          time: formatHHMM(slotStart),
+          time: formatClinicHHMM(slotStart), // HH:MM no fuso da clínica
           isoStart: slotStart.toISOString(),
         })
       }
@@ -206,11 +223,9 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
         })
       }
 
-      // Calcula startTime e endTime (30 min de duração)
-      const [hh, mm] = time.split(':').map(Number)
-      const [year, month, day] = date.split('-').map(Number)
-      const startTime = new Date(year, month - 1, day, hh, mm, 0, 0)
-      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000)
+      // Converte horário do fuso da clínica (UTC-3) para UTC antes de salvar
+      const startTime = clinicLocalToUTC(date, time)
+      const endTime = addMinutes(startTime, 30)
 
       await prisma.appointment.create({
         data: {
