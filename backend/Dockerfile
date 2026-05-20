@@ -1,4 +1,4 @@
-# v18 — feat: Pegar Chat, transferência via WhatsApp, resolve nome paciente/médico
+# v19 — fix: Pegar Chat envia direto via WhatsApp sem passar pela IA
 FROM node:22-slim
 
 WORKDIR /app

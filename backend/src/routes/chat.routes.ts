@@ -265,6 +265,47 @@ export async function chatRoutes(app: FastifyInstance) {
     return { data: chat }
   })
 
+  // ----- ENVIAR MENSAGEM DIRETA (sem IA) — usado pelo atendente quando chat está pegado -----
+  app.post('/chats/:id/send', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    const { message } = request.body as { message?: string }
+
+    if (!message?.trim()) return reply.code(400).send({ error: 'Mensagem não pode ser vazia.' })
+
+    const chat = await prisma.chat.findUnique({ where: { id } })
+    if (!chat) return reply.code(404).send({ error: 'Chat não encontrado' })
+
+    const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID
+    const ZAPI_TOKEN = process.env.ZAPI_TOKEN
+    const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN
+
+    if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) {
+      return reply.code(503).send({ error: 'WhatsApp não configurado.' })
+    }
+
+    const digits = chat.phone.replace(/\D/g, '')
+    const formattedPhone = digits.startsWith('55') ? digits : `55${digits}`
+
+    try {
+      await axios.post(
+        `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
+        { phone: formattedPhone, message: message.trim() },
+        { headers: { 'Client-Token': ZAPI_CLIENT_TOKEN, 'Content-Type': 'application/json' } }
+      )
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string }
+      const msg = axiosErr?.response?.data?.message ?? axiosErr?.message ?? 'Erro ao enviar via WhatsApp'
+      return reply.code(502).send({ error: msg })
+    }
+
+    // Loga como mensagem do assistente (não é IA, é o atendente humano)
+    await prisma.chatLog.create({
+      data: { phone: chat.phone, message: message.trim(), isUser: false },
+    })
+
+    return { ok: true }
+  })
+
   // ----- FECHAR CHAT -----
   app.post('/chats/:id/close', async (request, reply) => {
     const { id } = request.params as { id: string }

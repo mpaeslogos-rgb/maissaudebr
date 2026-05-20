@@ -352,6 +352,10 @@ export function returnChat(chatId: string): Promise<{ data: Chat }> {
   return apiPost<{ data: Chat }>(`/api/chats/${chatId}/return`, {})
 }
 
+export function sendDirectChatMessage(chatId: string, message: string): Promise<{ ok: boolean }> {
+  return apiPost<{ ok: boolean }>(`/api/chats/${chatId}/send`, { message })
+}
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
 export interface Contact {
