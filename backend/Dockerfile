@@ -1,4 +1,4 @@
-# v19 — fix: Pegar Chat envia direto via WhatsApp sem passar pela IA
+# v20 — fix: usa Zod no /chats/:id/send para evitar erro de tipo TS6
 FROM node:22-slim
 
 WORKDIR /app
