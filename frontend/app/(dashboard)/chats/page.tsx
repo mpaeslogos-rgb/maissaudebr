@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI, sendDirectChatMessage } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -237,18 +237,20 @@ function TakenChatModal({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const [sendError, setSendError] = useState('')
+
   const handleSend = async () => {
     if (!input.trim() || isSending) return
-    const userMessage: Message = { role: 'user', content: input, timestamp: new Date() }
-    setMessages(prev => [...prev, userMessage])
+    const text = input.trim()
     setInput('')
     setIsSending(true)
+    setSendError('')
     try {
-      const apiMessages: ApiChatMessage[] = messages.concat(userMessage).map(m => ({ role: m.role, content: m.content }))
-      const res = await sendChatMessage({ messages: apiMessages, phone: chat.phone })
-      setMessages(prev => [...prev, { role: 'assistant', content: res.response, timestamp: new Date() }])
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Erro ao enviar. Tente novamente.', timestamp: new Date() }])
+      await sendDirectChatMessage(chat.id, text)
+      // Mensagem aparecerá no próximo polling de loadMessages
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Erro ao enviar.')
+      setInput(text)
     } finally {
       setIsSending(false)
     }
@@ -298,6 +300,7 @@ function TakenChatModal({
 
         {/* Input */}
         <div className="bg-white border-t border-surface-border p-4 rounded-b-xl shrink-0">
+          {sendError && <p className="text-xs text-red-600 mb-2">{sendError}</p>}
           <div className="flex gap-2">
             <input
               type="text"
