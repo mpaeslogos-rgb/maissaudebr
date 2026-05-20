@@ -456,7 +456,8 @@ model Chat {
   patientId   String?
   status      ChatStatus  @default(ACTIVE)
   aiPaused    Boolean     @default(false)
-  transferredToDoctorId String?
+  transferredToDoctorId   String?
+  pendingTransferDoctorId String?
   lastMessageAt DateTime  @default(now())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

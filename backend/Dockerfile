@@ -1,4 +1,4 @@
-# v17 — fix: agenda usa dados do paciente atendido, não do contato WhatsApp
+# v18 — feat: Pegar Chat, transferência via WhatsApp, resolve nome paciente/médico
 FROM node:22-slim
 
 WORKDIR /app

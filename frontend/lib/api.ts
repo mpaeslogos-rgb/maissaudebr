@@ -332,8 +332,12 @@ export function sendChatMessage(data: { messages: ChatMessage[]; phone?: string 
   return apiPost<{ response: string }>('/api/chat', data)
 }
 
-export function transferChat(chatId: string, doctorId: string): Promise<{ data: Chat }> {
-  return apiPost<{ data: Chat }>(`/api/chats/${chatId}/transfer`, { doctorId })
+export function transferChat(chatId: string, doctorId: string): Promise<{ data: Chat; pending: boolean; message: string }> {
+  return apiPost<{ data: Chat; pending: boolean; message: string }>(`/api/chats/${chatId}/transfer`, { doctorId })
+}
+
+export function transferConfirmChat(chatId: string, doctorId: string): Promise<{ data: Chat }> {
+  return apiPost<{ data: Chat }>(`/api/chats/${chatId}/transfer-confirm`, { doctorId })
 }
 
 export function getChatMessages(chatId: string): Promise<{ data: { id: string; role: 'user' | 'assistant'; content: string; timestamp: string }[] }> {
