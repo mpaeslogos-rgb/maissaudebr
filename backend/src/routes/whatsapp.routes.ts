@@ -9,6 +9,10 @@ const sendSchema = z.object({
   message: z.string().min(1),
 })
 
+const bulkSendSchema = z.object({
+  message: z.string().min(1).max(4096),
+})
+
 export async function whatsappRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireRole('ADMIN', 'RECEPTIONIST'))
 
@@ -49,6 +53,62 @@ export async function whatsappRoutes(app: FastifyInstance) {
         'Erro ao enviar mensagem via WhatsApp'
       return reply.code(502).send({ error: msg })
     }
+  })
+
+  // POST /api/whatsapp/bulk-send — envia mensagem para todos os pacientes com telefone
+  app.post('/bulk-send', async (request, reply) => {
+    const parsed = bulkSendSchema.safeParse(request.body)
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
+
+    const { message } = parsed.data
+
+    const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID
+    const ZAPI_TOKEN = process.env.ZAPI_TOKEN
+    const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN
+
+    if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) {
+      return reply.code(503).send({ error: 'WhatsApp não configurado.' })
+    }
+
+    const patients = await prisma.patient.findMany({
+      where: { phone: { not: '' } },
+      select: { id: true, fullName: true, phone: true },
+      orderBy: { fullName: 'asc' },
+    })
+
+    let sent = 0
+    let failed = 0
+    const errors: { name: string; phone: string; reason: string }[] = []
+
+    for (const patient of patients) {
+      if (!patient.phone?.trim()) continue
+
+      const digits = patient.phone.replace(/\D/g, '')
+      if (digits.length < 10) { failed++; continue }
+      const formattedPhone = digits.startsWith('55') ? digits : `55${digits}`
+
+      try {
+        await axios.post(
+          `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
+          { phone: formattedPhone, message },
+          { headers: { 'Client-Token': ZAPI_CLIENT_TOKEN, 'Content-Type': 'application/json' } }
+        )
+        sent++
+      } catch (err: unknown) {
+        failed++
+        const axiosErr = err as any
+        errors.push({
+          name: patient.fullName,
+          phone: patient.phone,
+          reason: axiosErr?.response?.data?.message ?? axiosErr?.message ?? 'Erro desconhecido',
+        })
+      }
+
+      // Pausa entre envios para evitar bloqueio por rate-limit do WhatsApp
+      await new Promise(resolve => setTimeout(resolve, 150))
+    }
+
+    return { sent, failed, total: patients.length, errors: errors.slice(0, 20) }
   })
 
   // GET /api/whatsapp/contacts — lista unificada: pacientes + médicos + fornecedores

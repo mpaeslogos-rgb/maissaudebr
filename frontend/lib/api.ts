@@ -356,6 +356,17 @@ export function sendDirectChatMessage(chatId: string, message: string): Promise<
   return apiPost<{ ok: boolean }>(`/api/chats/${chatId}/send`, { message })
 }
 
+export interface BulkSendResult {
+  sent: number
+  failed: number
+  total: number
+  errors: { name: string; phone: string; reason: string }[]
+}
+
+export function sendBulkMessage(message: string): Promise<BulkSendResult> {
+  return apiPost<BulkSendResult>('/api/whatsapp/bulk-send', { message })
+}
+
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 
 export interface Contact {
