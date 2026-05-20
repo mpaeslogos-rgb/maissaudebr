@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI, sendDirectChatMessage } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -209,21 +209,25 @@ function TakenChatModal({
   chat: Chat
   onReturn: () => void
 }) {
-  const [messages, setMessages] = useState<Message[]>([])
+  // Mensagens do servidor (paciente) — sobrescritas a cada polling
+  const [serverMessages, setServerMessages] = useState<Message[]>([])
+  // Mensagens enviadas pelo atendente nesta sessão — nunca sobrescritas pelo polling
+  const [sentMessages, setSentMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [sendError, setSendError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const loadMessages = useCallback(async () => {
     try {
       const res = await getChatMessages(chat.id)
-      setMessages(res.data.map((m: any) => ({
+      setServerMessages(res.data.map((m: any) => ({
         role: m.role,
         content: m.content,
         timestamp: new Date(m.timestamp),
       })))
     } catch {
-      setMessages([])
+      // mantém o que tinha
     }
   }, [chat.id])
 
@@ -233,11 +237,14 @@ function TakenChatModal({
     return () => clearInterval(interval)
   }, [loadMessages])
 
+  // Combina mensagens do servidor com as enviadas localmente, ordenadas por timestamp
+  const allMessages = [...serverMessages, ...sentMessages].sort(
+    (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+  )
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const [sendError, setSendError] = useState('')
+  }, [allMessages.length])
 
   const handleSend = async () => {
     if (!input.trim() || isSending) return
@@ -246,8 +253,10 @@ function TakenChatModal({
     setIsSending(true)
     setSendError('')
     try {
-      await sendDirectChatMessage(chat.id, text)
-      // Mensagem aparecerá no próximo polling de loadMessages
+      // Usa endpoint existente /api/whatsapp/send — não depende de deploy novo
+      await sendWhatsAppMessage(chat.phone, text)
+      // Adiciona ao estado local para aparecer imediatamente (não sobrescrito pelo polling)
+      setSentMessages(prev => [...prev, { role: 'assistant' as const, content: text, timestamp: new Date() }])
     } catch (err) {
       setSendError(err instanceof Error ? err.message : 'Erro ao enviar.')
       setInput(text)
@@ -281,7 +290,7 @@ function TakenChatModal({
 
         {/* Mensagens */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-cream-50">
-          {messages.map((msg, i) => (
+          {allMessages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-sm ${
                 msg.role === 'user'
