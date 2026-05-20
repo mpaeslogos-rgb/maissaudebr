@@ -1,4 +1,4 @@
-# v20 — fix: usa Zod no /chats/:id/send para evitar erro de tipo TS6
+# v21 — feat: bulk-send WhatsApp para todos os pacientes
 FROM node:22-slim
 
 WORKDIR /app

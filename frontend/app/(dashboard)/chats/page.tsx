@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI } from '@/lib/api'
+import { getChats, getDoctors, sendChatMessage, transferChat, returnChat, getContacts, sendWhatsAppMessage, getChatMessages, toggleChatAI, sendBulkMessage } from '@/lib/api'
+import type { BulkSendResult } from '@/lib/api'
 import type { Chat, Doctor, ChatMessage as ApiChatMessage } from '@/lib/types'
 import type { Contact } from '@/lib/api'
 
@@ -200,6 +201,138 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ─── Modal: Mensagem em Massa ─────────────────────────────────────────────────
+
+function BulkMessageModal({ onClose }: { onClose: () => void }) {
+  const [message, setMessage] = useState('')
+  const [step, setStep] = useState<'compose' | 'confirm' | 'sending' | 'done'>('compose')
+  const [result, setResult] = useState<BulkSendResult | null>(null)
+  const [error, setError] = useState('')
+
+  async function handleSend() {
+    setStep('sending')
+    setError('')
+    try {
+      const res = await sendBulkMessage(message.trim())
+      setResult(res)
+      setStep('done')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar mensagens.')
+      setStep('confirm')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col">
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between p-5 border-b border-surface-border">
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">📢 Mensagem em Massa</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Envia para todos os pacientes com WhatsApp cadastrado</p>
+          </div>
+          {step !== 'sending' && (
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          )}
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* Resultado */}
+          {step === 'done' && result && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-green-700">{result.sent}</p>
+                  <p className="text-xs text-green-600 mt-0.5">Enviados</p>
+                </div>
+                <div className={`border rounded-lg p-3 ${result.failed > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                  <p className={`text-2xl font-bold ${result.failed > 0 ? 'text-red-700' : 'text-slate-500'}`}>{result.failed}</p>
+                  <p className={`text-xs mt-0.5 ${result.failed > 0 ? 'text-red-600' : 'text-slate-400'}`}>Falhas</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-slate-700">{result.total}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Total</p>
+                </div>
+              </div>
+              {result.errors.length > 0 && (
+                <details className="text-xs text-slate-500 cursor-pointer">
+                  <summary className="font-medium text-slate-600 hover:text-slate-800">
+                    Ver falhas ({result.errors.length})
+                  </summary>
+                  <ul className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                    {result.errors.map((e, i) => (
+                      <li key={i} className="text-red-600">{e.name} ({e.phone}): {e.reason}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              <button onClick={onClose} className="btn-primary w-full">Fechar</button>
+            </div>
+          )}
+
+          {/* Enviando */}
+          {step === 'sending' && (
+            <div className="text-center py-8 space-y-3">
+              <div className="text-4xl animate-pulse">📱</div>
+              <p className="text-slate-700 font-medium">Enviando mensagens…</p>
+              <p className="text-xs text-slate-400">Aguarde. O envio pode demorar alguns minutos<br/>dependendo da quantidade de pacientes.</p>
+            </div>
+          )}
+
+          {/* Confirmação */}
+          {step === 'confirm' && (
+            <div className="space-y-4">
+              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <p className="text-sm font-medium text-amber-800">⚠️ Confirmar envio em massa</p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Esta ação enviará a mensagem abaixo para <strong>todos os pacientes</strong> com WhatsApp cadastrado. Não é possível cancelar após iniciar.
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-700 border border-slate-200 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                {message}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setStep('compose')} className="btn-outline flex-1">Editar</button>
+                <button onClick={handleSend} className="btn-primary flex-1">Confirmar e Enviar</button>
+              </div>
+            </div>
+          )}
+
+          {/* Composição */}
+          {step === 'compose' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Mensagem <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Digite a mensagem que será enviada para todos os pacientes…"
+                  className="input resize-none min-h-[140px]"
+                  maxLength={4096}
+                />
+                <p className="text-xs text-slate-400 mt-1 text-right">{message.length}/4096</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={onClose} className="btn-outline flex-1">Cancelar</button>
+                <button
+                  onClick={() => setStep('confirm')}
+                  disabled={!message.trim()}
+                  className="btn-primary flex-1 disabled:opacity-50"
+                >
+                  Continuar →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Modal: Chat Pegado (Pegar Chat) ─────────────────────────────────────────
 
 function TakenChatModal({
@@ -341,6 +474,7 @@ export default function ChatsPage() {
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showNewMessage, setShowNewMessage] = useState(false)
+  const [showBulkMessage, setShowBulkMessage] = useState(false)
   const [isTogglingAI, setIsTogglingAI] = useState(false)
   const [toggleError, setToggleError] = useState('')
   const [takenChat, setTakenChat] = useState<Chat | null>(null)
@@ -532,9 +666,18 @@ export default function ChatsPage() {
             <h2 className="text-base font-semibold text-slate-800">Chats</h2>
             <p className="text-xs text-slate-400 mt-0.5">Duplo clique = pegar chat</p>
           </div>
-          <button onClick={() => setShowNewMessage(true)} className="btn-primary text-xs px-3 py-1.5">
-            + Nova mensagem
-          </button>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setShowBulkMessage(true)}
+              className="btn-outline text-xs px-2.5 py-1.5"
+              title="Enviar mensagem para todos os pacientes"
+            >
+              📢 Em massa
+            </button>
+            <button onClick={() => setShowNewMessage(true)} className="btn-primary text-xs px-3 py-1.5">
+              + Nova mensagem
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto divide-y divide-surface-border">
@@ -712,6 +855,9 @@ export default function ChatsPage() {
 
       {/* Modal de nova mensagem */}
       {showNewMessage && <NewMessageModal onClose={() => setShowNewMessage(false)} />}
+
+      {/* Modal de mensagem em massa */}
+      {showBulkMessage && <BulkMessageModal onClose={() => setShowBulkMessage(false)} />}
 
       {/* Modal: Chat Pegado */}
       {takenChat && (
