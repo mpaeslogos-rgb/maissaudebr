@@ -103,6 +103,12 @@ export type ChatStatus = 'ACTIVE' | 'TRANSFERRED_TO_DOCTOR' | 'CLOSED'
 
 export type SchedulingStatus = 'agendado' | 'em_andamento' | 'cancelado' | 'sem_agendamento'
 
+export interface ResolvedDoctor {
+  id: string
+  name: string | null
+  specialty: string
+}
+
 export interface Chat {
   id: string
   phone: string
@@ -111,11 +117,13 @@ export interface Chat {
   aiPaused: boolean
   schedulingStatus: SchedulingStatus
   transferredToDoctorId?: string
+  pendingTransferDoctorId?: string
   lastMessageAt: string
   createdAt: string
   updatedAt: string
   patient?: Patient
   doctor?: Doctor
+  resolvedDoctor?: ResolvedDoctor | null
 }
 
 export type ChatListResponse = PaginatedResponse<Chat>

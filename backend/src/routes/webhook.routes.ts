@@ -429,6 +429,14 @@ async function sendZAPIMessage(phone: string, message: string) {
   )
 }
 
+// ─── Detecta resposta afirmativa do médico ────────────────────────────────────
+
+function isAffirmativeResponse(msg: string): boolean {
+  const normalized = msg.toLowerCase().trim()
+  const patterns = ['sim', 'pode', 'claro', 'aceito', 'aceitar', 'ok', 'certo', 'confirmo', 'confirmado', 'posso', 'yes', 'confirm', 'tudo bem', 'tá bem', 'ta bem', 'vou atender', 'com certeza']
+  return patterns.some(p => normalized.includes(p))
+}
+
 // ─── Rota ─────────────────────────────────────────────────────────────────────
 
 export async function webhookRoutes(app: FastifyInstance) {
@@ -442,11 +450,61 @@ export async function webhookRoutes(app: FastifyInstance) {
     const phone = String(body.phone)
     const message = String(body.text.message)
 
-    const chat = await prisma.chat.upsert({
+    // ── 1. Verifica se é médico respondendo a uma transferência pendente ──────
+    const phoneDigits = phone.replace(/\D/g, '')
+    const doctorMatch = await prisma.doctor.findFirst({
+      where: { phone: { contains: phoneDigits } },
+      select: { id: true, phone: true },
+    })
+
+    if (doctorMatch) {
+      const pendingChat = await prisma.chat.findFirst({
+        where: { pendingTransferDoctorId: doctorMatch.id },
+        include: { patient: { select: { fullName: true } } },
+      })
+
+      if (pendingChat) {
+        // Registra a resposta do médico no log
+        await prisma.chatLog.create({ data: { phone, message, isUser: true } })
+
+        if (isAffirmativeResponse(message)) {
+          // Confirma a transferência automaticamente
+          await prisma.chat.update({
+            where: { id: pendingChat.id },
+            data: {
+              status: 'TRANSFERRED_TO_DOCTOR',
+              transferredToDoctorId: doctorMatch.id,
+              pendingTransferDoctorId: null,
+              aiPaused: true,
+            },
+          })
+          await sendZAPIMessage(phone, `Transferência confirmada! O paciente ${pendingChat.patient?.fullName ?? ''} está aguardando. A conversa foi direcionada para você.`)
+        }
+        // Resposta negativa ou não reconhecida: apenas loga, não faz nada (admin pode resolver manualmente)
+        return reply.send({ ok: true })
+      }
+    }
+
+    // ── 2. Fluxo normal de mensagem do paciente ────────────────────────────────
+    let chat = await prisma.chat.upsert({
       where: { phone },
       update: { lastMessageAt: new Date() },
       create: { phone, lastMessageAt: new Date() },
     })
+
+    // Auto-link paciente se ainda não vinculado
+    if (!chat.patientId) {
+      const patient = await prisma.patient.findFirst({
+        where: { phone: { contains: phoneDigits } },
+        select: { id: true },
+      })
+      if (patient) {
+        chat = await prisma.chat.update({
+          where: { id: chat.id },
+          data: { patientId: patient.id },
+        })
+      }
+    }
 
     await prisma.chatLog.create({ data: { phone, message, isUser: true } })
 
