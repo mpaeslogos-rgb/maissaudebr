@@ -14,6 +14,10 @@ const transferSchema = z.object({
   doctorId: z.string(),
 })
 
+const sendMessageSchema = z.object({
+  message: z.string().min(1),
+})
+
 // ─── Z-API helper ─────────────────────────────────────────────────────────────
 
 async function sendZAPIMessage(phone: string, message: string) {
@@ -268,9 +272,10 @@ export async function chatRoutes(app: FastifyInstance) {
   // ----- ENVIAR MENSAGEM DIRETA (sem IA) — usado pelo atendente quando chat está pegado -----
   app.post('/chats/:id/send', async (request, reply) => {
     const { id } = request.params as { id: string }
-    const { message } = request.body as { message?: string }
+    const parsed = sendMessageSchema.safeParse(request.body)
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
-    if (!message?.trim()) return reply.code(400).send({ error: 'Mensagem não pode ser vazia.' })
+    const { message } = parsed.data
 
     const chat = await prisma.chat.findUnique({ where: { id } })
     if (!chat) return reply.code(404).send({ error: 'Chat não encontrado' })
@@ -289,18 +294,17 @@ export async function chatRoutes(app: FastifyInstance) {
     try {
       await axios.post(
         `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
-        { phone: formattedPhone, message: message.trim() },
+        { phone: formattedPhone, message },
         { headers: { 'Client-Token': ZAPI_CLIENT_TOKEN, 'Content-Type': 'application/json' } }
       )
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string }
+      const axiosErr = err as any
       const msg = axiosErr?.response?.data?.message ?? axiosErr?.message ?? 'Erro ao enviar via WhatsApp'
       return reply.code(502).send({ error: msg })
     }
 
-    // Loga como mensagem do assistente (não é IA, é o atendente humano)
     await prisma.chatLog.create({
-      data: { phone: chat.phone, message: message.trim(), isUser: false },
+      data: { phone: chat.phone, message, isUser: false },
     })
 
     return { ok: true }
