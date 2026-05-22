@@ -34,7 +34,7 @@ export default function BoletoOcrPage() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/financial/ocr/boleto`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/financial/ocr/boleto`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
