@@ -5,7 +5,42 @@ import { prisma } from '../lib/prisma2'
 import { requireRole } from '../plugins/auth'
 import type { JwtPayload } from '../plugins/auth'
 import { logAudit } from '../lib/audit'
+import { encrypt, decrypt, encryptDeterministic, decryptDeterministic } from '../lib/crypto'
 import * as XLSX from 'xlsx'
+
+/** Criptografa campos PII antes de salvar no banco */
+function encryptPatient<T extends Record<string, unknown>>(data: T): T {
+  const d = { ...data } as Record<string, unknown>
+  if ('cpf'          in d) d.cpf          = encryptDeterministic(d.cpf as string)
+  if ('phone'        in d) d.phone        = encrypt(d.phone as string)
+  if ('rg'           in d) d.rg           = encrypt(d.rg as string)
+  if ('zipCode'      in d) d.zipCode      = encrypt(d.zipCode as string)
+  if ('street'       in d) d.street       = encrypt(d.street as string)
+  if ('number'       in d) d.number       = encrypt(d.number as string)
+  if ('complement'   in d) d.complement   = encrypt(d.complement as string)
+  if ('neighborhood' in d) d.neighborhood = encrypt(d.neighborhood as string)
+  if ('allergies'    in d) d.allergies    = encrypt(d.allergies as string)
+  if ('notes'        in d) d.notes        = encrypt(d.notes as string)
+  if ('healthInsuranceNumber' in d) d.healthInsuranceNumber = encrypt(d.healthInsuranceNumber as string)
+  return d as T
+}
+
+/** Descriptografa campos PII ao ler do banco */
+function decryptPatient<T extends Record<string, unknown>>(data: T): T {
+  const d = { ...data } as Record<string, unknown>
+  if ('cpf'          in d) d.cpf          = decryptDeterministic(d.cpf as string)
+  if ('phone'        in d) d.phone        = decrypt(d.phone as string)
+  if ('rg'           in d) d.rg           = decrypt(d.rg as string)
+  if ('zipCode'      in d) d.zipCode      = decrypt(d.zipCode as string)
+  if ('street'       in d) d.street       = decrypt(d.street as string)
+  if ('number'       in d) d.number       = decrypt(d.number as string)
+  if ('complement'   in d) d.complement   = decrypt(d.complement as string)
+  if ('neighborhood' in d) d.neighborhood = decrypt(d.neighborhood as string)
+  if ('allergies'    in d) d.allergies    = decrypt(d.allergies as string)
+  if ('notes'        in d) d.notes        = decrypt(d.notes as string)
+  if ('healthInsuranceNumber' in d) d.healthInsuranceNumber = decrypt(d.healthInsuranceNumber as string)
+  return d as T
+}
 
 // ============================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -84,7 +119,7 @@ export async function patientsRoutes(app: FastifyInstance) {
       prisma.patient.count({ where }),
     ])
 
-    return { data: patients, total, take, skip }
+    return { data: patients.map(decryptPatient), total, take, skip }
   })
 
   // ----- BUSCAR POR ID -----
@@ -110,7 +145,7 @@ export async function patientsRoutes(app: FastifyInstance) {
       return reply.code(404).send({ error: 'Paciente não encontrado' })
     }
 
-    return patient
+    return decryptPatient(patient as Record<string, unknown>)
   })
 
   // ----- CRIAR -----
@@ -121,7 +156,7 @@ export async function patientsRoutes(app: FastifyInstance) {
     }
 
     try {
-      const patient = await prisma.patient.create({ data: parsed.data })
+      const patient = await prisma.patient.create({ data: encryptPatient(parsed.data) })
       const uid = (request.user as JwtPayload)?.sub ?? null
       logAudit({ userId: uid, action: 'CREATE', entity: 'Patient', entityId: patient.id, request })
       return reply.code(201).send(patient)
@@ -148,13 +183,20 @@ export async function patientsRoutes(app: FastifyInstance) {
     }
 
     try {
+      const before = await prisma.patient.findUnique({ where: { id } })
+      if (!before) return reply.code(404).send({ error: 'Paciente não encontrado' })
+
       const patient = await prisma.patient.update({
         where: { id },
-        data: parsed.data,
+        data: encryptPatient(parsed.data),
       })
       const uid = (request.user as JwtPayload)?.sub ?? null
-      logAudit({ userId: uid, action: 'UPDATE', entity: 'Patient', entityId: patient.id, request })
-      return patient
+      logAudit({
+        userId: uid, action: 'UPDATE', entity: 'Patient', entityId: patient.id, request,
+        before: decryptPatient(before as Record<string, unknown>),
+        after:  decryptPatient(patient as Record<string, unknown>),
+      })
+      return decryptPatient(patient as Record<string, unknown>)
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
@@ -168,14 +210,51 @@ export async function patientsRoutes(app: FastifyInstance) {
     }
   })
 
-  // ----- EXCLUIR -----
+  // ----- EXCLUIR (anonimização LGPD Art. 18) -----
+  // Por que anonimizar em vez de deletar? Prontuários médicos têm retenção legal de 20 anos
+  // (CFM 1.821/2007). Anonimizar preserva o histórico clínico sem manter dados pessoais.
   app.delete('/patients/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
     try {
-      await prisma.patient.delete({ where: { id } })
+      const existing = await prisma.patient.findUnique({ where: { id }, select: { id: true } })
+      if (!existing) return reply.code(404).send({ error: 'Paciente não encontrado' })
+
+      const anonymizedName = `ANONIMIZADO-${id.slice(-8).toUpperCase()}`
+      await prisma.patient.update({
+        where: { id },
+        data: {
+          fullName:             anonymizedName,
+          cpf:                  null,
+          rg:                   null,
+          email:                null,
+          phone:                'ANONIMIZADO',
+          birthDate:            null,
+          gender:               null,
+          zipCode:              null,
+          street:               null,
+          number:               null,
+          complement:           null,
+          neighborhood:         null,
+          city:                 null,
+          state:                null,
+          allergies:            null,
+          notes:                null,
+          healthInsurance:      null,
+          healthInsuranceNumber: null,
+          userId:               null,
+        },
+      })
+
       const uid = (request.user as JwtPayload)?.sub ?? null
-      logAudit({ userId: uid, action: 'DELETE', entity: 'Patient', entityId: id, request })
-      return reply.code(204).send()
+      logAudit({
+        userId: uid,
+        action: 'LGPD_ANONYMIZE',
+        entity: 'Patient',
+        entityId: id,
+        metadata: { reason: 'right_to_erasure_art18' },
+        request,
+      })
+      return reply.send({ message: 'Dados pessoais do paciente anonimizados conforme LGPD Art. 18.' })
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         return reply.code(404).send({ error: 'Paciente não encontrado' })
