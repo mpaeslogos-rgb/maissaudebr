@@ -252,7 +252,7 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
       const startTime = clinicLocalToUTC(date, time)
       const endTime = addMinutes(startTime, 30)
 
-      await prisma.appointment.create({
+      const appointment = await prisma.appointment.create({
         data: {
           patientId: patient.id,
           doctorId,
@@ -262,6 +262,20 @@ async function executeTool(name: string, args: any, phone: string): Promise<any>
           reason: `Agendado via WhatsApp — ${specialty || doctor.specialty}`,
         }
       })
+
+      // Auto-criar cobrança se médico tem consultationFee cadastrado
+      if (doctor.consultationFee) {
+        const doctorName = doctor.user?.name ?? `CRM ${doctor.crm}`
+        await prisma.payment.create({
+          data: {
+            patientId: patient.id,
+            appointmentId: appointment.id,
+            amount: doctor.consultationFee,
+            dueDate: startTime,
+            description: `Consulta via WhatsApp — ${specialty || doctor.specialty} (${doctorName})`,
+          },
+        })
+      }
 
       // Atualiza status do lead para agendado
       await prisma.lead.update({ where: { id: leadId }, data: { status: 'SCHEDULED' } })
