@@ -172,12 +172,12 @@ function FluxoCaixa({
   const { current: c, totals, months: monthData } = cashflow;
 
   const chartData = monthData.map(m => ({
-    name:             fmtMonth(m.month),
-    Recebido:         +(m.entradas.toFixed(2)),
-    "A Receber":      +(m.projecaoEntradas.toFixed(2)),
-    Pago:             +(m.saidas.toFixed(2)),
-    "A Pagar":        +(m.projecaoSaidas.toFixed(2)),
-    Saldo:            +(m.saldo.toFixed(2)),
+    name:          fmtMonth(m.month),
+    Recebido:      +((m.entradas ?? 0).toFixed(2)),
+    "A Receber":   +((m.projecaoEntradas ?? 0).toFixed(2)),
+    Pago:          +((m.saidas ?? 0).toFixed(2)),
+    "A Pagar":     +((m.projecaoSaidas ?? 0).toFixed(2)),
+    Saldo:         +((m.saldo ?? 0).toFixed(2)),
   }));
 
   return (
