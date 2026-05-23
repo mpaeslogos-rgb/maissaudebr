@@ -100,7 +100,11 @@ export default function FinanceiroPage() {
     }
   }, [months]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAll]);
 
   if (loading) {
     return (
@@ -168,10 +172,12 @@ function FluxoCaixa({
   const { current: c, totals, months: monthData } = cashflow;
 
   const chartData = monthData.map(m => ({
-    name:   fmtMonth(m.month),
-    Entradas: +(m.entradas.toFixed(2)),
-    Saídas:   +(m.saidas.toFixed(2)),
-    Saldo:    +(m.saldo.toFixed(2)),
+    name:             fmtMonth(m.month),
+    Recebido:         +(m.entradas.toFixed(2)),
+    "A Receber":      +(m.projecaoEntradas.toFixed(2)),
+    Pago:             +(m.saidas.toFixed(2)),
+    "A Pagar":        +(m.projecaoSaidas.toFixed(2)),
+    Saldo:            +(m.saldo.toFixed(2)),
   }));
 
   return (
@@ -262,8 +268,10 @@ function FluxoCaixa({
               labelStyle={{ fontWeight: 600 }}
             />
             <Legend iconType="circle" iconSize={8} />
-            <Bar dataKey="Entradas" fill="#16a34a" radius={[3, 3, 0, 0]} barSize={14} />
-            <Bar dataKey="Saídas"   fill="#dc2626" radius={[3, 3, 0, 0]} barSize={14} />
+            <Bar dataKey="Recebido"    fill="#16a34a" radius={[3, 3, 0, 0]} barSize={10} />
+            <Bar dataKey="A Receber"  fill="#86efac" radius={[3, 3, 0, 0]} barSize={10} />
+            <Bar dataKey="Pago"       fill="#dc2626" radius={[3, 3, 0, 0]} barSize={10} />
+            <Bar dataKey="A Pagar"    fill="#fca5a5" radius={[3, 3, 0, 0]} barSize={10} />
             <Line type="monotone" dataKey="Saldo" stroke="#2563eb" strokeWidth={2} dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
