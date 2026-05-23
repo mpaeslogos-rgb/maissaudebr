@@ -59,7 +59,8 @@ export async function authRoutes(app: FastifyInstance) {
 
     const jti = `${user.id}-${Date.now()}`
     const token = app.jwt.sign(
-      { sub: user.id, role: user.role, name: user.name, jti },
+      { sub: user.id, role: user.role, name: user.name },
+      { jwtid: jti },
     )
 
     logAudit({ userId: user.id, action: 'LOGIN', entity: 'User', entityId: user.id, request })
