@@ -1,4 +1,4 @@
-# v22 — feat: auto-criar cobrança ao agendar consulta
+# v23 — feat: projecao PENDING no cashflow + polling 30s financeiro
 FROM node:22-slim
 
 WORKDIR /app

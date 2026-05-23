@@ -580,11 +580,13 @@ export function getAuditLogs(params?: {
 // ─── Fluxo de Caixa ───────────────────────────────────────────────────────────
 
 export interface CashflowMonth {
-  month:           string
-  entradas:        number
-  saidas:          number
-  saldo:           number
-  saldoAcumulado:  number
+  month:              string
+  entradas:           number
+  saidas:             number
+  saldo:              number
+  saldoAcumulado:     number
+  projecaoEntradas:   number
+  projecaoSaidas:     number
 }
 
 export interface CashflowData {

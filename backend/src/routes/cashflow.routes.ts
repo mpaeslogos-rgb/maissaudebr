@@ -37,8 +37,8 @@ export async function cashflowRoutes(app: FastifyInstance) {
     const now = new Date()
     const fromDate = startOfMonth(addMonths(now, -(months - 1)))
 
-    // Buscar todos os pagamentos PAID no período
-    const [paidPayments, paidPayables] = await Promise.all([
+    // Buscar pagamentos PAID e PENDING no período
+    const [paidPayments, paidPayables, pendingPayments, pendingPayables] = await Promise.all([
       prisma.payment.findMany({
         where: { status: 'PAID', paidAt: { gte: fromDate } },
         select: { amount: true, paidAt: true },
@@ -47,13 +47,21 @@ export async function cashflowRoutes(app: FastifyInstance) {
         where: { status: 'PAID', paidAt: { gte: fromDate } },
         select: { amount: true, paidAt: true },
       }),
+      prisma.payment.findMany({
+        where: { status: 'PENDING', dueDate: { gte: fromDate } },
+        select: { amount: true, dueDate: true },
+      }),
+      prisma.accountPayable.findMany({
+        where: { status: 'PENDING', dueDate: { gte: fromDate } },
+        select: { amount: true, dueDate: true },
+      }),
     ])
 
     // Montar meses no intervalo
-    const monthsMap: Record<string, { entradas: number; saidas: number }> = {}
+    const monthsMap: Record<string, { entradas: number; saidas: number; projecaoEntradas: number; projecaoSaidas: number }> = {}
     for (let i = 0; i < months; i++) {
       const key = monthKey(addMonths(fromDate, i))
-      monthsMap[key] = { entradas: 0, saidas: 0 }
+      monthsMap[key] = { entradas: 0, saidas: 0, projecaoEntradas: 0, projecaoSaidas: 0 }
     }
 
     for (const p of paidPayments) {
@@ -65,6 +73,14 @@ export async function cashflowRoutes(app: FastifyInstance) {
       if (!p.paidAt) continue
       const key = monthKey(new Date(p.paidAt))
       if (monthsMap[key]) monthsMap[key].saidas += Number(p.amount)
+    }
+    for (const p of pendingPayments) {
+      const key = monthKey(new Date(p.dueDate))
+      if (monthsMap[key]) monthsMap[key].projecaoEntradas += Number(p.amount)
+    }
+    for (const p of pendingPayables) {
+      const key = monthKey(new Date(p.dueDate))
+      if (monthsMap[key]) monthsMap[key].projecaoSaidas += Number(p.amount)
     }
 
     let saldoAcumulado = 0
