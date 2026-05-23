@@ -1,4 +1,4 @@
-# v24 — fix: max take 500 nos endpoints payments e accounts-payable
+# v25 — fix: take 500 + hard-delete cancelled appointments + cashflow projecao
 FROM node:22-slim
 
 WORKDIR /app

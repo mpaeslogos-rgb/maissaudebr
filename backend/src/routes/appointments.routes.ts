@@ -338,7 +338,9 @@ export async function appointmentsRoutes(app: FastifyInstance) {
       if (!current) return reply.code(404).send({ error: 'Consulta não encontrada' })
 
       if (current.status === 'CANCELLED') {
-        return reply.code(409).send({ error: 'Consulta já está cancelada' })
+        // Hard-delete: consulta cancelada pode ser removida definitivamente
+        await prisma.appointment.delete({ where: { id: parsed.data.id } })
+        return reply.send({ message: 'Consulta removida.' })
       }
       if (current.status === 'COMPLETED') {
         return reply.code(409).send({ error: 'Consulta concluída não pode ser cancelada' })
