@@ -1,4 +1,4 @@
-# v21 — feat: bulk-send WhatsApp para todos os pacientes
+# v22 — feat: auto-criar cobrança ao agendar consulta
 FROM node:22-slim
 
 WORKDIR /app
