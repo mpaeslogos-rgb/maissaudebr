@@ -92,7 +92,7 @@ export async function cashflowRoutes(app: FastifyInstance) {
     // Projeções: pendentes e próximos 30 dias
     const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-    const [pendingPayments, pendingPayables, upcoming30In, upcoming30Out] = await Promise.all([
+    const [pendingPaymentsAgg, pendingPayablesAgg, upcoming30In, upcoming30Out] = await Promise.all([
       prisma.payment.aggregate({
         where: { status: 'PENDING' },
         _sum: { amount: true },
@@ -156,10 +156,10 @@ export async function cashflowRoutes(app: FastifyInstance) {
         thisMonthEntradas:    n(thisMonthIn._sum.amount),
         thisMonthSaidas:      n(thisMonthOut._sum.amount),
         thisMonthSaldo:       n(thisMonthIn._sum.amount) - n(thisMonthOut._sum.amount),
-        pendingEntradas:      n(pendingPayments._sum.amount),
-        pendingEntradasCount: pendingPayments._count._all,
-        pendingSaidas:        n(pendingPayables._sum.amount),
-        pendingSaidasCount:   pendingPayables._count._all,
+        pendingEntradas:      n(pendingPaymentsAgg._sum.amount),
+        pendingEntradasCount: pendingPaymentsAgg._count._all,
+        pendingSaidas:        n(pendingPayablesAgg._sum.amount),
+        pendingSaidasCount:   pendingPayablesAgg._count._all,
         overdueEntradas:      n(overdueIn._sum.amount),
         overdueEntradasCount: overdueIn._count._all,
         overdueSaidas:        n(overdueOut._sum.amount),
