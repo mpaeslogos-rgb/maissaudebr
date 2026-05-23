@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, AlertCircle,
   Plus, X, Loader2, CheckCircle2, Clock, AlertTriangle, RefreshCw,
-  ChevronDown, ChevronUp, DollarSign,
+  ChevronDown, ChevronUp, DollarSign, Trash2,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import {
   getPayments, getAccountsPayable, createAccountPayable,
-  payPayment, payAccountPayable, getCashflow,
+  payPayment, payAccountPayable, deleteAccountPayable, getCashflow,
   type CashflowData,
 } from "@/lib/api";
 import type { Payment, AccountPayable } from "@/lib/types";
@@ -102,8 +102,6 @@ export default function FinanceiroPage() {
 
   useEffect(() => {
     fetchAll();
-    const interval = setInterval(fetchAll, 30000);
-    return () => clearInterval(interval);
   }, [fetchAll]);
 
   if (loading) {
@@ -316,7 +314,7 @@ function FluxoCaixa({
 // ─── Contas a Receber ─────────────────────────────────────────────────────────
 
 const STATUS_PAYMENT = {
-  PAID:      { label: "Pago",        cls: "bg-green-100 text-green-700" },
+  PAID:      { label: "Recebido",     cls: "bg-green-100 text-green-700" },
   PENDING:   { label: "Pendente",    cls: "bg-amber-100 text-amber-700" },
   OVERDUE:   { label: "Vencido",     cls: "bg-red-100 text-red-700" },
   CANCELLED: { label: "Cancelado",   cls: "bg-slate-100 text-slate-500" },
@@ -445,6 +443,7 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
   const [filter,      setFilter]      = useState("all");
   const [showForm,    setShowForm]    = useState(false);
   const [paying,      setPaying]      = useState<string | null>(null);
+  const [deleting,    setDeleting]    = useState<string | null>(null);
   const [saving,      setSaving]      = useState(false);
   const [formError,   setFormError]   = useState("");
 
@@ -463,6 +462,17 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
       onRefresh();
     } finally {
       setPaying(null);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Cancelar esta conta a pagar?")) return;
+    setDeleting(id);
+    try {
+      await deleteAccountPayable(id);
+      onRefresh();
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -614,15 +624,29 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {(item.status === "PENDING" || item.status === "OVERDUE") && (
-                        <button
-                          onClick={() => handlePay(item.id)}
-                          disabled={paying === item.id}
-                          className="text-xs px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium"
-                        >
-                          {paying === item.id ? <Loader2 size={12} className="animate-spin inline" /> : "Pagar"}
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        {(item.status === "PENDING" || item.status === "OVERDUE") && (
+                          <button
+                            onClick={() => handlePay(item.id)}
+                            disabled={paying === item.id || deleting === item.id}
+                            className="text-xs px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 font-medium"
+                          >
+                            {paying === item.id ? <Loader2 size={12} className="animate-spin inline" /> : "Pagar"}
+                          </button>
+                        )}
+                        {item.status !== "CANCELLED" && (
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            disabled={deleting === item.id || paying === item.id}
+                            title="Cancelar conta"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                          >
+                            {deleting === item.id
+                              ? <Loader2 size={14} className="animate-spin" />
+                              : <Trash2 size={14} />}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

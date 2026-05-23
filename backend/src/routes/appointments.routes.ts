@@ -31,6 +31,7 @@ const createSchema = z
     endTime: z.coerce.date(),
     reason: z.string().max(500).optional(),
     notes: z.string().max(2000).optional(),
+    amount: z.number().positive().optional(),
   })
   .refine((d) => d.startTime < d.endTime, {
     message: 'startTime deve ser anterior a endTime',
@@ -148,7 +149,7 @@ export async function appointmentsRoutes(app: FastifyInstance) {
     if (!parsed.success) {
       return reply.code(400).send({ error: parsed.error.flatten() })
     }
-    const { patientId, doctorId, startTime, endTime, reason, notes } = parsed.data
+    const { patientId, doctorId, startTime, endTime, reason, notes, amount } = parsed.data
 
     try {
       // Valida existência ANTES de tentar inserir (mensagens mais claras que P2003)
@@ -173,14 +174,15 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         include: appointmentInclude,
       })
 
-      // Auto-criar cobrança se médico tem consultationFee cadastrado
-      if (doctor.consultationFee) {
+      // Auto-criar cobrança: usa valor negociado se fornecido, senão o fee do médico
+      const chargeAmount = amount ?? doctor.consultationFee
+      if (chargeAmount) {
         const doctorName = doctor.user?.name ?? doctorId
         await prisma.payment.create({
           data: {
             patientId,
             appointmentId: created.id,
-            amount: doctor.consultationFee,
+            amount: chargeAmount,
             dueDate: startTime,
             description: `Consulta — ${doctor.specialty} (${doctorName})`,
           },
