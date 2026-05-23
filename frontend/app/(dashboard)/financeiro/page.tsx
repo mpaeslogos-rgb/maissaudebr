@@ -86,8 +86,8 @@ export default function FinanceiroPage() {
     setLoading(true);
     try {
       const [resPayments, resPayables, resCashflow] = await Promise.all([
-        getPayments({ take: 200 }),
-        getAccountsPayable({ take: 200 }),
+        getPayments({ take: 100 }),
+        getAccountsPayable({ take: 100 }),
         getCashflow(months),
       ]);
       setPayments(resPayments.data);
