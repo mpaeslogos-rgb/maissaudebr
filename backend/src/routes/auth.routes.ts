@@ -57,10 +57,8 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(401).send({ error: 'Credenciais invalidas' })
     }
 
-    const jti = `${user.id}-${Date.now()}`
     const token = app.jwt.sign(
       { sub: user.id, role: user.role, name: user.name },
-      { jwtid: jti },
     )
 
     logAudit({ userId: user.id, action: 'LOGIN', entity: 'User', entityId: user.id, request })
@@ -74,10 +72,10 @@ export async function authRoutes(app: FastifyInstance) {
   // POST /auth/logout — revoga o token atual até expirar
   app.post('/auth/logout', { preHandler: requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT') },
     async (request, reply) => {
-      const payload = request.user as JwtPayload & { jti?: string; exp?: number }
-      const jti = payload.jti ?? (request.headers.authorization?.split(' ')[1] ?? '')
+      const payload = request.user as JwtPayload
+      const tokenKey = request.headers.authorization?.split(' ')[1] ?? payload.sub
       const exp = payload.exp ? payload.exp * 1000 : Date.now() + 8 * 60 * 60 * 1000
-      revokedTokens.set(jti, exp)
+      revokedTokens.set(tokenKey, exp)
       const uid = payload.sub ?? null
       logAudit({ userId: uid, action: 'LOGOUT', entity: 'User', entityId: uid, request })
       return reply.send({ message: 'Sessão encerrada.' })
