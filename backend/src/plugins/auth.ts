@@ -44,6 +44,7 @@ export function requireRole(...roles: Role[]) {
     if (await checkRevoked(request.headers.authorization)) {
       return reply.code(401).send({ error: 'Token revogado. Faça login novamente.' })
     }
+    const payload = request.user as JwtPayload
     if (!roles.includes(payload.role)) {
       return reply.code(403).send({ error: 'Acesso negado. Permissão insuficiente.' })
     }
