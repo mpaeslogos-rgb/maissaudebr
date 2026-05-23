@@ -154,7 +154,10 @@ export async function appointmentsRoutes(app: FastifyInstance) {
       // Valida existência ANTES de tentar inserir (mensagens mais claras que P2003)
       const [patient, doctor] = await Promise.all([
         prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } }),
-        prisma.doctor.findUnique({ where: { id: doctorId }, select: { id: true } }),
+        prisma.doctor.findUnique({
+          where: { id: doctorId },
+          select: { id: true, consultationFee: true, specialty: true, user: { select: { name: true } } },
+        }),
       ])
       if (!patient) return reply.code(404).send({ error: 'Paciente não encontrado' })
       if (!doctor) return reply.code(404).send({ error: 'Médico não encontrado' })
@@ -169,6 +172,21 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: { patientId, doctorId, startTime, endTime, reason, notes },
         include: appointmentInclude,
       })
+
+      // Auto-criar cobrança se médico tem consultationFee cadastrado
+      if (doctor.consultationFee) {
+        const doctorName = doctor.user?.name ?? doctorId
+        await prisma.payment.create({
+          data: {
+            patientId,
+            appointmentId: created.id,
+            amount: doctor.consultationFee,
+            dueDate: startTime,
+            description: `Consulta — ${doctor.specialty} (${doctorName})`,
+          },
+        })
+      }
+
       const uid = (request.user as JwtPayload)?.sub ?? null
       logAudit({ userId: uid, action: 'CREATE', entity: 'Appointment', entityId: created.id, request })
       return reply.code(201).send(created)
@@ -331,6 +349,13 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: { status: 'CANCELLED' },
         include: appointmentInclude,
       })
+
+      // Cancelar cobrança pendente vinculada, se houver
+      await prisma.payment.updateMany({
+        where: { appointmentId: cancelled.id, status: { in: ['PENDING', 'OVERDUE'] } },
+        data: { status: 'CANCELLED' },
+      })
+
       const uid = (request.user as JwtPayload)?.sub ?? null
       logAudit({ userId: uid, action: 'CANCEL', entity: 'Appointment', entityId: cancelled.id, request })
       return reply.send(cancelled)
