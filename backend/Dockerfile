@@ -1,4 +1,4 @@
-# v25 — fix: take 500 + hard-delete cancelled appointments + cashflow projecao
+# v26 — force rebuild: hard-delete cancelled + take 500 + cashflow projecao
 FROM node:22-slim
 
 WORKDIR /app
