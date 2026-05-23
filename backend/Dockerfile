@@ -1,4 +1,4 @@
-# v26 — force rebuild: hard-delete cancelled + take 500 + cashflow projecao
+# v27 — fix: TS2451 cashflow redecl + hard-delete cancelled + take 500
 FROM node:22-slim
 
 WORKDIR /app
