@@ -45,7 +45,18 @@ export class ApiException extends Error {
   public data: ApiError
 
   constructor(status: number, data: ApiError) {
-    super(data.error || 'Erro desconhecido')
+    const raw = data.error as unknown
+    let msg: string
+    if (typeof raw === 'string') {
+      msg = raw
+    } else if (raw && typeof raw === 'object') {
+      const fe = (raw as { fieldErrors?: Record<string, string[]> }).fieldErrors
+      const msgs = fe ? Object.values(fe).flat() : []
+      msg = msgs.length ? msgs.join('; ') : 'Erro de validação. Verifique os dados informados.'
+    } else {
+      msg = 'Erro desconhecido'
+    }
+    super(msg)
     this.name = 'ApiException'
     this.status = status
     this.data = data
