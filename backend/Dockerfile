@@ -1,4 +1,4 @@
-# v29 — fix TS2323 getPayload dup + jwtid sign (security & LGPD)
+# v30 — fix TS2769 jwtid overload (use raw token for revocation)
 FROM node:22-slim
 
 WORKDIR /app

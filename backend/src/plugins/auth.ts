@@ -11,19 +11,18 @@ export interface JwtPayload {
 }
 
 // Import lazy para evitar dependência circular (auth.routes importa auth.ts e vice-versa)
-async function checkRevoked(jti: string | undefined, authorization: string | undefined): Promise<boolean> {
-  if (!jti && !authorization) return false
+async function checkRevoked(authorization: string | undefined): Promise<boolean> {
+  if (!authorization) return false
   const { isTokenRevoked } = await import('../routes/auth.routes')
-  const key = jti ?? authorization?.split(' ')[1] ?? ''
-  return isTokenRevoked(key)
+  const token = authorization.split(' ')[1] ?? ''
+  return isTokenRevoked(token)
 }
 
 /** Apenas verifica se o JWT é válido — sem checar role. */
 export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
   try {
     await request.jwtVerify()
-    const payload = request.user as JwtPayload
-    if (await checkRevoked(payload.jti, request.headers.authorization)) {
+    if (await checkRevoked(request.headers.authorization)) {
       return reply.code(401).send({ error: 'Token revogado. Faça login novamente.' })
     }
   } catch {
@@ -42,8 +41,7 @@ export function requireRole(...roles: Role[]) {
     } catch {
       return reply.code(401).send({ error: 'Token inválido ou ausente' })
     }
-    const payload = request.user as JwtPayload
-    if (await checkRevoked(payload.jti, request.headers.authorization)) {
+    if (await checkRevoked(request.headers.authorization)) {
       return reply.code(401).send({ error: 'Token revogado. Faça login novamente.' })
     }
     if (!roles.includes(payload.role)) {
