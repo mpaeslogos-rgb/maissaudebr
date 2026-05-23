@@ -90,6 +90,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
   const [startMin, setStartMin]       = useState(0)
   const [durationMin, setDurationMin] = useState(30)
   const [reason, setReason]           = useState('')
+  const [amount, setAmount]           = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -120,6 +121,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
         startTime: start.toISOString(),
         endTime:   end.toISOString(),
         reason:    reason.trim() || undefined,
+        amount:    amount ? parseFloat(amount.replace(',', '.')) : undefined,
       })
       onSaved()
     } catch (err: unknown) {
@@ -233,6 +235,31 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                   <option value={90}>1h30</option>
                   <option value={120}>2 horas</option>
                 </select>
+              </div>
+
+              {/* Valor */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Valor <span className="text-slate-400 text-xs">(opcional — deixe em branco para usar o valor do médico)</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    placeholder={
+                      doctorId
+                        ? (doctors.find(d => d.id === doctorId)?.consultationFee
+                            ? String(doctors.find(d => d.id === doctorId)!.consultationFee)
+                            : 'Sem valor padrão')
+                        : 'Selecione um médico'
+                    }
+                    className="input pl-9"
+                  />
+                </div>
               </div>
 
               {/* Motivo */}

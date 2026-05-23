@@ -422,6 +422,10 @@ export function payAccountPayable(id: string): Promise<{ data: AccountPayable }>
   return apiPost<{ data: AccountPayable }>(`/accounts-payable/${id}/pay`, {})
 }
 
+export function deleteAccountPayable(id: string): Promise<{ data: AccountPayable }> {
+  return apiDelete<{ data: AccountPayable }>(`/accounts-payable/${id}`)
+}
+
 // ─── Prontuários ──────────────────────────────────────────────────────────────
 
 export function getMedicalRecords(params?: {
