@@ -1,4 +1,4 @@
-# v30 — fix TS2769 jwtid overload (use raw token for revocation)
+# v31 — fix TS2304 payload undeclared in requireRole
 FROM node:22-slim
 
 WORKDIR /app
