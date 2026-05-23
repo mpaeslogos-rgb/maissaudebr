@@ -1,4 +1,4 @@
-# v23 — feat: projecao PENDING no cashflow + polling 30s financeiro
+# v24 — fix: max take 500 nos endpoints payments e accounts-payable
 FROM node:22-slim
 
 WORKDIR /app

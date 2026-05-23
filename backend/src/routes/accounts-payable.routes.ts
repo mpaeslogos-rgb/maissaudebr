@@ -58,7 +58,7 @@ const listQuerySchema = z.object({
   from: z.coerce.date().optional(), // intervalo em dueDate
   to: z.coerce.date().optional(),
   overdueOnly: z.coerce.boolean().optional(), // atalho: dueDate < hoje && status PENDING
-  take: z.coerce.number().int().positive().max(100).default(50),
+  take: z.coerce.number().int().positive().max(500).default(50),
   skip: z.coerce.number().int().min(0).default(0),
 })
 

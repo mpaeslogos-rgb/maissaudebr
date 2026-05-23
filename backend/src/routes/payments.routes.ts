@@ -71,7 +71,7 @@ const listQuerySchema = z.object({
   to: z.coerce.date().optional(),
   dateField: z.enum(['createdAt', 'paidAt', 'dueDate']).default('createdAt'),
   overdueOnly: z.coerce.boolean().optional(),
-  take: z.coerce.number().int().positive().max(100).default(50),
+  take: z.coerce.number().int().positive().max(500).default(50),
   skip: z.coerce.number().int().min(0).default(0),
 })
 
