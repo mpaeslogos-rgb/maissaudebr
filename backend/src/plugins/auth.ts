@@ -56,8 +56,3 @@ export function requireRole(...roles: Role[]) {
 export function getPayload(request: FastifyRequest): JwtPayload {
   return request.user as JwtPayload
 }
-
-/** Extrai o payload JWT da request (já verificada). */
-export function getPayload(request: FastifyRequest): JwtPayload {
-  return request.user as JwtPayload
-}
