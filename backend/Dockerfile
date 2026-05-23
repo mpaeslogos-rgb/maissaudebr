@@ -1,4 +1,4 @@
-# v27 — fix: TS2451 cashflow redecl + hard-delete cancelled + take 500
+# v28 — security: rate-limit, helmet, AES-256 PII, LGPD consent, logout, audit diff
 FROM node:22-slim
 
 WORKDIR /app

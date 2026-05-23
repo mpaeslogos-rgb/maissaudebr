@@ -200,6 +200,32 @@ model Patient {
   @@index([cpf])
   @@index([fullName])
   @@map("patients")
+
+  consents        Consent[]
+}
+
+// ============================================
+// LGPD — CONSENTIMENTO (Art. 7 e Art. 9)
+// ============================================
+// Registra o consentimento explícito do paciente para cada finalidade de tratamento.
+// Finalidades típicas: "tratamento_clinico", "marketing", "compartilhamento_parceiros", etc.
+
+model Consent {
+  id          String   @id @default(cuid())
+  patientId   String
+  purpose     String   // Finalidade do tratamento (ex: "tratamento_clinico")
+  granted     Boolean  @default(true) // true = consentiu, false = revogou
+  grantedAt   DateTime @default(now())
+  revokedAt   DateTime?
+  ipAddress   String?
+  userAgent   String?
+  notes       String?
+
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([patientId, purpose])
+  @@map("consents")
 }
 
 // ============================================

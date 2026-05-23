@@ -6,6 +6,7 @@ import { requireRole } from '../plugins/auth'
 import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { logAudit } from '../lib/audit'
+import { passwordSchema } from '../lib/password'
 
 const roleEnum = z.enum(['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'])
 
@@ -21,7 +22,7 @@ const createSchema = z.object({
   email:    z.string().email(),
   name:     z.string().min(2).max(200),
   role:     roleEnum,
-  password: z.string().min(6),
+  password: passwordSchema,
 })
 
 const updateSchema = z.object({
@@ -31,7 +32,7 @@ const updateSchema = z.object({
 })
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(6),
+  password: passwordSchema,
 })
 
 const SELECT_USER = {

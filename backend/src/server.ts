@@ -1,8 +1,10 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
+import rateLimit from '@fastify/rate-limit'
 import fastifyStatic from '@fastify/static'
 import path from 'node:path'
 import fs from 'node:fs'
@@ -29,8 +31,33 @@ import { cid10Routes } from './routes/cid10.routes'
 import { usersRoutes } from './routes/users.routes'
 import { auditRoutes } from './routes/audit.routes'
 import { cashflowRoutes } from './routes/cashflow.routes'
+import { consentsRoutes } from './routes/consents.routes'
 
 const app = Fastify({ logger: true })
+
+const WEAK_SECRETS = new Set([
+  'troque-este-segredo',
+  'chave-secreta-bem-grande-troque-em-producao-123456',
+  'openssl rand -base64 32',
+  'secret',
+  'jwt_secret',
+  'change_me',
+])
+
+function assertSecrets() {
+  const jwtSecret = process.env.JWT_SECRET
+  if (!jwtSecret || jwtSecret.length < 32) {
+    console.error('[FATAL] JWT_SECRET deve ter pelo menos 32 caracteres')
+    process.exit(1)
+  }
+  if (WEAK_SECRETS.has(jwtSecret)) {
+    console.error('[FATAL] JWT_SECRET é um valor padrão inseguro. Defina um segredo forte em produção.')
+    process.exit(1)
+  }
+  if (!process.env.FIELD_ENCRYPTION_KEY || process.env.FIELD_ENCRYPTION_KEY.length < 32) {
+    console.warn('[WARN] FIELD_ENCRYPTION_KEY não configurada ou muito curta — dados PII não serão criptografados')
+  }
+}
 
 async function bootstrap() {
   const uploadsDir = path.resolve(process.cwd(), 'uploads')
@@ -41,6 +68,22 @@ async function bootstrap() {
   await app.register(fastifyStatic, {
     root: uploadsDir,
     prefix: '/uploads/',
+  })
+
+  // Security headers (CSP desativado para não quebrar uploads/static)
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+
+  // Rate limiting global: 200 req/min por IP
+  await app.register(rateLimit, {
+    global: true,
+    max: 200,
+    timeWindow: '1 minute',
+    errorResponseBuilder: (_req, context) => ({
+      error: `Muitas requisições. Tente novamente em ${Math.ceil(context.ttl / 1000)}s`,
+    }),
   })
 
   const allowedOrigins = process.env.CORS_ALLOW_ORIGIN
@@ -55,8 +98,10 @@ async function bootstrap() {
     exposedHeaders: ['Authorization'],
   })
 
+  assertSecrets()
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET || 'troque-este-segredo',
+    secret: process.env.JWT_SECRET!,
+    sign: { expiresIn: '8h' },
   })
 
   await app.register(multipart, {
@@ -84,6 +129,7 @@ async function bootstrap() {
   await app.register(usersRoutes, { prefix: '/api' })
   await app.register(auditRoutes, { prefix: '/api' })
   await app.register(cashflowRoutes, { prefix: '/api' })
+  await app.register(consentsRoutes)
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'
