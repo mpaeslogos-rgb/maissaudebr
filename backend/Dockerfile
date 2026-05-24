@@ -1,4 +1,4 @@
-# v31 — fix TS2304 payload undeclared in requireRole
+# v32 — amount negociado em nova consulta + security/LGPD
 FROM node:22-slim
 
 WORKDIR /app
