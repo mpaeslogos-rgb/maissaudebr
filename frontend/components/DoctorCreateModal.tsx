@@ -16,7 +16,7 @@ interface DoctorCreateModalProps {
 export function DoctorCreateModal({ onClose, onSaved }: DoctorCreateModalProps) {
   const [form, setForm] = useState({
     name: '', email: '', password: '', crm: '', crmState: 'SP', specialty: '',
-    phone: '', consultationFee: '',
+    phone: '', consultationFee: '', workStartHour: '8', workEndHour: '18',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -47,6 +47,8 @@ export function DoctorCreateModal({ onClose, onSaved }: DoctorCreateModalProps) 
       }
       if (form.phone.trim())    payload.phone = form.phone.trim()
       if (form.consultationFee) payload.consultationFee = Number(form.consultationFee)
+      payload.workStartHour = Number(form.workStartHour) || 8
+      payload.workEndHour   = Number(form.workEndHour)   || 18
 
       const doctor = await createDoctor(payload)
       onSaved(doctor)
@@ -128,6 +130,25 @@ export function DoctorCreateModal({ onClose, onSaved }: DoctorCreateModalProps) 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Valor consulta</label>
               <input type="number" min="0" step="0.01" name="consultationFee" value={form.consultationFee} onChange={handleChange} placeholder="0,00" className="input" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Início da agenda</label>
+              <select name="workStartHour" value={form.workStartHour} onChange={handleChange} className="input">
+                {Array.from({ length: 18 }, (_, i) => i + 6).map(h => (
+                  <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Fim da agenda</label>
+              <select name="workEndHour" value={form.workEndHour} onChange={handleChange} className="input">
+                {Array.from({ length: 18 }, (_, i) => i + 7).map(h => (
+                  <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+                ))}
+              </select>
             </div>
           </div>
 

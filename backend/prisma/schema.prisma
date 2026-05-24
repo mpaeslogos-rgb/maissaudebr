@@ -141,6 +141,8 @@ model Doctor {
   phone        String?
   bio          String?
   consultationFee Float?
+  workStartHour Int      @default(8)
+  workEndHour   Int      @default(18)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

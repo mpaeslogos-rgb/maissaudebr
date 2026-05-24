@@ -40,8 +40,8 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
   NO_SHOW:     'Não compareceu',
 }
 
-// Horas exibidas na grade (8h às 20h)
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 8)
+// Horas exibidas na grade (6h às 20h)
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 6)
 
 // ─── Utilitários de data ─────────────────────────────────────────────────────
 
@@ -1343,6 +1343,15 @@ export default function AgendaPage() {
     setShowNewModal(true)
   }
 
+  const selectedDoctor = doctors.find(d => d.id === filterDoctorId) ?? null
+
+  function isOutsideWorkHours(hour: number): boolean {
+    if (!selectedDoctor) return false
+    const start = selectedDoctor.workStartHour ?? 8
+    const end   = selectedDoctor.workEndHour   ?? 18
+    return hour < start || hour >= end
+  }
+
   return (
     <div className="space-y-4 flex flex-col" style={{ minHeight: 0 }}>
       {/* Cabeçalho */}
@@ -1374,6 +1383,13 @@ export default function AgendaPage() {
             <option key={d.id} value={d.id}>Dr(a). {d.user?.name} — {d.specialty}</option>
           ))}
         </select>
+
+        {selectedDoctor && (
+          <div className="flex items-center gap-1.5 text-xs bg-primary-50 border border-primary-200 text-primary-700 rounded-lg px-3 py-1.5 font-medium">
+            <Activity size={12} />
+            Agenda: {String(selectedDoctor.workStartHour ?? 8).padStart(2, '0')}:00 – {String(selectedDoctor.workEndHour ?? 18).padStart(2, '0')}:00
+          </div>
+        )}
 
         <div className="ml-auto flex items-center gap-3 text-xs flex-wrap">
           <Legend color="bg-yellow-300"  label="Agendada" />
@@ -1469,16 +1485,17 @@ export default function AgendaPage() {
               {/* Linhas de horário */}
               {HOURS.map(hour => (
                 <div key={`row-${hour}`} className="contents">
-                  <div className="border-r border-b border-surface-border p-2 text-xs text-slate-500 font-mono text-right pr-2 bg-white">
+                  <div className={`border-r border-b border-surface-border p-2 text-xs font-mono text-right pr-2 ${isOutsideWorkHours(hour) ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-500'}`}>
                     {String(hour).padStart(2, '0')}:00
                   </div>
                   {days.map((day, di) => {
                     const apts = getApts(day, hour)
+                    const outside = isOutsideWorkHours(hour)
                     return (
                       <div
                         key={`${hour}-${di}`}
                         onClick={() => { if (apts.length === 0) handleCellClick(day, hour) }}
-                        className="border-r border-b border-surface-border min-h-[60px] p-1 hover:bg-cream-50 cursor-pointer relative"
+                        className={`border-r border-b border-surface-border min-h-[60px] p-1 cursor-pointer relative ${outside ? 'bg-slate-100 hover:bg-slate-200' : 'hover:bg-cream-50'}`}
                       >
                         {apts.map(apt => (
                           <div

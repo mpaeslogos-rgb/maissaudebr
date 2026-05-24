@@ -84,6 +84,8 @@ export interface Doctor {
   phone?: string
   bio?: string
   consultationFee?: number
+  workStartHour?: number
+  workEndHour?: number
   isActive?: boolean
   user?: {
     id?: string
