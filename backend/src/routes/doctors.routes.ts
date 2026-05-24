@@ -23,6 +23,8 @@ const createDoctorSchema = z.object({
   consultationFee: z.number().positive().optional(),
   phone: z.string().optional(),
   bio: z.string().optional(),
+  workStartHour: z.number().int().min(0).max(23).default(8),
+  workEndHour: z.number().int().min(1).max(24).default(18),
 })
 
 const updateDoctorSchema = z.object({
@@ -31,6 +33,8 @@ const updateDoctorSchema = z.object({
   phone: z.string().optional(),
   bio: z.string().optional(),
   crmState: z.string().length(2).optional(),
+  workStartHour: z.number().int().min(0).max(23).optional(),
+  workEndHour: z.number().int().min(1).max(24).optional(),
 })
 
 const idParamSchema = z.object({ id: z.string().min(1, 'ID inválido') })
@@ -55,7 +59,7 @@ export async function doctorsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: parsed.error.flatten() })
     }
 
-    const { name, email, password, crm, crmState, specialty, consultationFee, phone, bio } =
+    const { name, email, password, crm, crmState, specialty, consultationFee, phone, bio, workStartHour, workEndHour } =
       parsed.data
 
     try {
@@ -75,6 +79,8 @@ export async function doctorsRoutes(app: FastifyInstance) {
             consultationFee,
             phone,
             bio,
+            workStartHour,
+            workEndHour,
           },
           include: {
             user: {
