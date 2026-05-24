@@ -176,7 +176,12 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                     + Novo médico
                   </button>
                 </div>
-                <select value={doctorId} onChange={e => setDoctorId(e.target.value)} className="input">
+                <select value={doctorId} onChange={e => {
+                  const id = e.target.value
+                  setDoctorId(id)
+                  const doc = doctors.find(d => d.id === id)
+                  setAmount(doc?.consultationFee ? String(doc.consultationFee) : '')
+                }} className="input">
                   <option value="">Selecione um médico</option>
                   {doctors.map(d => (
                     <option key={d.id} value={d.id}>
@@ -240,23 +245,16 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
               {/* Valor */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Valor <span className="text-slate-400 text-xs">(opcional — deixe em branco para usar o valor do médico)</span>
+                  Valor da consulta <span className="text-slate-400 text-xs">(edite para negociar)</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">R$</span>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    placeholder={
-                      doctorId
-                        ? (doctors.find(d => d.id === doctorId)?.consultationFee
-                            ? String(doctors.find(d => d.id === doctorId)!.consultationFee)
-                            : 'Sem valor padrão')
-                        : 'Selecione um médico'
-                    }
+                    placeholder="0,00"
                     className="input pl-9"
                   />
                 </div>
