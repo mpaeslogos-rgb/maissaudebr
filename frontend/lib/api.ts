@@ -12,6 +12,7 @@ import type {
   ChatListResponse, Chat, ChatMessage,
   ApiError,
   Exam,
+  LeadListResponse, Lead,
 } from './types'
 
 // ─── URL base ────────────────────────────────────────────────────────────────
@@ -202,10 +203,29 @@ export function deletePatient(id: string): Promise<{ message: string }> {
   return apiDelete<{ message: string }>(`/patients/${id}`)
 }
 
-export function bulkImportPatients(file: File): Promise<{ message: string; data: Patient[] }> {
+// ─── Leads ────────────────────────────────────────────────────────────────────
+
+export function getLeads(params?: { page?: number; limit?: number; search?: string }): Promise<LeadListResponse> {
+  const query = new URLSearchParams()
+  if (params?.limit)  query.set('take', String(params.limit))
+  if (params?.page && params?.limit) query.set('skip', String((params.page - 1) * params.limit))
+  if (params?.search) query.set('q', params.search)
+  const qs = query.toString()
+  return apiGet<LeadListResponse>(`/leads${qs ? `?${qs}` : ''}`)
+}
+
+export function deleteLead(id: string): Promise<void> {
+  return apiDelete<void>(`/leads/${id}`)
+}
+
+export function convertLead(id: string, data: Partial<Patient>): Promise<Patient> {
+  return apiPost<Patient>(`/leads/${id}/convert`, data)
+}
+
+export function bulkImportLeads(file: File): Promise<{ message: string; count: number }> {
   const formData = new FormData()
   formData.append('file', file)
-  return apiUpload<{ message: string; data: Patient[] }>('/patients/bulk-import', formData)
+  return apiUpload<{ message: string; count: number }>('/leads/bulk-import', formData)
 }
 
 // ─── Médicos ──────────────────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import {
   ClipboardList,
   BookOpen,
   X,
+  UserPlus,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 
@@ -34,6 +35,7 @@ const menu: MenuItem[] = [
   { href: "/chats",         label: "Chats",          icon: MessageSquare,  roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/agenda",        label: "Agenda",         icon: Calendar,       roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/pacientes",     label: "Pacientes",      icon: Users,          roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/leads",         label: "Leads",          icon: UserPlus,       roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/medicos",       label: "Médicos",        icon: Stethoscope,    roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/prontuarios",   label: "Prontuários",    icon: FileText,       roles: ['ADMIN', 'DOCTOR'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },

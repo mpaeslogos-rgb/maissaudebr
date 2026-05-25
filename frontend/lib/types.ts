@@ -73,6 +73,37 @@ export interface Patient {
 
 export type PatientListResponse = PaginatedResponse<Patient>
 
+// ─── Leads ───────────────────────────────────────────────────────────────────
+
+export interface Lead {
+  id: string
+  name: string
+  phone: string
+  specialty?: string
+  status: string
+  cpf?: string
+  rg?: string
+  birthDate?: string
+  gender?: string
+  email?: string
+  zipCode?: string
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  bloodType?: string
+  allergies?: string
+  notes?: string
+  healthInsurance?: string
+  healthInsuranceNumber?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type LeadListResponse = PaginatedResponse<Lead>
+
 // ─── Médicos ─────────────────────────────────────────────────────────────────
 
 export interface Doctor {
