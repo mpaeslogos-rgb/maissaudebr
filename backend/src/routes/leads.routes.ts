@@ -4,6 +4,24 @@ import { requireRole } from '../plugins/auth'
 import { encrypt, encryptDeterministic, decrypt, decryptDeterministic } from '../lib/crypto'
 import * as XLSX from 'xlsx'
 
+// Criptografia para campos PII do model Patient (espelha encryptPatient em patients.routes.ts)
+function encryptForPatient<T extends Record<string, unknown>>(data: T): T {
+  const d = { ...data } as Record<string, unknown>
+  if ('cpf'                  in d && d.cpf)                  d.cpf                  = encryptDeterministic(d.cpf as string)
+  if ('phone'                in d && d.phone)                d.phone                = encrypt(d.phone as string)
+  if ('rg'                   in d && d.rg)                   d.rg                   = encrypt(d.rg as string)
+  if ('zipCode'              in d && d.zipCode)              d.zipCode              = encrypt(d.zipCode as string)
+  if ('street'               in d && d.street)               d.street               = encrypt(d.street as string)
+  if ('number'               in d && d.number)               d.number               = encrypt(d.number as string)
+  if ('complement'           in d && d.complement)           d.complement           = encrypt(d.complement as string)
+  if ('neighborhood'         in d && d.neighborhood)         d.neighborhood         = encrypt(d.neighborhood as string)
+  if ('allergies'            in d && d.allergies)            d.allergies            = encrypt(d.allergies as string)
+  if ('notes'                in d && d.notes)                d.notes                = encrypt(d.notes as string)
+  if ('healthInsuranceNumber' in d && d.healthInsuranceNumber) d.healthInsuranceNumber = encrypt(d.healthInsuranceNumber as string)
+  // email NÃO é criptografado no model Patient
+  return d as T
+}
+
 function encryptLead<T extends Record<string, unknown>>(data: T): T {
   const d = { ...data } as Record<string, unknown>
   if ('phone'     in d && d.phone)     d.phone     = encrypt(d.phone as string)
@@ -62,7 +80,7 @@ export async function leadsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Preencha todos os campos obrigatórios: Nome, CPF, Data de Nascimento, Gênero, Telefone e E-mail' })
     }
 
-    const patientData = encryptLead({
+    const patientData = encryptForPatient({
       fullName:             String(body.fullName),
       cpf:                  String(body.cpf),
       birthDate:            new Date(String(body.birthDate)),
