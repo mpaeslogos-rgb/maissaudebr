@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 import {
   getPatients,
   createPatient,
@@ -389,6 +390,27 @@ export default function PacientesPage() {
     }
   }
 
+  // ── Download template ─────────────────────────────────────────────────────
+  function downloadTemplate() {
+    const headers = [
+      'Nome Completo', 'CPF', 'Data de Nascimento', 'Gênero', 'Telefone',
+      'RG', 'Email', 'CEP', 'Rua', 'Número', 'Complemento', 'Bairro',
+      'Cidade', 'Estado', 'Tipo Sanguíneo', 'Alergias', 'Observações',
+      'Convênio', 'Número do Convênio',
+    ]
+    const example = [
+      'Maria da Silva', '123.456.789-00', '1985-06-15', 'Feminino', '(11) 91234-5678',
+      'MG-12.345.678', 'maria@email.com', '01310-100', 'Av. Paulista', '1000', 'Apto 42', 'Bela Vista',
+      'São Paulo', 'SP', 'A+', 'Dipirona', '',
+      'Unimed', '987654321',
+    ]
+    const ws = XLSX.utils.aoa_to_sheet([headers, example])
+    ws['!cols'] = headers.map(() => ({ wch: 22 }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Pacientes')
+    XLSX.writeFile(wb, 'modelo_importacao_pacientes.xlsx')
+  }
+
   // ── Bulk import ──────────────────────────────────────────────────────────
   async function handleBulkImport(file: File) {
     setImporting(true)
@@ -426,6 +448,12 @@ export default function PacientesPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            className="btn-outline flex items-center gap-2"
+            onClick={downloadTemplate}
+          >
+            Baixar Modelo
+          </button>
           <button
             className="btn-outline flex items-center gap-2"
             onClick={() => fileInputRef.current?.click()}
