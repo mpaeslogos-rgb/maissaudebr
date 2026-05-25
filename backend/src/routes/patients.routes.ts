@@ -6,7 +6,6 @@ import { requireRole } from '../plugins/auth'
 import type { JwtPayload } from '../plugins/auth'
 import { logAudit } from '../lib/audit'
 import { encrypt, decrypt, encryptDeterministic, decryptDeterministic } from '../lib/crypto'
-import * as XLSX from 'xlsx'
 
 /** Criptografa campos PII antes de salvar no banco */
 function encryptPatient<T extends Record<string, unknown>>(data: T): T {
@@ -263,103 +262,4 @@ export async function patientsRoutes(app: FastifyInstance) {
     }
   })
 
-  // ----- IMPORTAR EM MASSA (Excel) -----
-  app.post('/patients/bulk-import', async (request, reply) => {
-    const data = await request.file()
-    if (!data) {
-      return reply.code(400).send({ error: 'Arquivo não enviado' })
-    }
-
-    if (data.mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
-        data.mimetype !== 'application/vnd.ms-excel') {
-      return reply.code(400).send({ error: 'Arquivo deve ser Excel (.xlsx ou .xls)' })
-    }
-
-    const buffer = await data.toBuffer()
-    const workbook = XLSX.read(buffer, { type: 'buffer' })
-    const sheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[sheetName]
-    const jsonData = XLSX.utils.sheet_to_json(worksheet)
-
-    if (jsonData.length === 0) {
-      return reply.code(400).send({ error: 'Arquivo vazio ou sem dados válidos' })
-    }
-
-    // Validar e preparar dados
-    const patientsToCreate: any[] = []
-    const errors: string[] = []
-
-    jsonData.forEach((row: any, index: number) => {
-      try {
-        const patientData = {
-          fullName: row['Nome Completo'] || row['fullName'],
-          cpf: row['CPF'] || row['cpf'],
-          rg: row['RG'] || row['rg'],
-          birthDate: row['Data de Nascimento'] || row['birthDate'],
-          gender: row['Gênero'] || row['gender'],
-          email: row['Email'] || row['email'],
-          phone: row['Telefone'] || row['phone'],
-          zipCode: row['CEP'] || row['zipCode'],
-          street: row['Rua'] || row['street'],
-          number: row['Número'] || row['number'],
-          complement: row['Complemento'] || row['complement'],
-          neighborhood: row['Bairro'] || row['neighborhood'],
-          city: row['Cidade'] || row['city'],
-          state: row['Estado'] || row['state'],
-          bloodType: row['Tipo Sanguíneo'] || row['bloodType'],
-          allergies: row['Alergias'] || row['allergies'],
-          notes: row['Observações'] || row['notes'],
-          healthInsurance: row['Convênio'] || row['healthInsurance'],
-          healthInsuranceNumber: row['Número do Convênio'] || row['healthInsuranceNumber'],
-        }
-
-        // Validar campos obrigatórios
-        if (!patientData.fullName || !patientData.phone) {
-          errors.push(`Linha ${index + 2}: Campos obrigatórios faltando (Nome Completo, Telefone)`)
-          return
-        }
-
-        // Transformar data
-        if (typeof patientData.birthDate === 'string') {
-          patientData.birthDate = new Date(patientData.birthDate)
-        }
-
-        // Mapear gênero
-        const genderMap: { [key: string]: string } = {
-          'Masculino': 'MALE',
-          'Feminino': 'FEMALE',
-          'Outro': 'OTHER',
-          'MALE': 'MALE',
-          'FEMALE': 'FEMALE',
-          'OTHER': 'OTHER'
-        }
-        patientData.gender = genderMap[patientData.gender] || 'OTHER'
-
-        patientsToCreate.push(patientData)
-      } catch (err) {
-        errors.push(`Linha ${index + 2}: Erro ao processar dados - ${err}`)
-      }
-    })
-
-    if (errors.length > 0) {
-      return reply.code(400).send({ error: 'Erros na validação dos dados', details: errors })
-    }
-
-    try {
-      const createdPatients = await prisma.$transaction(
-        patientsToCreate.map(patient => prisma.patient.create({ data: patient }))
-      )
-      return reply.code(201).send({
-        message: `${createdPatients.length} pacientes importados com sucesso`,
-        data: createdPatients
-      })
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          return reply.code(409).send({ error: 'CPF duplicado encontrado' })
-        }
-      }
-      throw error
-    }
-  })
 }

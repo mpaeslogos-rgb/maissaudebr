@@ -458,8 +458,27 @@ model Lead {
   name      String
   phone     String
   specialty String?
-  status    String   @default("PENDING_SCHEDULING") // PENDING, SCHEDULED
-  
+  status    String   @default("NOVO")
+
+  // Campos opcionais capturados na importação Excel
+  cpf                   String?
+  rg                    String?
+  birthDate             DateTime?
+  gender                String?
+  email                 String?
+  zipCode               String?
+  street                String?
+  number                String?
+  complement            String?
+  neighborhood          String?
+  city                  String?
+  state                 String?
+  bloodType             String?
+  allergies             String?
+  notes                 String?
+  healthInsurance       String?
+  healthInsuranceNumber String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

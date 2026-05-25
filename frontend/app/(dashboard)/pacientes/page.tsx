@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
-import * as XLSX from 'xlsx'
+import { useEffect, useState, useCallback } from 'react'
 import {
   getPatients,
   createPatient,
   updatePatient,
   deletePatient,
-  bulkImportPatients,
 } from '@/lib/api'
 import { Patient, Gender } from '@/lib/types'
 
@@ -125,11 +123,12 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
     e.preventDefault()
     setError('')
 
-    // Validações mínimas client-side
+    // Validações client-side
     if (!form.fullName.trim()) return setError('Nome completo é obrigatório.')
     if (!form.cpf.trim())      return setError('CPF é obrigatório.')
     if (!form.birthDate)       return setError('Data de nascimento é obrigatória.')
     if (!form.phone.trim())    return setError('Telefone é obrigatório.')
+    if (!form.email.trim())    return setError('E-mail é obrigatório.')
 
     setSaving(true)
     try {
@@ -140,8 +139,8 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
         birthDate: form.birthDate,
         gender: form.gender,
         phone: form.phone.trim(),
+        email: form.email.trim(),
       }
-      if (form.email.trim())   payload.email   = form.email.trim()
       if (form.address.trim()) payload.address = form.address.trim()
       if (form.notes.trim())   payload.notes   = form.notes.trim()
 
@@ -255,7 +254,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
           {/* E-mail */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              E-mail <span className="text-slate-400 text-xs">(opcional)</span>
+              E-mail <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -328,9 +327,6 @@ export default function PacientesPage() {
   const [showModal, setShowModal]   = useState(false)
   const [editing, setEditing]       = useState<Patient | null>(null)
 
-  // Bulk import
-  const [importing, setImporting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Busca no backend ──────────────────────────────────────────────────────
@@ -390,52 +386,6 @@ export default function PacientesPage() {
     }
   }
 
-  // ── Download template ─────────────────────────────────────────────────────
-  function downloadTemplate() {
-    const headers = [
-      'Nome Completo', 'CPF', 'Data de Nascimento', 'Gênero', 'Telefone',
-      'RG', 'Email', 'CEP', 'Rua', 'Número', 'Complemento', 'Bairro',
-      'Cidade', 'Estado', 'Tipo Sanguíneo', 'Alergias', 'Observações',
-      'Convênio', 'Número do Convênio',
-    ]
-    const example = [
-      'Maria da Silva', '123.456.789-00', '1985-06-15', 'Feminino', '(11) 91234-5678',
-      'MG-12.345.678', 'maria@email.com', '01310-100', 'Av. Paulista', '1000', 'Apto 42', 'Bela Vista',
-      'São Paulo', 'SP', 'A+', 'Dipirona', '',
-      'Unimed', '987654321',
-    ]
-    const ws = XLSX.utils.aoa_to_sheet([headers, example])
-    ws['!cols'] = headers.map(() => ({ wch: 22 }))
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Pacientes')
-    XLSX.writeFile(wb, 'modelo_importacao_pacientes.xlsx')
-  }
-
-  // ── Bulk import ──────────────────────────────────────────────────────────
-  async function handleBulkImport(file: File) {
-    setImporting(true)
-    try {
-      const result = await bulkImportPatients(file)
-      alert(result.message)
-      fetchPatients()
-    } catch (err: unknown) {
-      if (err instanceof Error) alert(err.message)
-      else alert('Erro ao importar pacientes.')
-    } finally {
-      setImporting(false)
-    }
-  }
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      alert('Selecione um arquivo Excel (.xlsx ou .xls)')
-      return
-    }
-    handleBulkImport(file)
-  }
-
   // ── Renderização ──────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
@@ -448,19 +398,6 @@ export default function PacientesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            className="btn-outline flex items-center gap-2"
-            onClick={downloadTemplate}
-          >
-            Baixar Modelo
-          </button>
-          <button
-            className="btn-outline flex items-center gap-2"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-          >
-            {importing ? 'Importando...' : 'Importar Excel'}
-          </button>
           <button
             className="btn-primary flex items-center gap-2 self-start sm:self-auto"
             onClick={() => { setEditing(null); setShowModal(true) }}
@@ -595,14 +532,6 @@ export default function PacientesPage() {
         />
       )}
 
-      {/* Hidden file input for bulk import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
     </div>
   )
 }
