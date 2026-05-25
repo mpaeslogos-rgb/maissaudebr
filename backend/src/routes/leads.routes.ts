@@ -99,7 +99,7 @@ export async function leadsRoutes(app: FastifyInstance) {
 
     const buffer = await data.toBuffer()
 
-    let jsonData: unknown[]
+    let jsonData: unknown[] = []
     try {
       const workbook = XLSX.read(buffer, { type: 'buffer' })
       const worksheet = workbook.Sheets[workbook.SheetNames[0]]
