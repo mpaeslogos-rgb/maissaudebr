@@ -97,17 +97,16 @@ export async function leadsRoutes(app: FastifyInstance) {
     const data = await request.file()
     if (!data) return reply.code(400).send({ error: 'Arquivo não enviado' })
 
-    if (
-      data.mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
-      data.mimetype !== 'application/vnd.ms-excel'
-    ) {
-      return reply.code(400).send({ error: 'Arquivo deve ser Excel (.xlsx ou .xls)' })
-    }
-
     const buffer = await data.toBuffer()
-    const workbook = XLSX.read(buffer, { type: 'buffer' })
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-    const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+    let jsonData: unknown[]
+    try {
+      const workbook = XLSX.read(buffer, { type: 'buffer' })
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+      jsonData = XLSX.utils.sheet_to_json(worksheet)
+    } catch {
+      return reply.code(400).send({ error: 'Não foi possível ler o arquivo. Certifique-se de que é um arquivo Excel (.xlsx ou .xls) válido.' })
+    }
 
     if (jsonData.length === 0) {
       return reply.code(400).send({ error: 'Arquivo vazio ou sem dados válidos' })
@@ -182,7 +181,12 @@ export async function leadsRoutes(app: FastifyInstance) {
       })
     }
 
-    await prisma.lead.createMany({ data: toCreate })
+    try {
+      await prisma.lead.createMany({ data: toCreate })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      return reply.code(500).send({ error: `Erro ao salvar no banco: ${msg}` })
+    }
 
     const message = errors.length > 0
       ? `${toCreate.length} lead(s) importado(s). ${errors.length} linha(s) ignorada(s) por erro:\n${errors.join('\n')}`
