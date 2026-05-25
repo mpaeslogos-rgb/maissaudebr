@@ -1,4 +1,4 @@
-# v32 — amount negociado em nova consulta + security/LGPD
+# v33 — módulo de Leads (importação Excel, decrypt PII)
 FROM node:22-slim
 
 WORKDIR /app
