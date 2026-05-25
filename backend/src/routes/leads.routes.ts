@@ -130,14 +130,27 @@ export async function leadsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Arquivo vazio ou sem dados válidos' })
     }
 
-    const toCreate: any[] = []
     const errors: string[] = []
+
+    // ── 1. Parseia linhas sem criptografar ainda ─────────────────────────────
+    type RawRow = {
+      lineNum: number; name: string; phone: string; cpf?: string; rg?: string
+      birthDate?: Date; gender?: string; email?: string; zipCode?: string
+      street?: string; number?: string; complement?: string; neighborhood?: string
+      city?: string; state?: string; bloodType?: string; allergies?: string
+      notes?: string; healthInsurance?: string; healthInsuranceNumber?: string
+    }
+    const rawRows: RawRow[] = []
+
+    const genderMap: Record<string, string> = {
+      Masculino: 'MALE', Feminino: 'FEMALE', Outro: 'OTHER',
+      MALE: 'MALE', FEMALE: 'FEMALE', OTHER: 'OTHER',
+    }
 
     jsonData.forEach((row: any, index: number) => {
       const name  = String(row['Nome Completo'] || row['name'] || '').trim()
       const phone = String(row['Telefone'] || row['phone'] || '').trim()
 
-      // Ignora linhas totalmente em branco (trailing rows do Excel)
       if (!name && !phone) return
 
       if (!name || !phone) {
@@ -146,17 +159,10 @@ export async function leadsRoutes(app: FastifyInstance) {
         return
       }
 
-      const genderMap: Record<string, string> = {
-        Masculino: 'MALE', Feminino: 'FEMALE', Outro: 'OTHER',
-        MALE: 'MALE', FEMALE: 'FEMALE', OTHER: 'OTHER',
-      }
-
       const rawDate = row['Data de Nascimento'] || row['birthDate']
       let birthDate: Date | undefined
       if (rawDate) {
         if (typeof rawDate === 'number') {
-          // Número serial do Excel
-          birthDate = XLSX.SSF.parse_date_code(rawDate) as unknown as Date
           const parsed = XLSX.SSF.parse_date_code(rawDate)
           birthDate = new Date(parsed.y, parsed.m - 1, parsed.d)
         } else {
@@ -165,18 +171,17 @@ export async function leadsRoutes(app: FastifyInstance) {
         }
       }
 
-      const rawCpf = String(row['CPF'] || row['cpf'] || '').trim()
-
-      toCreate.push(encryptLead({
+      rawRows.push({
+        lineNum:              index + 2,
         name,
         phone,
-        cpf:                  rawCpf || undefined,
-        rg:                   String(row['RG'] || row['rg'] || '').trim() || undefined,
-        birthDate:            birthDate,
+        cpf:                  String(row['CPF']  || row['cpf']  || '').trim() || undefined,
+        rg:                   String(row['RG']   || row['rg']   || '').trim() || undefined,
+        birthDate,
         gender:               genderMap[row['Gênero'] || row['gender']] || undefined,
         email:                String(row['Email'] || row['email'] || '').trim() || undefined,
-        zipCode:              String(row['CEP'] || row['zipCode'] || '').trim() || undefined,
-        street:               String(row['Rua'] || row['street'] || '').trim() || undefined,
+        zipCode:              String(row['CEP']  || row['zipCode'] || '').trim() || undefined,
+        street:               String(row['Rua']  || row['street'] || '').trim() || undefined,
         number:               String(row['Número'] || row['number'] || '').trim() || undefined,
         complement:           String(row['Complemento'] || row['complement'] || '').trim() || undefined,
         neighborhood:         String(row['Bairro'] || row['neighborhood'] || '').trim() || undefined,
@@ -187,9 +192,43 @@ export async function leadsRoutes(app: FastifyInstance) {
         notes:                String(row['Observações'] || row['notes'] || '').trim() || undefined,
         healthInsurance:      String(row['Convênio'] || row['healthInsurance'] || '').trim() || undefined,
         healthInsuranceNumber: String(row['Número do Convênio'] || row['healthInsuranceNumber'] || '').trim() || undefined,
-        status: 'NOVO',
-      }))
+      })
     })
+
+    // ── 2. Cruza com pacientes existentes para evitar duplicatas ─────────────
+    const normalize = (p: string) => p.replace(/\D/g, '')
+
+    // CPF: criptografia determinística → lookup direto no banco
+    const cpfsNoArquivo = rawRows.filter(r => r.cpf).map(r => encryptDeterministic(r.cpf!))
+    const pacientesPorCpf = cpfsNoArquivo.length > 0
+      ? await prisma.patient.findMany({ where: { cpf: { in: cpfsNoArquivo } }, select: { cpf: true } })
+      : []
+    const cpfsExistentes = new Set(
+      pacientesPorCpf.map((p: { cpf: string | null }) => p.cpf).filter(Boolean) as string[]
+    )
+
+    // Telefone: criptografia AES com IV aleatório → descriptografa todos os pacientes
+    const todosPacientes = await prisma.patient.findMany({ select: { phone: true } })
+    const telefonesExistentes = new Set(
+      todosPacientes.map((p: { phone: string }) => normalize(decrypt(p.phone) ?? ''))
+    )
+
+    // ── 3. Filtra duplicatas e monta lista final ──────────────────────────────
+    const toCreate: any[] = []
+
+    for (const row of rawRows) {
+      const cpfEnc = row.cpf ? encryptDeterministic(row.cpf) : null
+      if (cpfEnc && cpfsExistentes.has(cpfEnc)) {
+        errors.push(`Linha ${row.lineNum}: ${row.name} — CPF já cadastrado como paciente (ignorado)`)
+        continue
+      }
+      if (telefonesExistentes.has(normalize(row.phone))) {
+        errors.push(`Linha ${row.lineNum}: ${row.name} — telefone já cadastrado como paciente (ignorado)`)
+        continue
+      }
+
+      toCreate.push(encryptLead({ ...row, status: 'NOVO' }))
+    }
 
     if (toCreate.length === 0) {
       return reply.code(400).send({
