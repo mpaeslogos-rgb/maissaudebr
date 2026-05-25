@@ -314,8 +314,8 @@ export async function patientsRoutes(app: FastifyInstance) {
         }
 
         // Validar campos obrigatórios
-        if (!patientData.fullName || !patientData.cpf || !patientData.birthDate || !patientData.gender || !patientData.phone) {
-          errors.push(`Linha ${index + 2}: Campos obrigatórios faltando (Nome, CPF, Data Nascimento, Gênero, Telefone)`)
+        if (!patientData.fullName || !patientData.phone) {
+          errors.push(`Linha ${index + 2}: Campos obrigatórios faltando (Nome Completo, Telefone)`)
           return
         }
 
