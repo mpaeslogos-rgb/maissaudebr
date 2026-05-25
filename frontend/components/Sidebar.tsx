@@ -17,6 +17,7 @@ import {
   Stethoscope,
   ShieldCheck,
   ClipboardList,
+  BookOpen,
   X,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
@@ -40,6 +41,7 @@ const menu: MenuItem[] = [
   { href: "/configuracoes", label: "Configurações",  icon: Settings,       roles: ['ADMIN'] },
   { href: "/admin/usuarios",    label: "Usuários",    icon: ShieldCheck,    roles: ['ADMIN'] },
   { href: "/admin/audit-logs", label: "Logs",         icon: ClipboardList,  roles: ['ADMIN'] },
+  { href: "/manual",           label: "Manual",        icon: BookOpen },
 ];
 
 interface SidebarProps {
