@@ -1,16 +1,26 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma2'
 import { requireRole } from '../plugins/auth'
-import { encrypt, encryptDeterministic } from '../lib/crypto'
+import { encrypt, encryptDeterministic, decrypt, decryptDeterministic } from '../lib/crypto'
 import * as XLSX from 'xlsx'
 
 function encryptLead<T extends Record<string, unknown>>(data: T): T {
   const d = { ...data } as Record<string, unknown>
-  if ('phone'   in d && d.phone)   d.phone   = encrypt(d.phone as string)
-  if ('email'   in d && d.email)   d.email   = encrypt(d.email as string)
-  if ('cpf'     in d && d.cpf)     d.cpf     = encryptDeterministic(d.cpf as string)
+  if ('phone'     in d && d.phone)     d.phone     = encrypt(d.phone as string)
+  if ('email'     in d && d.email)     d.email     = encrypt(d.email as string)
+  if ('cpf'       in d && d.cpf)       d.cpf       = encryptDeterministic(d.cpf as string)
   if ('allergies' in d && d.allergies) d.allergies = encrypt(d.allergies as string)
-  if ('notes'   in d && d.notes)   d.notes   = encrypt(d.notes as string)
+  if ('notes'     in d && d.notes)     d.notes     = encrypt(d.notes as string)
+  return d as T
+}
+
+function decryptLead<T extends Record<string, unknown>>(data: T): T {
+  const d = { ...data } as Record<string, unknown>
+  if ('phone'     in d && d.phone)     d.phone     = decrypt(d.phone as string)
+  if ('email'     in d && d.email)     d.email     = decrypt(d.email as string)
+  if ('cpf'       in d && d.cpf)       d.cpf       = decryptDeterministic(d.cpf as string)
+  if ('allergies' in d && d.allergies) d.allergies = decrypt(d.allergies as string)
+  if ('notes'     in d && d.notes)     d.notes     = decrypt(d.notes as string)
   return d as T
 }
 
@@ -30,7 +40,7 @@ export async function leadsRoutes(app: FastifyInstance) {
       prisma.lead.count({ where }),
     ])
 
-    return reply.send({ data, total, take: takeN, skip: skipN })
+    return reply.send({ data: data.map(l => decryptLead(l as Record<string, unknown>)), total, take: takeN, skip: skipN })
   })
 
   // ── Excluir lead ────────────────────────────────────────────────────────────
@@ -110,8 +120,12 @@ export async function leadsRoutes(app: FastifyInstance) {
       const name  = String(row['Nome Completo'] || row['name'] || '').trim()
       const phone = String(row['Telefone'] || row['phone'] || '').trim()
 
+      // Ignora linhas totalmente em branco (trailing rows do Excel)
+      if (!name && !phone) return
+
       if (!name || !phone) {
-        errors.push(`Linha ${index + 2}: Nome Completo e Telefone são obrigatórios`)
+        const missing = [!name && 'Nome Completo', !phone && 'Telefone'].filter(Boolean).join(', ')
+        errors.push(`Linha ${index + 2}: campo(s) obrigatório(s) faltando — ${missing}`)
         return
       }
 
@@ -160,12 +174,20 @@ export async function leadsRoutes(app: FastifyInstance) {
       }))
     })
 
-    if (errors.length > 0) {
-      return reply.code(400).send({ error: 'Erros na validação', details: errors })
+    if (toCreate.length === 0) {
+      return reply.code(400).send({
+        error: errors.length > 0
+          ? `Nenhuma linha válida encontrada. Erros:\n${errors.join('\n')}`
+          : 'Arquivo sem dados válidos',
+      })
     }
 
     await prisma.lead.createMany({ data: toCreate })
 
-    return reply.code(201).send({ message: `${toCreate.length} lead(s) importado(s) com sucesso`, count: toCreate.length })
+    const message = errors.length > 0
+      ? `${toCreate.length} lead(s) importado(s). ${errors.length} linha(s) ignorada(s) por erro:\n${errors.join('\n')}`
+      : `${toCreate.length} lead(s) importado(s) com sucesso`
+
+    return reply.code(201).send({ message, count: toCreate.length })
   })
 }
