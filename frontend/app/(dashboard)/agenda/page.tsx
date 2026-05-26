@@ -498,6 +498,9 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   const [showPip,          setShowPip]          = useState(false)
   const [pipMinimized,     setPipMinimized]     = useState(false)
 
+  // Status local: atualizado imediatamente após ações sem esperar o refresh do pai
+  const [localStatus, setLocalStatus] = useState<AppointmentStatus>(apt.status)
+
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
   const durMin = Math.round((end.getTime() - start.getTime()) / 60_000)
@@ -549,11 +552,11 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   // Ativa PiP automaticamente ao entrar no prontuário durante teleconsulta ativa
   useEffect(() => {
-    if (tab === 'prontuario' && apt.status === 'IN_PROGRESS') {
+    if (tab === 'prontuario' && localStatus === 'IN_PROGRESS') {
       setShowPip(true)
       setPipMinimized(false)
     }
-  }, [tab, apt.status])
+  }, [tab, localStatus])
 
   function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -629,7 +632,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   async function handleConfirm() {
     setActing(true); setError('')
-    try { await confirmAppointment(apt.id); onRefresh(); onClose() }
+    try { await confirmAppointment(apt.id); setLocalStatus('CONFIRMED'); onRefresh(); onClose() }
     catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erro') }
     finally { setActing(false) }
   }
@@ -637,7 +640,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   async function handleCancel() {
     if (!window.confirm(`Cancelar a consulta de ${apt.patient.fullName}?`)) return
     setActing(true); setError('')
-    try { await cancelAppointment(apt.id); onRefresh(); onClose() }
+    try { await cancelAppointment(apt.id); setLocalStatus('CANCELLED'); onRefresh(); onClose() }
     catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erro') }
     finally { setActing(false) }
   }
@@ -645,7 +648,9 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   async function handleStartConsulta() {
     try {
       await updateAppointment(apt.id, { status: 'IN_PROGRESS' })
+      setLocalStatus('IN_PROGRESS')
       onRefresh()
+      window.open(videoUrl, '_blank', 'noopener,noreferrer')
       setShowPip(true)
       setPipMinimized(false)
       setTab('prontuario')
@@ -657,6 +662,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     setActing(true); setError('')
     try {
       await updateAppointment(apt.id, { status: 'COMPLETED' })
+      setLocalStatus('COMPLETED')
       onRefresh(); onClose()
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erro') }
     finally { setActing(false) }
@@ -702,8 +708,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
               {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
 
               {/* Status */}
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[apt.status]}`}>
-                {STATUS_LABELS[apt.status]}
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[localStatus]}`}>
+                {STATUS_LABELS[localStatus]}
               </span>
 
               {/* Paciente */}
@@ -722,7 +728,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
               {apt.reason && <InfoRow label="Motivo" value={apt.reason} />}
 
               {/* Vídeo chamada */}
-              {(apt.status === 'CONFIRMED' || apt.status === 'IN_PROGRESS') && (
+              {(localStatus === 'CONFIRMED' || localStatus === 'IN_PROGRESS') && (
                 <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-2 text-primary-800 font-medium text-sm">
                     <Video size={16} />
@@ -732,12 +738,12 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     A sala de vídeo é privada e exclusiva desta consulta. Compartilhe o link com o paciente.
                   </p>
                   <div className="flex gap-2">
-                    {apt.status === 'CONFIRMED' && (
+                    {localStatus === 'CONFIRMED' && (
                       <button onClick={handleStartConsulta} disabled={acting} className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm">
                         <Video size={15} /> Iniciar Consulta
                       </button>
                     )}
-                    {apt.status === 'IN_PROGRESS' && (
+                    {localStatus === 'IN_PROGRESS' && (
                       <a href={videoUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm">
                         <Video size={15} /> Entrar na Sala
                       </a>
@@ -1033,23 +1039,23 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
         {/* Rodapé com ações */}
         <div className="p-5 border-t border-surface-border flex gap-2 shrink-0">
-          {apt.status === 'SCHEDULED' && (
+          {localStatus === 'SCHEDULED' && (
             <button onClick={handleConfirm} disabled={acting} className="btn-primary flex-1 text-sm">
               {acting ? '…' : 'Confirmar'}
             </button>
           )}
-          {apt.status === 'IN_PROGRESS' && (
+          {localStatus === 'IN_PROGRESS' && (
             <button onClick={handleFinishConsulta} disabled={acting} className="btn-primary flex-1 text-sm bg-green-600 hover:bg-green-700 border-green-600">
               {acting ? '…' : 'Finalizar Consulta'}
             </button>
           )}
-          {(apt.status === 'SCHEDULED' || apt.status === 'CONFIRMED' || apt.status === 'IN_PROGRESS') && (
+          {(localStatus === 'SCHEDULED' || localStatus === 'CONFIRMED' || localStatus === 'IN_PROGRESS') && (
             <button onClick={handleCancel} disabled={acting}
               className="flex-1 text-semantic-danger border border-semantic-danger hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               {acting ? '…' : 'Cancelar'}
             </button>
           )}
-          {(apt.status === 'COMPLETED' || apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') && (
+          {(localStatus === 'COMPLETED' || localStatus === 'CANCELLED' || localStatus === 'NO_SHOW') && (
             <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
           )}
         </div>
@@ -1090,7 +1096,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
       )}
 
       {/* ── PiP: vídeo flutuante durante teleconsulta ── */}
-      {showPip && apt.status === 'IN_PROGRESS' && (
+      {showPip && localStatus === 'IN_PROGRESS' && (
         pipMinimized ? (
           <button
             onClick={() => setPipMinimized(false)}
