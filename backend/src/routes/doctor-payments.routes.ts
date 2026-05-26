@@ -145,6 +145,13 @@ export async function doctorPaymentsRoutes(app: FastifyInstance) {
       )
     )
 
+    // Sincroniza AccountPayable vinculado (criado automaticamente junto com o repasse)
+    const repasseNotes = ids.map(id => `repasse:${id}`)
+    await prisma.accountPayable.updateMany({
+      where:  { notes: { in: repasseNotes }, status: 'PENDING' },
+      data:   { status: 'PAID', paidAt: now },
+    }).catch(() => {}) // não bloqueia se não existir vinculo
+
     const uid = (request.user as JwtPayload)?.sub ?? null
     logAudit({ userId: uid, action: 'MARK_PAID_DOCTOR_PAYMENTS', entity: 'DoctorPayment', metadata: { ids, count: items.length }, request })
 
@@ -161,6 +168,11 @@ export async function doctorPaymentsRoutes(app: FastifyInstance) {
         where: { id: params.data.id },
         data:  { status: 'CANCELLED' },
       })
+      // Cancela AccountPayable vinculado
+      await prisma.accountPayable.updateMany({
+        where: { notes: `repasse:${dp.id}`, status: 'PENDING' },
+        data:  { status: 'CANCELLED' },
+      }).catch(() => {})
       const uid = (request.user as JwtPayload)?.sub ?? null
       logAudit({ userId: uid, action: 'CANCEL_DOCTOR_PAYMENT', entity: 'DoctorPayment', entityId: dp.id, request })
       return reply.send(dp)
@@ -180,7 +192,14 @@ export async function createDoctorPaymentIfNeeded(paymentId: string): Promise<vo
     include: {
       appointment: {
         include: {
-          doctor: { select: { id: true, repasseType: true, repasseValue: true } },
+          doctor: {
+            select: {
+              id: true,
+              repasseType: true,
+              repasseValue: true,
+              user: { select: { name: true } },
+            },
+          },
         },
       },
     },
@@ -194,7 +213,6 @@ export async function createDoctorPaymentIfNeeded(paymentId: string): Promise<vo
   const exists = await prisma.doctorPayment.findUnique({ where: { appointmentId: appointment.id } })
   if (exists) return
 
-  // Calcula valor do repasse
   if (!doctor.repasseValue) return
 
   const consultaValue = payment.amount
@@ -203,13 +221,29 @@ export async function createDoctorPaymentIfNeeded(paymentId: string): Promise<vo
       ? (consultaValue * doctor.repasseValue) / 100
       : doctor.repasseValue
 
-  await prisma.doctorPayment.create({
+  // Cria o DoctorPayment
+  const dp = await prisma.doctorPayment.create({
     data: {
       doctorId:      doctor.id,
       appointmentId: appointment.id,
       paymentId:     payment.id,
       amount:        repasseAmount,
       status:        'PENDING',
+    },
+  })
+
+  // Cria lançamento em Contas a Pagar vinculado ao repasse
+  const doctorName  = doctor.user?.name ?? 'Médico'
+  const consultaDate = new Date(appointment.startTime).toLocaleDateString('pt-BR')
+  await prisma.accountPayable.create({
+    data: {
+      description: `Repasse ${doctorName} - consulta ${consultaDate}`,
+      category:    'Repasse Médico',
+      supplier:    doctorName,
+      amount:      repasseAmount,
+      dueDate:     new Date(),
+      status:      'PENDING',
+      notes:       `repasse:${dp.id}`,
     },
   })
 }
