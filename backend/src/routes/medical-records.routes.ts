@@ -54,6 +54,7 @@ const createSchema = z.object({
   attachmentUrl: z.string().url().optional(),
   ocrText: z.string().max(50_000).optional(),
   ocrSummary: z.string().max(10_000).optional(),
+  transcript: z.string().max(100_000).optional(),
 })
 
 const updateSchema = z.object({
@@ -68,6 +69,7 @@ const updateSchema = z.object({
   attachmentUrl: z.string().url().nullable().optional(),
   ocrText: z.string().max(50_000).nullable().optional(),
   ocrSummary: z.string().max(10_000).nullable().optional(),
+  transcript: z.string().max(100_000).nullable().optional(),
 })
 
 // Body para anexar resultado de OCR — todos opcionais mas pelo menos um deve vir
