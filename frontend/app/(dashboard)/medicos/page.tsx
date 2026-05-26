@@ -69,7 +69,7 @@ const EMPTY_CREATE: DoctorCreateForm = {
 
 interface CreateModalProps {
   onClose: () => void
-  onSaved: () => void
+  onSaved: (updated?: Doctor) => void
 }
 
 function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
@@ -231,20 +231,24 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
 interface EditModalProps {
   doctor: Doctor
   onClose: () => void
-  onSaved: () => void
+  onSaved: (updated: Doctor) => void
+}
+
+function formFromDoctor(d: Doctor): DoctorEditForm {
+  return {
+    specialty:       d.specialty,
+    crmState:        d.crmState,
+    cpf:             d.cpf ?? '',
+    phone:           d.phone ?? '',
+    consultationFee: d.consultationFee ? String(d.consultationFee) : '',
+    bio:             d.bio ?? '',
+    repasseType:     d.repasseType ?? 'PERCENTAGE',
+    repasseValue:    d.repasseValue ? String(d.repasseValue) : '',
+  }
 }
 
 function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
-  const [form, setForm] = useState<DoctorEditForm>({
-    specialty: doctor.specialty,
-    crmState: doctor.crmState,
-    cpf: doctor.cpf ?? '',
-    phone: doctor.phone ?? '',
-    consultationFee: doctor.consultationFee ? String(doctor.consultationFee) : '',
-    bio: doctor.bio ?? '',
-    repasseType: doctor.repasseType ?? 'PERCENTAGE',
-    repasseValue: doctor.repasseValue ? String(doctor.repasseValue) : '',
-  })
+  const [form, setForm] = useState<DoctorEditForm>(() => formFromDoctor(doctor))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -273,8 +277,8 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
       payload.repasseType = form.repasseType
       if (form.repasseValue)    payload.repasseValue = Number(form.repasseValue)
 
-      await updateDoctor(doctor.id, payload)
-      onSaved()
+      const updated = await updateDoctor(doctor.id, payload)
+      onSaved(updated)
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message)
       else setError('Erro inesperado. Tente novamente.')
@@ -447,9 +451,12 @@ export default function MedicosPage() {
     }, 500)
   }
 
-  function handleSaved() {
+  function handleSaved(updated?: Doctor) {
     setShowCreate(false)
     setEditing(null)
+    if (updated) {
+      setDoctors(prev => prev.map(d => d.id === updated.id ? { ...d, ...updated } : d))
+    }
     fetchDoctors()
   }
 
