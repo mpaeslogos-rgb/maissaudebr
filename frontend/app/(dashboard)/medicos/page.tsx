@@ -267,15 +267,15 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
     setSaving(true)
     try {
       const payload: Record<string, unknown> = {
-        specialty: form.specialty.trim(),
-        crmState: form.crmState.toUpperCase(),
+        specialty:       form.specialty.trim(),
+        crmState:        form.crmState.toUpperCase(),
+        cpf:             form.cpf.trim() || null,
+        phone:           form.phone.trim() || null,
+        bio:             form.bio.trim()   || null,
+        consultationFee: form.consultationFee ? Number(form.consultationFee) : null,
+        repasseType:     form.repasseType,
+        repasseValue:    form.repasseValue ? Number(form.repasseValue) : null,
       }
-      if (form.cpf.trim())      payload.cpf = form.cpf.trim()
-      if (form.phone.trim())    payload.phone = form.phone.trim()
-      if (form.bio.trim())      payload.bio = form.bio.trim()
-      if (form.consultationFee) payload.consultationFee = Number(form.consultationFee)
-      payload.repasseType = form.repasseType
-      if (form.repasseValue)    payload.repasseValue = Number(form.repasseValue)
 
       const updated = await updateDoctor(doctor.id, payload)
       onSaved(updated)
