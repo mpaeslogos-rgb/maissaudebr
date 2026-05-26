@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
@@ -331,6 +331,8 @@ type ProntuarioForm = {
   smokingStatus: string
   alcoholStatus: string
   physicalActivity: string
+  // Transcrição da consulta
+  transcript: string
 }
 
 const EMPTY_PRONTUARIO: ProntuarioForm = {
@@ -338,6 +340,7 @@ const EMPTY_PRONTUARIO: ProntuarioForm = {
   bloodPressure: '', heartRate: '', temperature: '', weight: '', height: '', oxygenSaturation: '',
   currentMedications: '', pastConditions: '', pastSurgeries: '', familyHistory: '',
   smokingStatus: '', alcoholStatus: '', physicalActivity: '',
+  transcript: '',
 }
 
 // Templates de anamnese por especialidade
@@ -486,8 +489,9 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   const [saveOk, setSaveOk]       = useState(false)
   const [saveErr, setSaveErr]     = useState('')
   const [clinicConfig, setClinicConfig] = useState<ClinicConfig | null>(null)
-  const [showVitals, setShowVitals]   = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
+  const [showVitals, setShowVitals]         = useState(false)
+  const [showHistory, setShowHistory]       = useState(false)
+  const [showTranscript, setShowTranscript] = useState(false)
 
   // Histórico: consulta selecionada para visualização
   const [selectedHistory, setSelectedHistory] = useState<MedicalRecord | null>(null)
@@ -540,10 +544,12 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
           smokingStatus:      current.smokingStatus      ?? '',
           alcoholStatus:      current.alcoholStatus      ?? '',
           physicalActivity:   current.physicalActivity   ?? '',
+          transcript:         current.transcript         ?? '',
         })
         // Expande seções se já tiver dados
         if (current.bloodPressure || current.heartRate || current.weight) setShowVitals(true)
         if (current.currentMedications || current.pastConditions) setShowHistory(true)
+        if (current.transcript) setShowTranscript(true)
       }
       // Histórico: exclui a consulta atual
       setHistory(histRes.data.filter(r => r.appointmentId !== apt.id))
@@ -879,6 +885,30 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* ── Transcrição da Consulta (colapsável) ── */}
+                  <button
+                    onClick={() => setShowTranscript(t => !t)}
+                    className="flex items-center justify-between w-full py-2 border-t border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wide hover:text-slate-700"
+                  >
+                    <span className="flex items-center gap-1.5"><FileText size={13} /> Transcrição da Consulta</span>
+                    {showTranscript ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {showTranscript && (
+                    <div className="pb-1">
+                      <p className="text-xs text-slate-400 mb-1.5">
+                        Cole aqui a transcrição gerada pela plataforma de telemedicina ou digite manualmente.
+                      </p>
+                      <textarea
+                        name="transcript"
+                        value={form.transcript}
+                        onChange={handleFormChange}
+                        rows={8}
+                        className="input resize-y w-full text-sm font-mono"
+                        placeholder="Transcrição da consulta…"
+                      />
                     </div>
                   )}
 
