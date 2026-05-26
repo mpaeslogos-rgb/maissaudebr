@@ -19,6 +19,13 @@ function formatFee(fee?: number) {
   return fee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+function formatRepasse(doc: Doctor) {
+  if (!doc.repasseValue) return '—'
+  return doc.repasseType === 'PERCENTAGE'
+    ? `${doc.repasseValue}% / consulta`
+    : doc.repasseValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' / consulta'
+}
+
 function formatCpf(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 11)
   if (digits.length <= 3) return digits
@@ -522,6 +529,7 @@ export default function MedicosPage() {
                       <th className="pb-3 font-semibold text-slate-600">Especialidade</th>
                       <th className="pb-3 font-semibold text-slate-600">Telefone</th>
                       <th className="pb-3 font-semibold text-slate-600">Consulta</th>
+                      <th className="pb-3 font-semibold text-slate-600">Repasse</th>
                       <th className="pb-3 font-semibold text-slate-600">Status</th>
                       <th className="pb-3"></th>
                     </tr>
@@ -532,11 +540,13 @@ export default function MedicosPage() {
                         <td className="py-3">
                           <p className="font-medium text-slate-800">{d.user?.name ?? '—'}</p>
                           <p className="text-xs text-slate-400">{d.user?.email}</p>
+                          {d.cpf && <p className="text-xs text-slate-400 font-mono">CPF: {d.cpf}</p>}
                         </td>
                         <td className="py-3 text-slate-600">{d.crm}-{d.crmState}</td>
                         <td className="py-3 text-slate-600">{d.specialty}</td>
                         <td className="py-3 text-slate-600">{d.phone ?? '—'}</td>
                         <td className="py-3 text-slate-600">{formatFee(d.consultationFee)}</td>
+                        <td className="py-3 text-slate-600 whitespace-nowrap">{formatRepasse(d)}</td>
                         <td className="py-3">
                           {d.user?.isActive !== false ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Ativo</span>
