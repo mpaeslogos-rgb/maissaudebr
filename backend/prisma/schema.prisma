@@ -17,6 +17,9 @@ model Config {
 
   // Dados da clínica
   clinicName      String @default("maissaudebr")
+  cnpj            String @default("")
+  cnes            String @default("") // Cadastro Nacional de Estabelecimentos de Saúde
+  address         String @default("")
   whatsappNumber  String @default("")
   attendanceHours String @default("")
   specialties     String @default("")
@@ -137,6 +140,7 @@ model Doctor {
   userId       String   @unique
   crm          String   @unique // Conselho Regional de Medicina
   crmState     String   // UF do CRM (ex: "SP", "RJ")
+  cpf          String?  // CPF do médico — obrigatório para prescrição digital CFM
   specialty    String
   phone        String?
   bio          String?
