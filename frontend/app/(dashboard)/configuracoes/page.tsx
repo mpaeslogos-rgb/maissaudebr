@@ -10,6 +10,9 @@ interface ClinicConfig {
   key?: string
 
   clinicName: string
+  cnpj: string
+  cnes: string
+  address: string
   whatsappNumber: string
   attendanceHours: string
   specialties: string
@@ -40,6 +43,9 @@ interface ClinicConfig {
 
 const EMPTY_CONFIG: ClinicConfig = {
   clinicName: '',
+  cnpj: '',
+  cnes: '',
+  address: '',
   whatsappNumber: '',
   attendanceHours: '',
   specialties: '',
@@ -191,13 +197,35 @@ export default function ConfiguracoesPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Section
             title="Dados da clínica"
-            description="Informações básicas que a IA poderá usar no atendimento."
+            description="Informações básicas da clínica — usadas pela IA e pela prescrição digital CFM."
           >
             <Input
               label="Nome da clínica"
               value={config.clinicName}
               onChange={(value) => updateField('clinicName', value)}
-              placeholder="Ex: maissaudebr"
+              placeholder="Ex: Clínica MaisSaúde"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="CNPJ"
+                value={config.cnpj}
+                onChange={(value) => updateField('cnpj', value)}
+                placeholder="00.000.000/0001-00"
+              />
+              <Input
+                label="CNES (prescrição digital CFM)"
+                value={config.cnes}
+                onChange={(value) => updateField('cnes', value)}
+                placeholder="Nº do estabelecimento (7 dígitos)"
+              />
+            </div>
+
+            <Input
+              label="Endereço completo"
+              value={config.address}
+              onChange={(value) => updateField('address', value)}
+              placeholder="Rua, número, bairro, cidade — UF"
             />
 
             <Input
