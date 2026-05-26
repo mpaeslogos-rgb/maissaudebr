@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual do Sistema — MaisSaúde BR</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── Capa ── */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1B5E3F 0%, #2e7d52 50%, #145232 100%);
+    color: #fff;
+    text-align: center;
+    page-break-after: always;
+    padding: 40px;
+  }
+  .cover .logo-area { margin-bottom: 48px; }
+  .cover .logo-icon {
+    width: 90px; height: 90px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    margin: 0 auto 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .cover h1 { font-size: 38pt; font-weight: 700; letter-spacing: -1px; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 16pt; opacity: 0.85; margin-bottom: 48px; }
+  .cover .tag {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    padding: 8px 24px;
+    font-size: 11pt;
+    margin-bottom: 8px;
+  }
+  .cover .version { font-size: 10pt; opacity: 0.6; margin-top: 32px; }
+
+  /* ── Sumário ── */
+  .toc { padding: 60px 80px; page-break-after: always; }
+  .toc h2 { font-size: 22pt; color: #1B5E3F; border-bottom: 3px solid #1B5E3F; padding-bottom: 12px; margin-bottom: 32px; }
+  .toc-section { margin-bottom: 24px; }
+  .toc-section h3 { font-size: 13pt; color: #1B5E3F; margin-bottom: 8px; }
+  .toc-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dotted #ccc;
+    color: #333;
+    font-size: 11pt;
+  }
+  .toc-item .num { font-weight: 700; color: #1B5E3F; width: 32px; }
+  .toc-item .dots { flex: 1; border-bottom: 1px dotted #bbb; margin: 0 8px; }
+
+  /* ── Conteúdo ── */
+  .content { padding: 60px 80px; }
+  .module { page-break-before: always; margin-bottom: 60px; }
+  .module:first-child { page-break-before: avoid; }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #1B5E3F, #2e7d52);
+    color: #fff;
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin-bottom: 32px;
+  }
+  .module-icon {
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .module-header h2 { font-size: 18pt; font-weight: 700; }
+  .module-header p { font-size: 10pt; opacity: 0.85; margin-top: 4px; }
+
+  h3 {
+    font-size: 13pt;
+    color: #1B5E3F;
+    margin: 28px 0 12px;
+    padding-left: 12px;
+    border-left: 4px solid #1B5E3F;
+  }
+  h4 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #145232;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 12px; color: #333; }
+
+  /* Steps */
+  .steps { counter-reset: step; list-style: none; margin: 16px 0; }
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .steps li::before {
+    content: counter(step);
+    background: #1B5E3F;
+    color: #fff;
+    font-weight: 700;
+    font-size: 10pt;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .steps li span { color: #333; line-height: 1.5; }
+
+  /* Tips / notes */
+  .tip {
+    background: #f0faf4;
+    border-left: 4px solid #1B5E3F;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 10.5pt;
+    color: #145232;
+  }
+  .warn {
+    background: #fffbea;
+    border-left: 4px solid #d97706;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 10.5pt;
+    color: #92400e;
+  }
+  .info {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 10.5pt;
+    color: #1e40af;
+  }
+
+  /* Screenshot placeholder */
+  .screenshot {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 32px 24px;
+    text-align: center;
+    margin: 20px 0;
+    color: #64748b;
+  }
+  .screenshot .icon { font-size: 32px; margin-bottom: 8px; }
+  .screenshot .label { font-size: 10pt; font-style: italic; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10pt; }
+  th {
+    background: #1B5E3F;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 30px;
+    font-size: 9pt;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .badge-gray   { background: #f1f5f9; color: #475569; }
+
+  /* Roles */
+  .roles { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 9pt;
+    color: #94a3b8;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 60px;
+  }
+
+  @media print {
+    .cover { height: 100vh; }
+    .module { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    @page { margin: 1.5cm 2cm; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CAPA
+════════════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="logo-area">
+    <div class="logo-icon">🏥</div>
+    <h1>MaisSaúde BR</h1>
+    <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
+  </div>
+  <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
+  <div class="tag">Versão 1.0 · Maio 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 25/05/2026</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SUMÁRIO
+════════════════════════════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Sumário</h2>
+
+  <div class="toc-section">
+    <h3>Introdução</h3>
+    <div class="toc-item"><span class="num">1.</span> Descrição do Sistema <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">2.</span> Acesso e Login <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">3.</span> Perfis de Usuário (Roles) <span class="dots"></span></div>
+  </div>
+
+  <div class="toc-section">
+    <h3>Módulos do Sistema</h3>
+    <div class="toc-item"><span class="num">4.</span> Dashboard — Painel Inicial <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">5.</span> Agenda — Consultas <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">6.</span> Pacientes <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">7.</span> Leads — Prospecção <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">8.</span> Médicos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">9.</span> Prontuários Médicos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">10.</span> Financeiro <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">10a.</span> &nbsp;&nbsp;↳ Conciliação de Médicos (Repasses) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">11.</span> Chats / WhatsApp <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">12.</span> Relatórios <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">13.</span> Configurações <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">14.</span> Auditoria (Admin) <span class="dots"></span></div>
+  </div>
+
+  <div class="toc-section">
+    <h3>Apêndices</h3>
+    <div class="toc-item"><span class="num">A.</span> Fluxo de Status das Consultas <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">B.</span> Perguntas Frequentes <span class="dots"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTEÚDO
+════════════════════════════════════════════════════════════════════ -->
+<div class="content">
+
+<!-- ────────────────────────────────── 1. DESCRIÇÃO ── -->
+<div class="module" id="descricao">
+  <div class="module-header">
+    <div class="module-icon">📋</div>
+    <div>
+      <h2>1. Descrição do Sistema</h2>
+      <p>Visão geral, objetivos e arquitetura da plataforma</p>
+    </div>
+  </div>
+
+  <p>O <strong>MaisSaúde BR</strong> é uma plataforma web completa para gestão de clínicas médicas, desenvolvida para centralizar todas as operações do consultório em um único sistema integrado.</p>
+
+  <h3>O que o sistema faz</h3>
+  <table>
+    <tr><th>Área</th><th>Funcionalidade</th></tr>
+    <tr><td>📅 Agenda</td><td>Agendamento, confirmação e acompanhamento de consultas</td></tr>
+    <tr><td>👥 Pacientes</td><td>Cadastro, busca e histórico completo de pacientes</td></tr>
+    <tr><td>🎯 Leads</td><td>Captação de prospects, importação em massa e conversão em pacientes</td></tr>
+    <tr><td>👨‍⚕️ Médicos</td><td>Cadastro de médicos com CRM, especialidade e valores</td></tr>
+    <tr><td>📝 Prontuários</td><td>Registro eletrônico de consultas, prescrições e diagnósticos</td></tr>
+    <tr><td>💰 Financeiro</td><td>Contas a receber, a pagar e fluxo de caixa</td></tr>
+    <tr><td>📱 WhatsApp</td><td>IA de atendimento + chat manual com pacientes</td></tr>
+    <tr><td>📊 Relatórios</td><td>KPIs, gráficos e exportação de relatórios</td></tr>
+    <tr><td>⚙️ Configurações</td><td>Parametrização de mensagens, valores e políticas</td></tr>
+    <tr><td>🔒 Auditoria</td><td>Rastreabilidade completa de todas as ações</td></tr>
+  </table>
+
+  <h3>Tecnologia</h3>
+  <p>O sistema funciona inteiramente pelo navegador web (Chrome, Edge, Firefox, Safari). Não é necessária instalação. Acesse pelo endereço fornecido pelo administrador.</p>
+
+  <div class="tip">
+    💡 <strong>Recomendação:</strong> Use o Google Chrome ou Microsoft Edge na versão mais recente para melhor experiência.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 2. LOGIN ── -->
+<div class="module" id="login">
+  <div class="module-header">
+    <div class="module-icon">🔐</div>
+    <div>
+      <h2>2. Acesso e Login</h2>
+      <p>Como entrar no sistema e encerrar a sessão</p>
+    </div>
+  </div>
+
+  <h3>Fazer login</h3>
+  <ol class="steps">
+    <li><span>Abra o navegador e acesse o endereço do sistema fornecido pelo administrador.</span></li>
+    <li><span>Na tela de login, informe seu <strong>e-mail</strong> cadastrado.</span></li>
+    <li><span>Informe sua <strong>senha</strong>. Clique no ícone de olho 👁 para visualizar o que está digitando.</span></li>
+    <li><span>Clique em <strong>"Entrar"</strong>. O sistema redirecionará para o painel inicial.</span></li>
+  </ol>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tela de login ]</div>
+  </div>
+
+  <h3>Esqueci minha senha</h3>
+  <p>Clique em <strong>"Esqueci minha senha"</strong> na tela de login. O sistema exibirá uma mensagem orientando a entrar em contato com o administrador para redefinição.</p>
+
+  <h3>Encerrar sessão (Logout)</h3>
+  <p>Clique no ícone de menu no canto superior direito e selecione <strong>"Sair"</strong>. O sistema encerrará sua sessão com segurança.</p>
+
+  <div class="warn">
+    ⚠️ <strong>Segurança:</strong> Sempre faça logout ao sair do computador, especialmente em equipamentos compartilhados. A sessão expira automaticamente após 8 horas.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 3. PERFIS ── -->
+<div class="module" id="perfis">
+  <div class="module-header">
+    <div class="module-icon">👤</div>
+    <div>
+      <h2>3. Perfis de Usuário</h2>
+      <p>Níveis de acesso e permissões por papel</p>
+    </div>
+  </div>
+
+  <p>O sistema possui 4 perfis de acesso. Cada usuário é cadastrado com um perfil que define o que pode visualizar e fazer.</p>
+
+  <table>
+    <tr><th>Perfil</th><th>Quem é</th><th>Principais acessos</th></tr>
+    <tr>
+      <td><span class="badge badge-red">ADMIN</span></td>
+      <td>Administrador da clínica</td>
+      <td>Acesso total: todos os módulos, auditoria, cadastro de usuários e médicos</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">MÉDICO</span></td>
+      <td>Médico(a) da clínica</td>
+      <td>Agenda, prontuários, pacientes vinculados, relatórios</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-yellow">RECEPCIONISTA</span></td>
+      <td>Recepção / atendente</td>
+      <td>Agenda, pacientes, financeiro básico, WhatsApp</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">PACIENTE</span></td>
+      <td>Paciente (acesso restrito)</td>
+      <td>Portal do paciente (funcionalidade futura)</td>
+    </tr>
+  </table>
+
+  <div class="info">
+    ℹ️ Caso precise de acesso a um módulo que não está disponível, solicite ao administrador a revisão do seu perfil.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 4. DASHBOARD ── -->
+<div class="module" id="dashboard">
+  <div class="module-header">
+    <div class="module-icon">📊</div>
+    <div>
+      <h2>4. Dashboard — Painel Inicial</h2>
+      <p>Visão geral da clínica em tempo real</p>
+    </div>
+  </div>
+
+  <p>O Dashboard é a primeira tela após o login. Exibe um resumo operacional e financeiro da clínica.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do Dashboard ]</div>
+  </div>
+
+  <h3>Indicadores (KPIs)</h3>
+  <table>
+    <tr><th>Card</th><th>O que mostra</th></tr>
+    <tr><td>👥 Total de Pacientes</td><td>Número total de pacientes cadastrados no sistema</td></tr>
+    <tr><td>📅 Consultas Hoje</td><td>Quantidade de consultas agendadas para o dia atual</td></tr>
+    <tr><td>💰 Faturamento Mensal</td><td>Soma de pagamentos confirmados no mês corrente</td></tr>
+    <tr><td>📋 Contas a Pagar</td><td>Total de despesas pendentes</td></tr>
+  </table>
+
+  <h3>Gráfico de Consultas (7 dias)</h3>
+  <p>Barras mostrando total de consultas e consultas concluídas nos últimos 7 dias. Útil para acompanhar a produção da clínica.</p>
+
+  <h3>Próximas Consultas</h3>
+  <p>Lista das próximas 5 consultas agendadas/confirmadas. Clique em qualquer uma para ver detalhes completos.</p>
+
+  <h3>Ações rápidas</h3>
+  <ol class="steps">
+    <li><span>Para abrir os detalhes de uma consulta: clique sobre ela no painel "Próximas Consultas".</span></li>
+    <li><span>Para ir à agenda completa: clique em <strong>"Ver Agenda Completa"</strong>.</span></li>
+    <li><span>Para acessar o Fluxo de Caixa: clique no link rápido no painel financeiro.</span></li>
+  </ol>
+</div>
+
+<!-- ────────────────────────────────── 5. AGENDA ── -->
+<div class="module" id="agenda">
+  <div class="module-header">
+    <div class="module-icon">📅</div>
+    <div>
+      <h2>5. Agenda — Consultas</h2>
+      <p>Agendamento, acompanhamento e registro de consultas médicas</p>
+    </div>
+  </div>
+
+  <p>A Agenda é o coração do sistema. Permite visualizar, criar, confirmar e concluir consultas.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da Agenda — Visão Semanal ]</div>
+  </div>
+
+  <h3>Navegar pela Agenda</h3>
+  <table>
+    <tr><th>Controle</th><th>Função</th></tr>
+    <tr><td>Botões ◀ ▶</td><td>Navegar para semana/mês anterior ou seguinte</td></tr>
+    <tr><td>Botão "Hoje"</td><td>Voltar para o período atual</td></tr>
+    <tr><td>Semana / Mês</td><td>Alternar entre visão semanal (horária) e mensal (calendário)</td></tr>
+    <tr><td>Filtro por Médico</td><td>Mostrar apenas consultas de um médico específico</td></tr>
+  </table>
+
+  <h3>Agendar Nova Consulta</h3>
+  <ol class="steps">
+    <li><span>Clique no botão <strong>"+ Nova Consulta"</strong> (canto superior direito) <em>ou</em> clique diretamente em um horário vazio na grade semanal.</span></li>
+    <li><span>Selecione o <strong>Paciente</strong> no menu suspenso. A lista mostra nome e CPF.</span></li>
+    <li><span>Selecione o <strong>Médico</strong>. O campo <strong>Valor da consulta</strong> é preenchido automaticamente com o valor cadastrado do médico.</span></li>
+    <li><span>Informe a <strong>Data</strong> e o <strong>Horário de início</strong> (hora e minuto).</span></li>
+    <li><span>Escolha a <strong>Duração</strong> (15 min a 2 horas).</span></li>
+    <li><span><em>Opcional:</em> Edite o <strong>Valor</strong> se houver negociação de preço diferente do padrão.</span></li>
+    <li><span><em>Opcional:</em> Adicione um <strong>Motivo</strong> da consulta.</span></li>
+    <li><span>Clique em <strong>"Agendar Consulta"</strong>.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 O valor da consulta digitado vai automaticamente para o <strong>Contas a Receber</strong> do módulo Financeiro.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do formulário Nova Consulta ]</div>
+  </div>
+
+  <h3>Visualizar e Gerenciar uma Consulta</h3>
+  <p>Clique em qualquer consulta na agenda para abrir o <strong>Painel de Detalhes</strong> lateral. Ele possui duas abas:</p>
+
+  <h4>Aba "Resumo"</h4>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li>Status atual (com badge colorido)</li>
+    <li>Dados do paciente: nome, telefone, e-mail</li>
+    <li>Data, horário e duração</li>
+    <li>Médico com CRM e especialidade</li>
+    <li>Motivo da consulta</li>
+    <li>Botões de ação conforme status</li>
+  </ul>
+
+  <h4>Aba "Prontuário"</h4>
+  <p>Acesso direto ao registro clínico da consulta (veja detalhes no módulo Prontuários).</p>
+
+  <h3>Fluxo de Status das Consultas</h3>
+  <table>
+    <tr><th>Status</th><th>Significado</th><th>Próximas ações</th></tr>
+    <tr>
+      <td><span class="badge badge-yellow">Agendada</span></td>
+      <td>Consulta registrada, aguardando confirmação</td>
+      <td>Confirmar → Cancelar → No-show</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">Confirmada</span></td>
+      <td>Paciente confirmou presença</td>
+      <td>Iniciar → Cancelar → No-show</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">Em Andamento</span></td>
+      <td>Consulta em curso (médico atendendo)</td>
+      <td>Finalizar → Cancelar</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">Concluída</span></td>
+      <td>Consulta encerrada com sucesso</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-red">Cancelada</span></td>
+      <td>Consulta cancelada</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-gray">No-show</span></td>
+      <td>Paciente não compareceu</td>
+      <td>—</td>
+    </tr>
+  </table>
+
+  <h3>Teleconsulta (Videochamada)</h3>
+  <ol class="steps">
+    <li><span>Com a consulta <strong>Confirmada</strong>, clique em <strong>"Iniciar Consulta"</strong> para gerar a sala de vídeo.</span></li>
+    <li><span>Copie o link e envie ao paciente pelo WhatsApp ou e-mail.</span></li>
+    <li><span>O vídeo abre em uma janela flutuante (Picture-in-Picture) para o médico continuar acessando o sistema enquanto atende.</span></li>
+    <li><span>Ao concluir, clique em <strong>"Finalizar"</strong> para encerrar a consulta.</span></li>
+  </ol>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do Painel de Detalhes / Prontuário ]</div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 6. PACIENTES ── -->
+<div class="module" id="pacientes">
+  <div class="module-header">
+    <div class="module-icon">👥</div>
+    <div>
+      <h2>6. Pacientes</h2>
+      <p>Cadastro e gestão da base de pacientes</p>
+    </div>
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da lista de Pacientes ]</div>
+  </div>
+
+  <h3>Buscar um Paciente</h3>
+  <ol class="steps">
+    <li><span>Na barra de busca, digite o <strong>nome</strong>, <strong>CPF</strong> ou <strong>e-mail</strong> do paciente.</span></li>
+    <li><span>O sistema filtra automaticamente enquanto você digita (busca em tempo real).</span></li>
+    <li><span>Para limpar a busca, clique no ícone <strong>✕</strong> ao lado do campo.</span></li>
+  </ol>
+
+  <h3>Cadastrar Novo Paciente</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"+ Novo Paciente"</strong>.</span></li>
+    <li><span>Preencha os campos obrigatórios: Nome completo, CPF, Data de nascimento, Gênero, Telefone.</span></li>
+    <li><span>Opcionalmente, informe e-mail, endereço e observações clínicas (alergias, etc.).</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 O CPF é formatado automaticamente (000.000.000-00) conforme você digita.
+  </div>
+
+  <h3>Editar Paciente</h3>
+  <ol class="steps">
+    <li><span>Localize o paciente na lista.</span></li>
+    <li><span>Clique no ícone de <strong>lápis ✏️</strong> na coluna de ações.</span></li>
+    <li><span>Altere os dados necessários e clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <h3>Excluir / Anonimizar Paciente</h3>
+  <p>Por exigência da <strong>LGPD (Lei 13.709/2018)</strong>, ao excluir um paciente o sistema realiza a <strong>anonimização</strong> dos dados — o registro permanece para fins de rastreabilidade, mas todos os dados pessoais são removidos.</p>
+  <ol class="steps">
+    <li><span>Clique no ícone de <strong>lixeira 🗑️</strong>.</span></li>
+    <li><span>Confirme a operação na janela de diálogo.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ Esta ação não pode ser desfeita. Os dados pessoais do paciente serão permanentemente removidos, em conformidade com o Art. 18 da LGPD.
+  </div>
+
+  <h3>Importar Pacientes (Excel)</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Importar Excel"</strong>.</span></li>
+    <li><span>Selecione um arquivo <code>.xlsx</code> ou <code>.xls</code> com os dados dos pacientes.</span></li>
+    <li><span>Aguarde o processamento. O sistema importará os registros em lote.</span></li>
+  </ol>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do formulário de Novo Paciente ]</div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 7. LEADS ── -->
+<div class="module" id="leads">
+  <div class="module-header">
+    <div class="module-icon">🎯</div>
+    <div>
+      <h2>7. Leads — Prospecção de Pacientes</h2>
+      <p>Captação, importação e conversão de prospects em pacientes</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-yellow">RECEPCIONISTA</span>
+  </div>
+
+  <p>O módulo de Leads gerencia pessoas interessadas nos serviços da clínica que ainda não são pacientes cadastrados. Um lead pode ser captado manualmente ou importado em massa via planilha Excel, e depois convertido em paciente quando efetuar uma consulta.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da lista de Leads ]</div>
+  </div>
+
+  <h3>Listar e Buscar Leads</h3>
+  <p>A tela exibe todos os leads cadastrados em ordem de criação (mais recentes primeiro). Use o campo de busca para filtrar pelo nome do lead.</p>
+
+  <h3>Baixar Modelo de Importação</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Baixar Modelo"</strong> (ícone de planilha).</span></li>
+    <li><span>O sistema fará o download de um arquivo <code>.xlsx</code> com todas as colunas disponíveis e exemplos de preenchimento.</span></li>
+    <li><span>Preencha os dados na planilha e salve. Somente <strong>Nome Completo</strong> e <strong>Telefone</strong> são obrigatórios.</span></li>
+  </ol>
+
+  <table>
+    <tr><th>Coluna</th><th>Obrigatório?</th><th>Observação</th></tr>
+    <tr><td>Nome Completo</td><td><span class="badge badge-red">Sim</span></td><td>Nome do prospect</td></tr>
+    <tr><td>Telefone</td><td><span class="badge badge-red">Sim</span></td><td>Com DDD (ex: 92912345678)</td></tr>
+    <tr><td>CPF</td><td><span class="badge badge-gray">Não</span></td><td>Formato 000.000.000-00 ou apenas dígitos</td></tr>
+    <tr><td>Data de Nascimento</td><td><span class="badge badge-gray">Não</span></td><td>DD/MM/AAAA</td></tr>
+    <tr><td>Gênero</td><td><span class="badge badge-gray">Não</span></td><td>Masculino, Feminino ou Outro</td></tr>
+    <tr><td>Email</td><td><span class="badge badge-gray">Não</span></td><td>—</td></tr>
+    <tr><td>CEP, Rua, Número…</td><td><span class="badge badge-gray">Não</span></td><td>Campos de endereço completo</td></tr>
+    <tr><td>Convênio, Alergias…</td><td><span class="badge badge-gray">Não</span></td><td>Dados clínicos opcionais</td></tr>
+  </table>
+
+  <h3>Importar Leads via Excel</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Importar Excel"</strong>.</span></li>
+    <li><span>Selecione o arquivo <code>.xlsx</code> ou <code>.xls</code> preenchido.</span></li>
+    <li><span>O sistema valida cada linha, ignora duplicatas (CPF ou telefone já cadastrado como paciente) e importa os registros válidos.</span></li>
+    <li><span>Uma mensagem de confirmação informa quantos leads foram importados e quais linhas foram ignoradas com o motivo.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 O sistema cruza automaticamente os dados da planilha com os pacientes já cadastrados. Leads cujo CPF ou telefone já exista na base de pacientes são descartados para evitar duplicatas.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do resultado da importação ]</div>
+  </div>
+
+  <h3>Converter Lead em Paciente</h3>
+  <p>Quando um lead efetuar a primeira consulta, converta-o em paciente para que possa ser vinculado à agenda e ao prontuário.</p>
+  <ol class="steps">
+    <li><span>Na lista de leads, clique no ícone de <strong>conversão</strong> na linha do lead.</span></li>
+    <li><span>O formulário abrirá pré-preenchido com os dados do lead.</span></li>
+    <li><span>Preencha os campos obrigatórios restantes: <strong>CPF</strong>, <strong>Data de Nascimento</strong>, <strong>Gênero</strong> e <strong>E-mail</strong> (se ainda não informados).</span></li>
+    <li><span>Clique em <strong>"Converter em Paciente"</strong>.</span></li>
+    <li><span>O lead é removido da lista e o paciente fica disponível em <strong>Pacientes</strong> e na <strong>Agenda</strong>.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ Após a conversão, o lead é excluído automaticamente — não há duplicidade. O paciente criado herda todos os dados preenchidos no lead.
+  </div>
+
+  <h3>Excluir Lead</h3>
+  <ol class="steps">
+    <li><span>Clique no ícone de <strong>lixeira 🗑️</strong> na linha do lead.</span></li>
+    <li><span>Confirme a exclusão. O lead é removido permanentemente.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ A exclusão de um lead é permanente e não pode ser desfeita. Use somente para contatos inválidos ou sem interesse.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 8. MÉDICOS ── -->
+<div class="module" id="medicos">
+  <div class="module-header">
+    <div class="module-icon">👨‍⚕️</div>
+    <div>
+      <h2>8. Médicos</h2>
+      <p>Cadastro e gestão dos profissionais de saúde</p>
+    </div>
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da lista de Médicos ]</div>
+  </div>
+
+  <h3>Cadastrar Novo Médico</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"+ Novo Médico"</strong>.</span></li>
+    <li><span>Informe: Nome completo, E-mail, Senha de acesso, CRM, Estado do CRM e Especialidade.</span></li>
+    <li><span>Informe o <strong>CPF do médico</strong> — necessário para emissão de prescrições digitais via CFM.</span></li>
+    <li><span>Opcionalmente: Telefone, Valor padrão da consulta (R$) e Apresentação/Bio.</span></li>
+    <li><span>Clique em <strong>"Cadastrar"</strong>. Um usuário de acesso será criado automaticamente para o médico.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ O <strong>Valor padrão da consulta</strong> é usado automaticamente ao agendar uma consulta. Pode ser editado no momento do agendamento se houver negociação.
+  </div>
+
+  <h3>Editar Médico</h3>
+  <p>Clique em <strong>"Editar"</strong> na linha do médico. No modal de edição é possível alterar:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li><strong>Especialidade</strong> e <strong>Estado do CRM</strong></li>
+    <li><strong>CPF</strong> (formato 000.000.000-00) — obrigatório para prescrição digital CFM</li>
+    <li><strong>Telefone</strong>, <strong>Valor da consulta</strong> e <strong>Bio</strong></li>
+    <li><strong>Repasse ao médico</strong> — tipo (Percentual % ou Valor fixo R$) e valor por consulta paga</li>
+  </ul>
+  <p>Nome, e-mail e CRM são somente leitura após o cadastro.</p>
+
+  <div class="tip">
+    💡 O campo <strong>Repasse</strong> define quanto o médico recebe por consulta confirmada. Ao marcar um pagamento como "Recebido" no Financeiro, o repasse é criado automaticamente em <em>Conciliação de Médicos</em>.
+  </div>
+
+  <h3>Listagem — O que é exibido na tabela</h3>
+  <p>A tabela de médicos exibe: Nome, E-mail e CPF (quando cadastrado) · CRM/UF · Especialidade · Telefone · Valor da Consulta · <strong>Repasse</strong> configurado · Status (Ativo/Inativo).</p>
+
+  <h3>Desativar Médico</h3>
+  <p>Clique em <strong>"Desativar"</strong>. O médico não aparecerá mais para seleção em novos agendamentos, mas consultas passadas são preservadas.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do formulário de Novo Médico ]</div>
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do modal de Edição com campos CPF e Repasse ]</div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 9. PRONTUÁRIOS ── -->
+<div class="module" id="prontuarios">
+  <div class="module-header">
+    <div class="module-icon">📝</div>
+    <div>
+      <h2>9. Prontuários Médicos</h2>
+      <p>Registro eletrônico de consultas — exclusivo para médicos</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-blue">MÉDICO</span>
+  </div>
+
+  <p>O prontuário eletrônico é preenchido pelo médico durante ou após cada consulta. Cada consulta gera um prontuário vinculado ao paciente.</p>
+
+  <h3>Preencher Prontuário durante a Consulta</h3>
+  <ol class="steps">
+    <li><span>Na Agenda, clique na consulta em andamento para abrir o painel lateral.</span></li>
+    <li><span>Selecione a aba <strong>"Prontuário"</strong>.</span></li>
+    <li><span>Preencha a <strong>Queixa Principal</strong> (motivo da consulta).</span></li>
+    <li><span>Registre a <strong>História da Doença Atual</strong>. Use os <strong>modelos por especialidade</strong> para agilizar o preenchimento.</span></li>
+    <li><span>Informe o <strong>Diagnóstico</strong>. Use a busca integrada de <strong>CID-10</strong> digitando o nome ou código da doença.</span></li>
+    <li><span>Registre a <strong>Conduta / Prescrição</strong> e <strong>Observações</strong>.</span></li>
+    <li><span>Expanda as seções de <strong>Sinais Vitais</strong> (pressão, FC, temperatura, SpO2, peso, altura) e <strong>Histórico Clínico</strong> se necessário.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da aba Prontuário ]</div>
+  </div>
+
+  <h3>Imprimir Prescrição</h3>
+  <ol class="steps">
+    <li><span>Com o prontuário preenchido, clique em <strong>"Imprimir Receita"</strong>.</span></li>
+    <li><span>O sistema gerará um PDF formatado com dados do paciente, médico, CRM e a conduta/prescrição.</span></li>
+    <li><span>Imprima ou salve o PDF diretamente pelo navegador.</span></li>
+  </ol>
+
+  <h3>Buscar Prontuários</h3>
+  <ol class="steps">
+    <li><span>Acesse o menu <strong>"Prontuários"</strong> no menu lateral.</span></li>
+    <li><span>Use o campo de busca para filtrar por nome do paciente ou diagnóstico.</span></li>
+    <li><span>Clique em <strong>"Ver Detalhes"</strong> para acessar o prontuário completo.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ <strong>Retenção legal:</strong> Prontuários médicos devem ser mantidos por no mínimo 20 anos (CFM 1.821/2007). O sistema não permite a exclusão permanente de prontuários.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 10. FINANCEIRO ── -->
+<div class="module" id="financeiro">
+  <div class="module-header">
+    <div class="module-icon">💰</div>
+    <div>
+      <h2>10. Financeiro</h2>
+      <p>Contas a Receber, Contas a Pagar e Fluxo de Caixa</p>
+    </div>
+  </div>
+
+  <p>O módulo financeiro possui três abas integradas.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do módulo Financeiro — Fluxo de Caixa ]</div>
+  </div>
+
+  <h3>Aba 1 — Fluxo de Caixa</h3>
+  <p>Visão consolidada da saúde financeira da clínica:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li>Saldo realizado no período selecionado</li>
+    <li>Entradas e saídas do mês corrente</li>
+    <li>Alertas de cobranças vencidas</li>
+    <li>Gráfico de evolução mensal (3, 6, 12 ou 24 meses)</li>
+    <li>Projeção dos próximos 30 dias</li>
+  </ul>
+
+  <div class="tip">
+    💡 Use o seletor de meses (3, 6, 12, 24) para ampliar ou reduzir o período analisado no gráfico.
+  </div>
+
+  <h3>Aba 2 — Contas a Receber</h3>
+  <p>Lista de cobranças geradas automaticamente ao agendar consultas.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do Contas a Receber ]</div>
+  </div>
+
+  <h4>Filtros disponíveis</h4>
+  <p>Todos · Pendente · Vencido · Recebido · Cancelado</p>
+
+  <h4>Marcar como Recebido</h4>
+  <ol class="steps">
+    <li><span>Localize a cobrança na lista (use os filtros se necessário).</span></li>
+    <li><span>Clique no botão verde <strong>"Receber"</strong> na linha correspondente.</span></li>
+    <li><span>O status muda para <span class="badge badge-green">Recebido</span> e o valor é contabilizado no Fluxo de Caixa.</span></li>
+  </ol>
+
+  <h3>Aba 3 — Contas a Pagar</h3>
+  <p>Controle de despesas da clínica (aluguel, energia, fornecedores, etc.).</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do Contas a Pagar ]</div>
+  </div>
+
+  <h4>Cadastrar Nova Despesa</h4>
+  <ol class="steps">
+    <li><span>Clique em <strong>"+ Nova Despesa"</strong>.</span></li>
+    <li><span>Informe: Descrição (obrigatório), Categoria, Fornecedor, Valor (R$) e Data de Vencimento.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <h4>Marcar como Pago</h4>
+  <ol class="steps">
+    <li><span>Localize a despesa na lista.</span></li>
+    <li><span>Clique em <strong>"Pagar"</strong>.</span></li>
+    <li><span>O status muda para <span class="badge badge-green">Pago</span>.</span></li>
+  </ol>
+
+  <h4>Excluir (Cancelar) uma Despesa</h4>
+  <ol class="steps">
+    <li><span>Clique no ícone de <strong>lixeira 🗑️</strong> na linha da despesa.</span></li>
+    <li><span>Confirme o cancelamento na mensagem de diálogo.</span></li>
+    <li><span>A despesa muda para status <span class="badge badge-gray">Cancelado</span>.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 Clique em <strong>"Atualizar"</strong> para recarregar os dados manualmente. A página não atualiza sozinha para evitar interferência enquanto você trabalha.
+  </div>
+
+  <h3>Botão "Conciliar Médicos"</h3>
+  <p>No cabeçalho do módulo Financeiro há o botão <strong>"Conciliar Médicos"</strong> que abre a página de repasses. Veja o capítulo 10a abaixo.</p>
+</div>
+
+<!-- ────────────────────────────────── 10a. CONCILIAÇÃO MÉDICOS ── -->
+<div class="module" id="conciliacao-medicos">
+  <div class="module-header">
+    <div class="module-icon">🩺</div>
+    <div>
+      <h2>10a. Conciliação de Médicos — Repasses</h2>
+      <p>Controle de repasses financeiros aos médicos por consulta realizada</p>
+    </div>
+  </div>
+
+  <p>Ao confirmar o recebimento de um pagamento de paciente (marcar como "Recebido"), o sistema gera automaticamente um <strong>repasse</strong> para o médico responsável pela consulta — desde que o médico tenha o campo <em>Repasse</em> configurado. A página de Conciliação é onde esses repasses são gerenciados.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da página Conciliação de Médicos ]</div>
+  </div>
+
+  <h3>Acesso</h3>
+  <p>Clique no botão <strong>"Conciliar Médicos"</strong> no cabeçalho do módulo Financeiro.</p>
+
+  <h3>Cards de Resumo por Médico</h3>
+  <p>No topo da página são exibidos cards com o resumo financeiro de cada médico:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li><strong>Pendente</strong> — soma dos repasses ainda não pagos ao médico</li>
+    <li><strong>Pago</strong> — soma dos repasses já quitados</li>
+    <li>Botão <em>"Ver pendentes"</em> — filtra a tabela para exibir só os repasses daquele médico com status Pendente</li>
+  </ul>
+
+  <h3>Filtros</h3>
+  <p>É possível filtrar por: <strong>Médico</strong> · <strong>Status</strong> (Pendente / Pago / Cancelado) · <strong>Período</strong> (De / Até).</p>
+
+  <h3>Confirmar Pagamento de Repasse</h3>
+  <div class="warning">
+    ⚠️ A NF/Recibo do médico é <strong>obrigatória</strong> antes de confirmar qualquer pagamento.
+  </div>
+  <ol class="steps">
+    <li><span>Selecione um ou mais repasses com status <span class="badge badge-yellow">Pendente</span> usando as caixas de seleção.</span></li>
+    <li><span>Para cada repasse selecionado, preencha o campo <strong>"Nº NF/Recibo"</strong> na coluna correspondente da tabela. O campo ficará com borda laranja enquanto estiver vazio.</span></li>
+    <li><span>Quando todos os selecionados tiverem NF/Recibo preenchido, o botão <strong>"Confirmar pagamento"</strong> será habilitado.</span></li>
+    <li><span>Clique em <strong>"Confirmar pagamento"</strong> e confirme na mensagem de diálogo.</span></li>
+    <li><span>Os repasses passam para <span class="badge badge-green">Pago</span> e a entrada correspondente em <em>Contas a Pagar</em> é atualizada automaticamente.</span></li>
+  </ol>
+
+  <h3>Cancelar Repasse</h3>
+  <p>Clique em <strong>"Cancelar"</strong> na linha do repasse desejado. Apenas repasses com status Pendente podem ser cancelados. O cancelamento também cancela o lançamento vinculado em Contas a Pagar.</p>
+
+  <h3>Geração Automática de Repasses</h3>
+  <p>O repasse é criado automaticamente quando:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li>Um pagamento de paciente é marcado como <strong>"Recebido"</strong> no módulo Financeiro, E</li>
+    <li>O médico da consulta tem o campo <strong>Repasse</strong> configurado (% ou valor fixo)</li>
+  </ul>
+  <p>O valor do repasse é calculado automaticamente: se percentual, aplica sobre o valor pago pelo paciente; se fixo, usa o valor definido no cadastro do médico.</p>
+
+  <div class="info">
+    ℹ️ Cada repasse gerado também cria um lançamento automático em <strong>Contas a Pagar</strong> com a descrição "Repasse [nome do médico] - consulta [data]". Ao marcar o repasse como Pago na Conciliação, o lançamento em Contas a Pagar é atualizado automaticamente.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tabela de repasses com campo NF/Recibo ]</div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 11. WHATSAPP ── -->
+<div class="module" id="whatsapp">
+  <div class="module-header">
+    <div class="module-icon">📱</div>
+    <div>
+      <h2>11. Chats / WhatsApp</h2>
+      <p>Atendimento por WhatsApp com IA e handoff manual</p>
+    </div>
+  </div>
+
+  <p>O sistema integra o WhatsApp da clínica com uma IA de atendimento automático. A equipe pode monitorar as conversas e assumir o atendimento quando necessário.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tela de Chats ]</div>
+  </div>
+
+  <h3>Visão Geral da Tela</h3>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li><strong>Barra lateral esquerda:</strong> lista de todas as conversas ativas</li>
+    <li><strong>Área principal:</strong> mensagens da conversa selecionada</li>
+    <li><strong>Status da IA:</strong> badge indica se a IA está ativa ou pausada naquele chat</li>
+  </ul>
+
+  <h3>Responder a um Paciente Manualmente</h3>
+  <ol class="steps">
+    <li><span>Clique na conversa na barra lateral para abrir as mensagens.</span></li>
+    <li><span>Digite a mensagem no campo inferior e pressione <strong>Enter</strong> ou clique em <strong>Enviar</strong>.</span></li>
+  </ol>
+
+  <h3>Pausar / Retomar a IA</h3>
+  <ol class="steps">
+    <li><span>Com a conversa aberta, clique em <strong>"Pausar IA"</strong> no topo.</span></li>
+    <li><span>A IA deixará de responder automaticamente naquele chat. O badge <em>"IA pausada"</em> ficará visível.</span></li>
+    <li><span>Para retomar, clique em <strong>"Retomar IA"</strong>.</span></li>
+  </ol>
+
+  <h3>Assumir um Atendimento (Dar duplo clique)</h3>
+  <ol class="steps">
+    <li><span>Dê <strong>duplo clique</strong> em uma conversa na lista lateral.</span></li>
+    <li><span>Uma janela dedicada abrirá com o histórico completo e campo de resposta.</span></li>
+    <li><span>Responda diretamente pelo campo. A IA fica pausada automaticamente.</span></li>
+    <li><span>Clique em <strong>"Devolver"</strong> quando quiser retornar a conversa para a IA.</span></li>
+  </ol>
+
+  <h3>Enviar Mensagem para um Contato</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Nova Mensagem"</strong>.</span></li>
+    <li><span>Selecione o contato (paciente, médico ou fornecedor) na lista.</span></li>
+    <li><span>Digite a mensagem e clique em <strong>"Enviar"</strong>.</span></li>
+  </ol>
+
+  <h3>Envio em Massa (Todos os Pacientes)</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"📢 Mensagem em Massa"</strong>.</span></li>
+    <li><span>Digite o texto da mensagem (limite: 4096 caracteres).</span></li>
+    <li><span>Clique em <strong>"Continuar"</strong> e revise o aviso de confirmação.</span></li>
+    <li><span>Clique em <strong>"Enviar para Todos"</strong>. O sistema enviará para todos os pacientes cadastrados com WhatsApp.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ O envio em massa é <strong>irreversível</strong>. Revise o conteúdo com cuidado antes de confirmar.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da conversa ativa com status da IA ]</div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 12. RELATÓRIOS ── -->
+<div class="module" id="relatorios">
+  <div class="module-header">
+    <div class="module-icon">📈</div>
+    <div>
+      <h2>12. Relatórios</h2>
+      <p>Indicadores de desempenho e saúde financeira</p>
+    </div>
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tela de Relatórios ]</div>
+  </div>
+
+  <h3>Indicadores Disponíveis</h3>
+  <table>
+    <tr><th>Indicador</th><th>Descrição</th></tr>
+    <tr><td>Total de Pacientes</td><td>Total cadastrado na base</td></tr>
+    <tr><td>Total de Consultas</td><td>Histórico completo de agendamentos</td></tr>
+    <tr><td>Faturamento</td><td>Soma de pagamentos confirmados</td></tr>
+    <tr><td>Resultado Líquido</td><td>Faturamento menos despesas pagas</td></tr>
+    <tr><td>Taxa de Conversão</td><td>% de consultas concluídas vs agendadas</td></tr>
+    <tr><td>Inadimplência</td><td>Total de cobranças em aberto</td></tr>
+  </table>
+
+  <h3>Exportar Relatório</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Exportar Relatório"</strong>.</span></li>
+    <li><span>O navegador abrirá a janela de impressão.</span></li>
+    <li><span>Selecione <strong>"Salvar como PDF"</strong> no destino de impressão para gerar o arquivo.</span></li>
+  </ol>
+</div>
+
+<!-- ────────────────────────────────── 13. CONFIGURAÇÕES ── -->
+<div class="module" id="configuracoes">
+  <div class="module-header">
+    <div class="module-icon">⚙️</div>
+    <div>
+      <h2>13. Configurações</h2>
+      <p>Parametrização da clínica e das mensagens automáticas do WhatsApp</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>As configurações controlam o comportamento da IA do WhatsApp e os dados institucionais da clínica.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tela de Configurações ]</div>
+  </div>
+
+  <h3>Seções de configuração</h3>
+  <table>
+    <tr><th>Seção</th><th>O que configurar</th></tr>
+    <tr><td>Dados da Clínica</td><td>Nome, número do WhatsApp, horários, especialidades</td></tr>
+    <tr><td>Telemedicina</td><td>Plataforma, instruções de acesso, link de consulta</td></tr>
+    <tr><td>Pagamentos</td><td>Valor padrão, chave PIX, link de pagamento, métodos aceitos</td></tr>
+    <tr><td>Políticas da Clínica</td><td>Confirmação, cancelamento e remarcação</td></tr>
+    <tr><td>Mensagens Automáticas</td><td>Boas-vindas, confirmação, lembrete, cobrança, emergência</td></tr>
+    <tr><td>Regras da IA</td><td>Instruções adicionais para o comportamento da IA</td></tr>
+  </table>
+
+  <h3>Salvar configurações</h3>
+  <ol class="steps">
+    <li><span>Edite os campos desejados em qualquer seção.</span></li>
+    <li><span>Clique em <strong>"Salvar Configurações"</strong> (botão fixo no rodapé da página).</span></li>
+    <li><span>Aguarde a confirmação de sucesso.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ As mensagens automáticas são enviadas pela IA diretamente aos pacientes. Revise o texto com cuidado antes de salvar.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 14. AUDITORIA ── -->
+<div class="module" id="auditoria">
+  <div class="module-header">
+    <div class="module-icon">🔒</div>
+    <div>
+      <h2>14. Auditoria</h2>
+      <p>Rastreabilidade completa de todas as ações do sistema</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>O módulo de Auditoria registra automaticamente todas as ações realizadas no sistema: logins, criações, edições, exclusões e cancelamentos.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da tela de Auditoria ]</div>
+  </div>
+
+  <h3>O que é registrado</h3>
+  <table>
+    <tr><th>Ação</th><th>Cor</th><th>Exemplo</th></tr>
+    <tr><td>LOGIN</td><td><span class="badge badge-blue">Roxo</span></td><td>Usuário entrou no sistema</td></tr>
+    <tr><td>LOGIN_FAILED</td><td><span class="badge badge-red">Vermelho</span></td><td>Tentativa de login com senha errada</td></tr>
+    <tr><td>CREATE</td><td><span class="badge badge-green">Verde</span></td><td>Novo paciente cadastrado</td></tr>
+    <tr><td>UPDATE</td><td><span class="badge badge-blue">Azul</span></td><td>Dados do médico editados</td></tr>
+    <tr><td>DELETE / CANCEL</td><td><span class="badge badge-red">Vermelho</span></td><td>Consulta cancelada</td></tr>
+  </table>
+
+  <h3>Filtrar registros</h3>
+  <ol class="steps">
+    <li><span>Use a busca por texto para encontrar registros de um paciente, entidade ou ID específico.</span></li>
+    <li><span>Filtre por <strong>Entidade</strong> (Paciente, Médico, Consulta, etc.) ou por <strong>Ação</strong>.</span></li>
+    <li><span>Defina um <strong>intervalo de datas</strong> para restringir o período.</span></li>
+    <li><span>Clique em <strong>"Atualizar"</strong> para aplicar os filtros.</span></li>
+  </ol>
+
+  <h3>Ver detalhes de um registro</h3>
+  <ol class="steps">
+    <li><span>Clique no botão de expansão (<strong>▶</strong>) na linha do registro.</span></li>
+    <li><span>Os metadados completos serão exibidos em formato JSON, incluindo dados anteriores e posteriores à alteração.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ Todos os acessos ficam registrados com data, hora e endereço IP. O sistema cumpre os requisitos de rastreabilidade da LGPD.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── APÊNDICE A ── -->
+<div class="module" id="apendice-a">
+  <div class="module-header">
+    <div class="module-icon">📌</div>
+    <div>
+      <h2>Apêndice A — Fluxo Completo de uma Consulta</h2>
+      <p>Passo a passo da operação padrão da clínica</p>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>#</th><th>Etapa</th><th>Responsável</th><th>Módulo</th></tr>
+    <tr><td>1</td><td>Prospect entra em contato e é registrado como Lead</td><td>Recepcionista</td><td>Leads</td></tr>
+    <tr><td>2</td><td>Lead é convertido em Paciente na primeira consulta</td><td>Recepcionista</td><td>Leads → Pacientes</td></tr>
+    <tr><td>3</td><td>Paciente entra em contato pelo WhatsApp</td><td>IA / Recepção</td><td>Chats</td></tr>
+    <tr><td>4</td><td>Recepção cadastra o paciente (se novo)</td><td>Recepcionista</td><td>Pacientes</td></tr>
+    <tr><td>5</td><td>Recepção agenda a consulta com médico e valor</td><td>Recepcionista</td><td>Agenda</td></tr>
+    <tr><td>6</td><td>Sistema gera cobrança automaticamente no Financeiro</td><td>Sistema</td><td>Financeiro</td></tr>
+    <tr><td>7</td><td>Recepção confirma a presença do paciente</td><td>Recepcionista</td><td>Agenda</td></tr>
+    <tr><td>8</td><td>Médico inicia a consulta e preenche prontuário</td><td>Médico</td><td>Agenda / Prontuários</td></tr>
+    <tr><td>9</td><td>Médico finaliza a consulta</td><td>Médico</td><td>Agenda</td></tr>
+    <tr><td>10</td><td>Recepção registra o pagamento recebido</td><td>Recepcionista</td><td>Financeiro</td></tr>
+    <tr><td>11</td><td>Sistema atualiza o Fluxo de Caixa</td><td>Sistema</td><td>Financeiro</td></tr>
+  </table>
+</div>
+
+<!-- ────────────────────────────────── APÊNDICE B ── -->
+<div class="module" id="apendice-b">
+  <div class="module-header">
+    <div class="module-icon">❓</div>
+    <div>
+      <h2>Apêndice B — Perguntas Frequentes</h2>
+      <p>Dúvidas mais comuns dos operadores</p>
+    </div>
+  </div>
+
+  <h3>Geral</h3>
+  <h4>O sistema funciona em celular?</h4>
+  <p>Sim, o sistema é responsivo e funciona em smartphones. Recomendamos uso em tablets ou computadores para melhor experiência na Agenda e Financeiro.</p>
+
+  <h4>Posso acessar de casa?</h4>
+  <p>Sim, o sistema é 100% web. Acesse pelo navegador de qualquer dispositivo conectado à internet.</p>
+
+  <h3>Agenda</h3>
+  <h4>Posso agendar uma consulta no passado?</h4>
+  <p>Não. O sistema exige que o horário de início seja no futuro. Para registrar consultas passadas, use o módulo de Prontuários diretamente.</p>
+
+  <h4>O que acontece se dois agendamentos entrarem em conflito?</h4>
+  <p>O sistema bloqueia automaticamente o segundo agendamento e exibe uma mensagem de conflito de horário.</p>
+
+  <h3>Financeiro</h3>
+  <h4>Por que uma cobrança não aparece no Contas a Receber?</h4>
+  <p>A cobrança é gerada automaticamente apenas quando o médico possui um <strong>Valor de Consulta</strong> cadastrado no perfil, ou quando um valor é digitado no formulário de agendamento.</p>
+
+  <h4>Como cancelar uma cobrança incorreta?</h4>
+  <p>No módulo Financeiro → Contas a Receber, localize a cobrança. No momento, use o módulo de Auditoria para registrar a ocorrência e entre em contato com o administrador para correção direta.</p>
+
+  <h3>WhatsApp</h3>
+  <h4>A IA não está respondendo. O que fazer?</h4>
+  <p>Verifique em Configurações se o número do WhatsApp está correto e se as credenciais Z-API estão ativas. Consulte o administrador do sistema.</p>
+
+  <h4>Posso editar uma mensagem enviada?</h4>
+  <p>Não. Mensagens enviadas pelo WhatsApp não podem ser editadas. Envie uma nova mensagem com a correção.</p>
+</div>
+
+<!-- ── Footer ── -->
+<div class="footer">
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v1.2 · Maio 2026<br>
+  Desenvolvido para uso interno · Todos os direitos reservados
+</div>
+
+</div><!-- .content -->
+</body>
+</html>
