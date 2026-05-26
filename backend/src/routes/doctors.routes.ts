@@ -37,6 +37,8 @@ const updateDoctorSchema = z.object({
   crmState: z.string().length(2).optional(),
   workStartHour: z.number().int().min(0).max(23).optional(),
   workEndHour: z.number().int().min(1).max(24).optional(),
+  repasseType: z.enum(['PERCENTAGE', 'FIXED']).optional(),
+  repasseValue: z.number().min(0).optional(),
 })
 
 const idParamSchema = z.object({ id: z.string().min(1, 'ID inválido') })

@@ -135,26 +135,35 @@ model User {
 // MÉDICOS
 // ============================================
 
+enum RepasseType {
+  PERCENTAGE
+  FIXED
+}
+
 model Doctor {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  crm          String   @unique // Conselho Regional de Medicina
-  crmState     String   // UF do CRM (ex: "SP", "RJ")
-  cpf          String?  // CPF do médico — obrigatório para prescrição digital CFM
+  id           String      @id @default(cuid())
+  userId       String      @unique
+  crm          String      @unique // Conselho Regional de Medicina
+  crmState     String      // UF do CRM (ex: "SP", "RJ")
+  cpf          String?     // CPF do médico — obrigatório para prescrição digital CFM
   specialty    String
   phone        String?
   bio          String?
   consultationFee Float?
-  workStartHour Int      @default(8)
-  workEndHour   Int      @default(18)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  workStartHour Int        @default(8)
+  workEndHour   Int        @default(18)
+  // Repasse ao médico por consulta paga
+  repasseType  RepasseType @default(PERCENTAGE)
+  repasseValue Float?      // % (0-100) ou valor fixo em R$
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments    Appointment[]
   medicalRecords  MedicalRecord[]
   prescriptions   Prescription[]
   transferredChats Chat[]
+  doctorPayments  DoctorPayment[]
 
   @@index([crm])
   @@index([specialty])
@@ -281,6 +290,7 @@ model Appointment {
   medicalRecord  MedicalRecord?
   prescription   Prescription?
   payment        Payment?
+  doctorPayment  DoctorPayment?
 
   @@index([patientId])
   @@index([doctorId])
@@ -405,13 +415,46 @@ model Payment {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  patient        Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment    Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  doctorPayment  DoctorPayment?
 
   @@index([patientId])
   @@index([status])
   @@index([dueDate])
   @@map("payments")
+}
+
+// ============================================
+// REPASSES AOS MÉDICOS
+// ============================================
+
+enum DoctorPaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model DoctorPayment {
+  id            String              @id @default(cuid())
+  doctorId      String
+  appointmentId String              @unique
+  paymentId     String?             @unique  // pagamento do paciente que gerou o repasse
+  amount        Float
+  status        DoctorPaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  doctor      Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  payment     Payment?    @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([doctorId])
+  @@index([status])
+  @@index([appointmentId])
+  @@map("doctor_payments")
 }
 
 // ============================================

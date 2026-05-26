@@ -168,6 +168,9 @@ export type LeadListResponse = PaginatedResponse<Lead>
 
 // ─── Médicos ─────────────────────────────────────────────────────────────────
 
+export type RepasseType = 'PERCENTAGE' | 'FIXED'
+export type DoctorPaymentStatus = 'PENDING' | 'PAID' | 'CANCELLED'
+
 export interface Doctor {
   id: string
   userId?: string
@@ -181,6 +184,8 @@ export interface Doctor {
   workStartHour?: number
   workEndHour?: number
   isActive?: boolean
+  repasseType?: RepasseType
+  repasseValue?: number
   user?: {
     id?: string
     name: string
@@ -189,6 +194,44 @@ export interface Doctor {
   }
   createdAt: string
   updatedAt: string
+}
+
+export interface DoctorPayment {
+  id: string
+  doctorId: string
+  appointmentId: string
+  paymentId?: string
+  amount: number
+  status: DoctorPaymentStatus
+  paidAt?: string
+  notes?: string
+  doctor?: {
+    id: string
+    crm: string
+    crmState: string
+    specialty: string
+    repasseType: RepasseType
+    repasseValue?: number
+    user?: { name: string; email: string }
+  }
+  appointment?: {
+    id: string
+    startTime: string
+    endTime: string
+    status: string
+    patient?: { id: string; fullName: string }
+  }
+  payment?: { id: string; amount: number; status: string; paidAt?: string }
+  createdAt: string
+  updatedAt: string
+}
+
+export type DoctorPaymentListResponse = PaginatedResponse<DoctorPayment>
+
+export interface DoctorPaymentSummaryItem {
+  doctor?: { id: string; specialty: string; repasseType: RepasseType; repasseValue?: number; user?: { name: string } }
+  pending: { amount: number; count: number }
+  paid:    { amount: number; count: number }
 }
 
 export type DoctorListResponse = PaginatedResponse<Doctor>
