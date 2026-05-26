@@ -51,6 +51,8 @@ export default function ConciliacaoMedicosPage() {
   const [total,       setTotal]       = useState(0)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
+  const [nfInputs, setNfInputs] = useState<Record<string, string>>({})
+
   const [doctorFilter, setDoctorFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'PAID' | 'CANCELLED' | ''>('PENDING')
   const [from, setFrom]                 = useState('')
@@ -89,6 +91,7 @@ export default function ConciliacaoMedicosPage() {
       setPayments(res.data)
       setTotal(res.total)
       setSelectedIds(new Set())
+      setNfInputs({})
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar repasses.')
     } finally {
@@ -117,12 +120,25 @@ export default function ConciliacaoMedicosPage() {
 
   async function handleMarkPaid() {
     if (selectedIds.size === 0) return
+
+    // Valida NF de todos selecionados antes de confirmar
+    const missing = Array.from(selectedIds).filter(id => !nfInputs[id]?.trim())
+    if (missing.length > 0) {
+      setError(`Preencha o Nº da NF/Recibo para todos os repasses selecionados (${missing.length} pendente(s)).`)
+      return
+    }
+
     if (!window.confirm(`Confirmar pagamento de ${selectedIds.size} repasse(s)?`)) return
     setSaving(true); setError(''); setSuccess('')
     try {
-      const res = await markDoctorPaymentsPaid(Array.from(selectedIds))
+      const paymentsToMark = Array.from(selectedIds).map(id => ({
+        id,
+        nfNumber: nfInputs[id].trim(),
+      }))
+      const res = await markDoctorPaymentsPaid(paymentsToMark)
       setSuccess(`${res.updated} repasse(s) marcado(s) como pago(s).`)
       setSelectedIds(new Set())
+      setNfInputs({})
       await fetchPayments()
       const s = await getDoctorPaymentsSummary()
       setSummary(s.data)
@@ -234,12 +250,22 @@ export default function ConciliacaoMedicosPage() {
 
       {/* Ação em lote */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-3 bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 flex-wrap">
           <span className="text-sm text-primary-800 font-medium">{selectedIds.size} repasse(s) selecionado(s)</span>
-          <button onClick={handleMarkPaid} disabled={saving} className="btn-primary text-sm px-4 py-1.5">
+          <button
+            onClick={handleMarkPaid}
+            disabled={saving || Array.from(selectedIds).some(id => !nfInputs[id]?.trim())}
+            className="btn-primary text-sm px-4 py-1.5 disabled:opacity-40"
+            title={Array.from(selectedIds).some(id => !nfInputs[id]?.trim()) ? 'Preencha o Nº NF/Recibo de todos os selecionados' : ''}
+          >
             {saving ? 'Processando…' : 'Confirmar pagamento'}
           </button>
-          <button onClick={() => setSelectedIds(new Set())} className="text-sm text-slate-500 hover:text-slate-700">Limpar seleção</button>
+          <button onClick={() => { setSelectedIds(new Set()); setNfInputs({}) }} className="text-sm text-slate-500 hover:text-slate-700">Limpar seleção</button>
+          {Array.from(selectedIds).some(id => !nfInputs[id]?.trim()) && (
+            <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+              Preencha o Nº NF/Recibo em cada linha selecionada
+            </span>
+          )}
         </div>
       )}
 
@@ -269,6 +295,7 @@ export default function ConciliacaoMedicosPage() {
                     <th className="pb-3 font-semibold text-slate-600">Valor consulta</th>
                     <th className="pb-3 font-semibold text-slate-600">Repasse</th>
                     <th className="pb-3 font-semibold text-slate-600">Status</th>
+                    <th className="pb-3 font-semibold text-slate-600">NF / Recibo</th>
                     <th className="pb-3 font-semibold text-slate-600">Pago em</th>
                     <th className="pb-3" />
                   </tr>
@@ -302,6 +329,19 @@ export default function ConciliacaoMedicosPage() {
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_CLASS[dp.status]}`}>
                           {STATUS_LABEL[dp.status]}
                         </span>
+                      </td>
+                      <td className="py-3">
+                        {dp.status === 'PENDING' ? (
+                          <input
+                            type="text"
+                            placeholder="Nº NF/Recibo"
+                            value={nfInputs[dp.id] ?? ''}
+                            onChange={e => setNfInputs(prev => ({ ...prev, [dp.id]: e.target.value }))}
+                            className={`input text-xs w-32 ${selectedIds.has(dp.id) && !nfInputs[dp.id]?.trim() ? 'border-amber-400' : ''}`}
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-600 font-mono">{dp.nfNumber ?? '—'}</span>
+                        )}
                       </td>
                       <td className="py-3 text-slate-500">{dp.paidAt ? formatDate(dp.paidAt) : '—'}</td>
                       <td className="py-3">

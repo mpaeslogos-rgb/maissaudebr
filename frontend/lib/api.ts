@@ -312,8 +312,11 @@ export function getDoctorPaymentsSummary(): Promise<{ data: DoctorPaymentSummary
   return apiGet<{ data: DoctorPaymentSummaryItem[] }>('/doctor-payments/summary')
 }
 
-export function markDoctorPaymentsPaid(ids: string[], notes?: string): Promise<{ updated: number }> {
-  return apiPost<{ updated: number }>('/doctor-payments/mark-paid', { ids, notes })
+export function markDoctorPaymentsPaid(
+  payments: { id: string; nfNumber: string }[],
+  notes?: string,
+): Promise<{ updated: number }> {
+  return apiPost<{ updated: number }>('/doctor-payments/mark-paid', { payments, notes })
 }
 
 export function cancelDoctorPayment(id: string): Promise<DoctorPayment> {
