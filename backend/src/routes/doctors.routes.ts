@@ -181,20 +181,20 @@ export async function doctorsRoutes(app: FastifyInstance) {
 
     try {
       const d = body.data
+      const updateData: Prisma.DoctorUpdateInput = {}
+      if (d.specialty        !== undefined) updateData.specialty       = d.specialty
+      if (d.crmState        !== undefined) updateData.crmState        = d.crmState.toUpperCase()
+      if (d.cpf             !== undefined) updateData.cpf             = d.cpf
+      if (d.phone           !== undefined) updateData.phone           = d.phone
+      if (d.bio             !== undefined) updateData.bio             = d.bio
+      if (d.consultationFee !== undefined) updateData.consultationFee = d.consultationFee
+      if (d.workStartHour   !== undefined) updateData.workStartHour   = d.workStartHour
+      if (d.workEndHour     !== undefined) updateData.workEndHour     = d.workEndHour
+      if (d.repasseType     !== undefined) updateData.repasseType     = d.repasseType
+      if (d.repasseValue    !== undefined) updateData.repasseValue    = d.repasseValue
       const updated = await prisma.doctor.update({
         where: { id: params.data.id },
-        data: {
-          ...(d.specialty        !== undefined && { specialty:       d.specialty }),
-          ...(d.crmState        !== undefined && { crmState:        d.crmState.toUpperCase() }),
-          ...(d.cpf             !== undefined && { cpf:             d.cpf }),
-          ...(d.phone           !== undefined && { phone:           d.phone }),
-          ...(d.bio             !== undefined && { bio:             d.bio }),
-          ...(d.consultationFee !== undefined && { consultationFee: d.consultationFee }),
-          ...(d.workStartHour   !== undefined && { workStartHour:   d.workStartHour }),
-          ...(d.workEndHour     !== undefined && { workEndHour:     d.workEndHour }),
-          ...(d.repasseType     !== undefined && { repasseType:     d.repasseType }),
-          ...(d.repasseValue    !== undefined && { repasseValue:    d.repasseValue }),
-        },
+        data:  updateData,
         include: {
           user: { select: { id: true, name: true, email: true, isActive: true } },
         },
