@@ -72,7 +72,6 @@ interface PatientForm {
   gender: Gender
   phone: string
   email: string
-  address: string
   notes: string
 }
 
@@ -83,7 +82,6 @@ const EMPTY_FORM: PatientForm = {
   gender: 'MALE',
   phone: '',
   email: '',
-  address: '',
   notes: '',
 }
 
@@ -101,12 +99,10 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
     return {
       fullName: patient.fullName,
       cpf: patient.cpf ?? '',
-      // birthDate vem como "1990-05-20T00:00:00.000Z", pegamos só a data
       birthDate: patient.birthDate ? patient.birthDate.split('T')[0] : '',
       gender: patient.gender ?? 'MALE',
       phone: patient.phone,
       email: patient.email ?? '',
-      address: patient.address ?? '',
       notes: patient.notes ?? '',
     }
   })
@@ -142,7 +138,6 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
         phone: form.phone.trim(),
         email: form.email.trim(),
       }
-      if (form.address.trim()) payload.address = form.address.trim()
       if (form.notes.trim())   payload.notes   = form.notes.trim()
 
       if (patient) {
@@ -263,20 +258,6 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
               value={form.email}
               onChange={handleChange}
               placeholder="exemplo@email.com"
-              className="input"
-            />
-          </div>
-
-          {/* Endereço */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Endereço <span className="text-slate-400 text-xs">(opcional)</span>
-            </label>
-            <input
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              placeholder="Rua, número, bairro, cidade"
               className="input"
             />
           </div>

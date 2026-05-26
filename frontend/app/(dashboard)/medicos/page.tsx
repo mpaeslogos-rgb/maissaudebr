@@ -220,7 +220,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
   const [form, setForm] = useState<DoctorEditForm>({
     specialty: doctor.specialty,
     crmState: doctor.crmState,
-    cpf: (doctor as Doctor & { cpf?: string }).cpf ?? '',
+    cpf: doctor.cpf ?? '',
     phone: doctor.phone ?? '',
     consultationFee: doctor.consultationFee ? String(doctor.consultationFee) : '',
     bio: doctor.bio ?? '',
