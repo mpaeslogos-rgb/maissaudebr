@@ -197,6 +197,9 @@ model Patient {
   // Foto
   photoUrl    String?
 
+  // LGPD — anonimização
+  deletedAt   DateTime?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

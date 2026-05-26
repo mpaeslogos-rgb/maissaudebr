@@ -102,15 +102,18 @@ export async function patientsRoutes(app: FastifyInstance) {
 
     const { search, take, skip } = parsed.data
 
+    const baseWhere: Prisma.PatientWhereInput = { deletedAt: null }
+
     const where: Prisma.PatientWhereInput = search
       ? {
+          ...baseWhere,
           OR: [
             { fullName: { contains: search } },
             { cpf: { contains: search } },
             { email: { contains: search } },
           ],
         }
-      : {}
+      : baseWhere
 
     const [patients, total] = await Promise.all([
       prisma.patient.findMany({
@@ -123,6 +126,36 @@ export async function patientsRoutes(app: FastifyInstance) {
     ])
 
     return { data: patients.map(decryptPatient), total, take, skip }
+  })
+
+  // ----- LISTAR EXCLUÍDOS (LGPD — dados anonimizados) -----
+  app.get('/patients/deleted', { preHandler: requireRole('ADMIN') }, async (request, reply) => {
+    const parsed = listQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.code(400).send({ error: parsed.error.flatten() })
+    }
+    const { take, skip } = parsed.data
+
+    const where: Prisma.PatientWhereInput = { deletedAt: { not: null } }
+
+    const [patients, total] = await Promise.all([
+      prisma.patient.findMany({
+        where,
+        orderBy: { deletedAt: 'desc' },
+        take,
+        skip,
+        select: {
+          id: true,
+          fullName: true,
+          deletedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.patient.count({ where }),
+    ])
+
+    return reply.send({ data: patients, total, take, skip })
   })
 
   // ----- BUSCAR POR ID -----
@@ -268,6 +301,7 @@ export async function patientsRoutes(app: FastifyInstance) {
           healthInsurance:      null,
           healthInsuranceNumber: null,
           userId:               null,
+          deletedAt:            new Date(),
         },
       })
 

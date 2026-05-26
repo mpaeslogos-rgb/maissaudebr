@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   getPatients,
   createPatient,
@@ -297,7 +297,6 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
 const PAGE_SIZE = 10
 
 export default function PacientesPage() {
-  const router = useRouter()
   const [patients, setPatients]     = useState<Patient[]>([])
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
@@ -380,9 +379,15 @@ export default function PacientesPage() {
             {total > 0 ? `${total} paciente${total !== 1 ? 's' : ''} cadastrado${total !== 1 ? 's' : ''}` : 'Nenhum paciente ainda'}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start sm:self-auto flex-wrap">
+          <Link
+            href="/pacientes/excluidos"
+            className="btn-outline flex items-center gap-2 text-sm"
+          >
+            Excluídos (LGPD)
+          </Link>
           <button
-            className="btn-primary flex items-center gap-2 self-start sm:self-auto"
+            className="btn-primary flex items-center gap-2"
             onClick={() => { setEditing(null); setShowModal(true) }}
           >
             <span className="text-lg leading-none">+</span> Novo Paciente
@@ -447,12 +452,15 @@ export default function PacientesPage() {
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {patients.map(p => (
-                      <tr
-                        key={p.id}
-                        className="hover:bg-cream-100 transition-colors cursor-pointer"
-                        onClick={() => router.push(`/pacientes/${p.id}`)}
-                      >
-                        <td className="py-3 font-medium text-slate-800">{p.fullName}</td>
+                      <tr key={p.id} className="hover:bg-cream-100 transition-colors">
+                        <td className="py-3">
+                          <Link
+                            href={`/pacientes/${p.id}`}
+                            className="font-medium text-primary-700 hover:underline"
+                          >
+                            {p.fullName}
+                          </Link>
+                        </td>
                         <td className="py-3 text-slate-600">{p.cpf}</td>
                         <td className="py-3 text-slate-600">{p.birthDate ? formatDate(p.birthDate) : '—'}</td>
                         <td className="py-3 text-slate-600">{p.birthDate ? calcAge(p.birthDate) : '—'}</td>
@@ -460,16 +468,7 @@ export default function PacientesPage() {
                         <td className="py-3 text-slate-600">{p.phone}</td>
                         <td className="py-3 text-slate-600">{p.email ?? '—'}</td>
                         <td className="py-3">
-                          <div
-                            className="flex items-center gap-2 justify-end"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <button
-                              className="btn-outline text-xs px-3 py-1"
-                              onClick={() => router.push(`/pacientes/${p.id}`)}
-                            >
-                              Ver
-                            </button>
+                          <div className="flex items-center gap-2 justify-end">
                             <button
                               className="btn-outline text-xs px-3 py-1"
                               onClick={() => { setEditing(p); setShowModal(true) }}
