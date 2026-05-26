@@ -13,6 +13,7 @@ import type {
   ApiError,
   Exam,
   LeadListResponse, Lead,
+  Prescription,
 } from './types'
 
 // ─── URL base ────────────────────────────────────────────────────────────────
@@ -187,20 +188,38 @@ export function getPatients(params?: {
   return apiGet<PatientListResponse>(`/patients${qs ? `?${qs}` : ''}`)
 }
 
-export function getPatient(id: string): Promise<{ data: Patient }> {
-  return apiGet<{ data: Patient }>(`/patients/${id}`)
+export function getPatient(id: string): Promise<Patient> {
+  return apiGet<Patient>(`/patients/${id}`)
 }
 
-export function createPatient(data: Partial<Patient>): Promise<{ data: Patient }> {
-  return apiPost<{ data: Patient }>('/patients', data)
+export function createPatient(data: Partial<Patient>): Promise<Patient> {
+  return apiPost<Patient>('/patients', data)
 }
 
-export function updatePatient(id: string, data: Partial<Patient>): Promise<{ data: Patient }> {
-  return apiPatch<{ data: Patient }>(`/patients/${id}`, data)
+export function updatePatient(id: string, data: Partial<Patient>): Promise<Patient> {
+  return apiPatch<Patient>(`/patients/${id}`, data)
 }
 
 export function deletePatient(id: string): Promise<{ message: string }> {
   return apiDelete<{ message: string }>(`/patients/${id}`)
+}
+
+export function uploadPatientPhoto(id: string, formData: FormData): Promise<{ photoUrl: string }> {
+  return apiFetch<{ photoUrl: string }>(`/patients/${id}/photo`, { method: 'PATCH', body: formData, isFormData: true })
+}
+
+// ─── Prescrições ──────────────────────────────────────────────────────────────
+
+export function getPrescriptions(patientId: string): Promise<{ data: Prescription[] }> {
+  return apiGet<{ data: Prescription[] }>(`/patients/${patientId}/prescriptions`)
+}
+
+export function createPrescription(patientId: string, data: unknown): Promise<Prescription> {
+  return apiPost<Prescription>(`/patients/${patientId}/prescriptions`, data)
+}
+
+export function deletePrescription(patientId: string, id: string): Promise<{ message: string }> {
+  return apiDelete<{ message: string }>(`/patients/${patientId}/prescriptions/${id}`)
 }
 
 // ─── Leads ────────────────────────────────────────────────────────────────────

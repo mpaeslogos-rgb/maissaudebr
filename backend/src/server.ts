@@ -33,6 +33,7 @@ import { auditRoutes } from './routes/audit.routes'
 import { cashflowRoutes } from './routes/cashflow.routes'
 import { consentsRoutes } from './routes/consents.routes'
 import { leadsRoutes } from './routes/leads.routes'
+import { prescriptionsRoutes } from './routes/prescriptions.routes'
 
 const app = Fastify({ logger: true })
 
@@ -132,6 +133,7 @@ async function bootstrap() {
   await app.register(cashflowRoutes, { prefix: '/api' })
   await app.register(consentsRoutes)
   await app.register(leadsRoutes)
+  await app.register(prescriptionsRoutes)
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

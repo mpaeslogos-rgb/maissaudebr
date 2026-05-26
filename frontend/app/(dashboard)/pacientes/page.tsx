@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   getPatients,
   createPatient,
@@ -315,6 +316,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
 const PAGE_SIZE = 10
 
 export default function PacientesPage() {
+  const router = useRouter()
   const [patients, setPatients]     = useState<Patient[]>([])
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
@@ -464,7 +466,11 @@ export default function PacientesPage() {
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {patients.map(p => (
-                      <tr key={p.id} className="hover:bg-cream-100 transition-colors">
+                      <tr
+                        key={p.id}
+                        className="hover:bg-cream-100 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/pacientes/${p.id}`)}
+                      >
                         <td className="py-3 font-medium text-slate-800">{p.fullName}</td>
                         <td className="py-3 text-slate-600">{p.cpf}</td>
                         <td className="py-3 text-slate-600">{p.birthDate ? formatDate(p.birthDate) : '—'}</td>
@@ -473,7 +479,16 @@ export default function PacientesPage() {
                         <td className="py-3 text-slate-600">{p.phone}</td>
                         <td className="py-3 text-slate-600">{p.email ?? '—'}</td>
                         <td className="py-3">
-                          <div className="flex items-center gap-2 justify-end">
+                          <div
+                            className="flex items-center gap-2 justify-end"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <button
+                              className="btn-outline text-xs px-3 py-1"
+                              onClick={() => router.push(`/pacientes/${p.id}`)}
+                            >
+                              Ver
+                            </button>
                             <button
                               className="btn-outline text-xs px-3 py-1"
                               onClick={() => { setEditing(p); setShowModal(true) }}
