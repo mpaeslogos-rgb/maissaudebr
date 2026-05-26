@@ -19,6 +19,7 @@ const createDoctorSchema = z.object({
   password: z.string().min(6),
   crm: z.string().min(3),
   crmState: z.string().length(2),
+  cpf: z.string().optional(),
   specialty: z.string().min(2),
   consultationFee: z.number().positive().optional(),
   phone: z.string().optional(),
@@ -29,6 +30,7 @@ const createDoctorSchema = z.object({
 
 const updateDoctorSchema = z.object({
   specialty: z.string().min(2).optional(),
+  cpf: z.string().optional(),
   consultationFee: z.number().positive().optional(),
   phone: z.string().optional(),
   bio: z.string().optional(),

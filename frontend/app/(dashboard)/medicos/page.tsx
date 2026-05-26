@@ -27,6 +27,7 @@ interface DoctorCreateForm {
   password: string
   crm: string
   crmState: string
+  cpf: string
   specialty: string
   phone: string
   consultationFee: string
@@ -36,6 +37,7 @@ interface DoctorCreateForm {
 interface DoctorEditForm {
   specialty: string
   crmState: string
+  cpf: string
   phone: string
   consultationFee: string
   bio: string
@@ -43,7 +45,7 @@ interface DoctorEditForm {
 
 const EMPTY_CREATE: DoctorCreateForm = {
   name: '', email: '', password: '', crm: '', crmState: 'SP',
-  specialty: '', phone: '', consultationFee: '', bio: '',
+  cpf: '', specialty: '', phone: '', consultationFee: '', bio: '',
 }
 
 // ─── Modal de Cadastro ────────────────────────────────────────────────────────
@@ -84,6 +86,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
         crmState: form.crmState.toUpperCase(),
         specialty: form.specialty.trim(),
       }
+      if (form.cpf.trim())          payload.cpf = form.cpf.replace(/\D/g, '')
       if (form.phone.trim())        payload.phone = form.phone.trim()
       if (form.bio.trim())          payload.bio = form.bio.trim()
       if (form.consultationFee)     payload.consultationFee = Number(form.consultationFee)
@@ -155,11 +158,20 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Especialidade <span className="text-red-500">*</span>
-            </label>
-            <input name="specialty" value={form.specialty} onChange={handleChange} placeholder="Ex: Cardiologia, Clínica Geral" className="input" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Especialidade <span className="text-red-500">*</span>
+              </label>
+              <input name="specialty" value={form.specialty} onChange={handleChange} placeholder="Ex: Cardiologia, Clínica Geral" className="input" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                CPF do médico
+                <span className="ml-1 text-xs text-indigo-500 font-normal">(prescrição digital)</span>
+              </label>
+              <input name="cpf" value={form.cpf} onChange={handleChange} placeholder="000.000.000-00" className="input" />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -208,6 +220,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
   const [form, setForm] = useState<DoctorEditForm>({
     specialty: doctor.specialty,
     crmState: doctor.crmState,
+    cpf: (doctor as Doctor & { cpf?: string }).cpf ?? '',
     phone: doctor.phone ?? '',
     consultationFee: doctor.consultationFee ? String(doctor.consultationFee) : '',
     bio: doctor.bio ?? '',
@@ -232,6 +245,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
         specialty: form.specialty.trim(),
         crmState: form.crmState.toUpperCase(),
       }
+      if (form.cpf.trim())      payload.cpf = form.cpf.replace(/\D/g, '')
       if (form.phone.trim())    payload.phone = form.phone.trim()
       if (form.bio.trim())      payload.bio = form.bio.trim()
       if (form.consultationFee) payload.consultationFee = Number(form.consultationFee)
@@ -291,6 +305,14 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
                 {BR_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              CPF do médico
+              <span className="ml-1 text-xs text-indigo-500 font-normal">(prescrição digital CFM)</span>
+            </label>
+            <input name="cpf" value={form.cpf} onChange={handleChange} placeholder="000.000.000-00" className="input" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
