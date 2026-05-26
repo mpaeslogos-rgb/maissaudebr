@@ -19,6 +19,14 @@ function formatFee(fee?: number) {
   return fee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+function formatCpf(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
 // ─── Tipos do formulário ──────────────────────────────────────────────────────
 
 interface DoctorCreateForm {
@@ -64,7 +72,8 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: name === 'cpf' ? formatCpf(value) : value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -86,7 +95,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
         crmState: form.crmState.toUpperCase(),
         specialty: form.specialty.trim(),
       }
-      if (form.cpf.trim())          payload.cpf = form.cpf.replace(/\D/g, '')
+      if (form.cpf.trim())          payload.cpf = form.cpf.trim()
       if (form.phone.trim())        payload.phone = form.phone.trim()
       if (form.bio.trim())          payload.bio = form.bio.trim()
       if (form.consultationFee)     payload.consultationFee = Number(form.consultationFee)
@@ -231,7 +240,8 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: name === 'cpf' ? formatCpf(value) : value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -245,7 +255,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
         specialty: form.specialty.trim(),
         crmState: form.crmState.toUpperCase(),
       }
-      if (form.cpf.trim())      payload.cpf = form.cpf.replace(/\D/g, '')
+      if (form.cpf.trim())      payload.cpf = form.cpf.trim()
       if (form.phone.trim())    payload.phone = form.phone.trim()
       if (form.bio.trim())      payload.bio = form.bio.trim()
       if (form.consultationFee) payload.consultationFee = Number(form.consultationFee)
