@@ -171,6 +171,7 @@ export interface Doctor {
   userId?: string
   crm: string
   crmState: string
+  cpf?: string
   specialty: string
   phone?: string
   bio?: string
