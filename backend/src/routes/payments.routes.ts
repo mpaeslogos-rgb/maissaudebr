@@ -6,6 +6,7 @@ import type { JwtPayload } from '../plugins/auth'
 import { prisma } from '../lib/prisma2'
 import { extractUniqueViolationFields } from '../lib/prisma-errors'
 import { logAudit } from '../lib/audit'
+import { createDoctorPaymentIfNeeded } from './doctor-payments.routes'
 
 // ============================================================
 // SCHEMAS DE VALIDAÇÃO (Zod)
@@ -417,6 +418,8 @@ export async function paymentsRoutes(app: FastifyInstance) {
       })
       const uid = (request.user as JwtPayload)?.sub ?? null
       logAudit({ userId: uid, action: 'PAY_PAYMENT', entity: 'Payment', entityId: paid.id, request })
+      // Cria repasse ao médico se o médico tiver repasseValue configurado
+      createDoctorPaymentIfNeeded(paid.id).catch(err => request.log.warn({ err }, 'doctor-payment auto-create failed'))
       return reply.send(paid)
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

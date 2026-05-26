@@ -14,6 +14,7 @@ import type {
   Exam,
   LeadListResponse, Lead,
   Prescription,
+  DoctorPaymentListResponse, DoctorPayment, DoctorPaymentSummaryItem,
 } from './types'
 
 // ─── URL base ────────────────────────────────────────────────────────────────
@@ -285,6 +286,38 @@ export function updateDoctor(id: string, data: unknown): Promise<Doctor> {
 
 export function deleteDoctor(id: string): Promise<{ message: string }> {
   return apiDelete<{ message: string }>(`/doctors/${id}`)
+}
+
+// ─── Repasses aos médicos ─────────────────────────────────────────────────────
+
+export function getDoctorPayments(params?: {
+  doctorId?: string
+  status?: DoctorPayment['status']
+  from?: string
+  to?: string
+  take?: number
+  skip?: number
+}): Promise<DoctorPaymentListResponse> {
+  const qs = new URLSearchParams()
+  if (params?.doctorId) qs.set('doctorId', params.doctorId)
+  if (params?.status)   qs.set('status',   params.status)
+  if (params?.from)     qs.set('from',      params.from)
+  if (params?.to)       qs.set('to',        params.to)
+  if (params?.take)     qs.set('take',      String(params.take))
+  if (params?.skip !== undefined) qs.set('skip', String(params.skip))
+  return apiGet<DoctorPaymentListResponse>(`/doctor-payments?${qs}`)
+}
+
+export function getDoctorPaymentsSummary(): Promise<{ data: DoctorPaymentSummaryItem[] }> {
+  return apiGet<{ data: DoctorPaymentSummaryItem[] }>('/doctor-payments/summary')
+}
+
+export function markDoctorPaymentsPaid(ids: string[], notes?: string): Promise<{ updated: number }> {
+  return apiPost<{ updated: number }>('/doctor-payments/mark-paid', { ids, notes })
+}
+
+export function cancelDoctorPayment(id: string): Promise<DoctorPayment> {
+  return apiPatch<DoctorPayment>(`/doctor-payments/${id}/cancel`, {})
 }
 
 // ─── Agendamentos ─────────────────────────────────────────────────────────────

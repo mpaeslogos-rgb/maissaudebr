@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, AlertCircle,
   Plus, X, Loader2, CheckCircle2, Clock, AlertTriangle, RefreshCw,
-  ChevronDown, ChevronUp, DollarSign, Trash2,
+  ChevronDown, ChevronUp, DollarSign, Trash2, Stethoscope,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -120,12 +121,20 @@ export default function FinanceiroPage() {
           <h1 className="text-2xl font-bold text-slate-800">Financeiro</h1>
           <p className="text-sm text-slate-500">Fluxo de caixa, recebimentos e despesas</p>
         </div>
-        <button
-          onClick={fetchAll}
-          className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-lg text-sm hover:bg-slate-50"
-        >
-          <RefreshCw size={14} /> Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/financeiro/conciliacao-medicos"
+            className="flex items-center gap-2 px-4 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700"
+          >
+            <Stethoscope size={14} /> Conciliar Médicos
+          </Link>
+          <button
+            onClick={fetchAll}
+            className="flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-lg text-sm hover:bg-slate-50"
+          >
+            <RefreshCw size={14} /> Atualizar
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

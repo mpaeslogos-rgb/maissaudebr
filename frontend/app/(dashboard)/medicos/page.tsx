@@ -49,6 +49,8 @@ interface DoctorEditForm {
   phone: string
   consultationFee: string
   bio: string
+  repasseType: 'PERCENTAGE' | 'FIXED'
+  repasseValue: string
 }
 
 const EMPTY_CREATE: DoctorCreateForm = {
@@ -233,6 +235,8 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
     phone: doctor.phone ?? '',
     consultationFee: doctor.consultationFee ? String(doctor.consultationFee) : '',
     bio: doctor.bio ?? '',
+    repasseType: doctor.repasseType ?? 'PERCENTAGE',
+    repasseValue: doctor.repasseValue ? String(doctor.repasseValue) : '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -259,6 +263,8 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
       if (form.phone.trim())    payload.phone = form.phone.trim()
       if (form.bio.trim())      payload.bio = form.bio.trim()
       if (form.consultationFee) payload.consultationFee = Number(form.consultationFee)
+      payload.repasseType = form.repasseType
+      if (form.repasseValue)    payload.repasseValue = Number(form.repasseValue)
 
       await updateDoctor(doctor.id, payload)
       onSaved()
@@ -339,6 +345,44 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
             <textarea name="bio" value={form.bio} onChange={handleChange} rows={2} className="input resize-none" />
+          </div>
+
+          {/* Repasse */}
+          <div className="border-t border-surface-border pt-4">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+              Repasse ao médico
+              <span className="ml-1 text-indigo-500 font-normal normal-case">(por consulta paga)</span>
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
+                <select name="repasseType" value={form.repasseType} onChange={handleChange} className="input">
+                  <option value="PERCENTAGE">Percentual (%)</option>
+                  <option value="FIXED">Valor fixo (R$)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {form.repasseType === 'PERCENTAGE' ? 'Percentual (%)' : 'Valor fixo (R$)'}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step={form.repasseType === 'PERCENTAGE' ? '0.01' : '1'}
+                  max={form.repasseType === 'PERCENTAGE' ? '100' : undefined}
+                  name="repasseValue"
+                  value={form.repasseValue}
+                  onChange={handleChange}
+                  placeholder={form.repasseType === 'PERCENTAGE' ? 'Ex: 33.33' : 'Ex: 100'}
+                  className="input"
+                />
+              </div>
+            </div>
+            {form.repasseValue && form.repasseType === 'PERCENTAGE' && (
+              <p className="text-xs text-slate-400 mt-1">
+                Em uma consulta de R$300: repasse = R${(300 * Number(form.repasseValue) / 100).toFixed(2)}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
