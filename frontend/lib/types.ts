@@ -83,6 +83,8 @@ export interface Patient {
   healthInsuranceNumber?: string
   // Foto
   photoUrl?: string
+  // LGPD
+  deletedAt?: string | null
   // Relações (carregadas no detalhe)
   appointments?: PatientAppointmentSummary[]
   medicalRecords?: PatientMedicalRecordSummary[]

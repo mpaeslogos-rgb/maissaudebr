@@ -204,6 +204,15 @@ export function deletePatient(id: string): Promise<{ message: string }> {
   return apiDelete<{ message: string }>(`/patients/${id}`)
 }
 
+export function getDeletedPatients(params?: {
+  page?: number
+  limit?: number
+}): Promise<PatientListResponse> {
+  const take = params?.limit ?? 50
+  const skip = params?.page ? (params.page - 1) * take : 0
+  return apiGet<PatientListResponse>(`/patients/deleted?take=${take}&skip=${skip}`)
+}
+
 export function uploadPatientPhoto(id: string, formData: FormData): Promise<{ photoUrl: string }> {
   return apiFetch<{ photoUrl: string }>(`/patients/${id}/photo`, { method: 'PATCH', body: formData, isFormData: true })
 }
