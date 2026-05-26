@@ -29,16 +29,16 @@ const createDoctorSchema = z.object({
 })
 
 const updateDoctorSchema = z.object({
-  specialty: z.string().min(2).optional(),
-  cpf: z.string().optional(),
-  consultationFee: z.number().positive().optional(),
-  phone: z.string().optional(),
-  bio: z.string().optional(),
-  crmState: z.string().length(2).optional(),
-  workStartHour: z.number().int().min(0).max(23).optional(),
-  workEndHour: z.number().int().min(1).max(24).optional(),
-  repasseType: z.enum(['PERCENTAGE', 'FIXED']).optional(),
-  repasseValue: z.number().min(0).optional(),
+  specialty:       z.string().min(2).optional(),
+  cpf:             z.string().nullable().optional(),
+  consultationFee: z.number().positive().nullable().optional(),
+  phone:           z.string().nullable().optional(),
+  bio:             z.string().nullable().optional(),
+  crmState:        z.string().length(2).optional(),
+  workStartHour:   z.number().int().min(0).max(23).optional(),
+  workEndHour:     z.number().int().min(1).max(24).optional(),
+  repasseType:     z.enum(['PERCENTAGE', 'FIXED']).optional(),
+  repasseValue:    z.number().min(0).nullable().optional(),
 })
 
 const idParamSchema = z.object({ id: z.string().min(1, 'ID inválido') })
@@ -180,14 +180,23 @@ export async function doctorsRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: body.error.flatten() })
 
     try {
+      const d = body.data
       const updated = await prisma.doctor.update({
         where: { id: params.data.id },
         data: {
-          ...body.data,
-          ...(body.data.crmState && { crmState: body.data.crmState.toUpperCase() }),
+          ...(d.specialty        !== undefined && { specialty:       d.specialty }),
+          ...(d.crmState        !== undefined && { crmState:        d.crmState.toUpperCase() }),
+          ...(d.cpf             !== undefined && { cpf:             d.cpf }),
+          ...(d.phone           !== undefined && { phone:           d.phone }),
+          ...(d.bio             !== undefined && { bio:             d.bio }),
+          ...(d.consultationFee !== undefined && { consultationFee: d.consultationFee }),
+          ...(d.workStartHour   !== undefined && { workStartHour:   d.workStartHour }),
+          ...(d.workEndHour     !== undefined && { workEndHour:     d.workEndHour }),
+          ...(d.repasseType     !== undefined && { repasseType:     d.repasseType }),
+          ...(d.repasseValue    !== undefined && { repasseValue:    d.repasseValue }),
         },
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, isActive: true } },
         },
       })
       const uid = (request.user as JwtPayload)?.sub ?? null
