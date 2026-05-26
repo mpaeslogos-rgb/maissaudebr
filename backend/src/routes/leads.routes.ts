@@ -199,7 +199,7 @@ export async function leadsRoutes(app: FastifyInstance) {
     const normalize = (p: string) => p.replace(/\D/g, '')
 
     // CPF: criptografia determinística → lookup direto no banco
-    const cpfsNoArquivo = rawRows.filter(r => r.cpf).map(r => encryptDeterministic(r.cpf!))
+    const cpfsNoArquivo = rawRows.filter(r => r.cpf).map(r => encryptDeterministic(r.cpf!)).filter((x): x is string => x !== null)
     const pacientesPorCpf = cpfsNoArquivo.length > 0
       ? await prisma.patient.findMany({ where: { cpf: { in: cpfsNoArquivo } }, select: { cpf: true } })
       : []
