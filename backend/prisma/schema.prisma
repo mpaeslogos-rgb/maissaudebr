@@ -149,6 +149,7 @@ model Doctor {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments    Appointment[]
   medicalRecords  MedicalRecord[]
+  prescriptions   Prescription[]
   transferredChats Chat[]
 
   @@index([crm])
@@ -189,6 +190,9 @@ model Patient {
   healthInsurance     String?
   healthInsuranceNumber String?
 
+  // Foto
+  photoUrl    String?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -198,12 +202,12 @@ model Patient {
   payments        Payment[]
   chats           Chat[]
   exams           Exam[]
+  prescriptions   Prescription[]
+  consents        Consent[]
 
   @@index([cpf])
   @@index([fullName])
   @@map("patients")
-
-  consents        Consent[]
 }
 
 // ============================================
@@ -268,6 +272,7 @@ model Appointment {
   patient        Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor         Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   medicalRecord  MedicalRecord?
+  prescription   Prescription?
   payment        Payment?
 
   @@index([patientId])
@@ -320,6 +325,9 @@ model MedicalRecord {
   attachmentUrl   String?  // URL do arquivo original (se salvar storage)
   ocrText         String?  // Texto extraído via OCR
   ocrSummary      String?  // Resumo gerado pela OpenAI
+
+  // Transcrição da consulta
+  transcript      String?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -519,4 +527,43 @@ enum ChatStatus {
   ACTIVE
   TRANSFERRED_TO_DOCTOR
   CLOSED
+}
+
+// ============================================
+// PRESCRIÇÕES MÉDICAS
+// ============================================
+
+model Prescription {
+  id            String    @id @default(cuid())
+  patientId     String
+  doctorId      String
+  appointmentId String?   @unique
+  emittedAt     DateTime  @default(now())
+  validUntil    DateTime?
+  notes         String?
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  items       PrescriptionItem[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             String  @id @default(cuid())
+  prescriptionId String
+  medication     String
+  dosage         String
+  frequency      String
+  duration       String?
+  instructions   String?
+  order          Int     @default(0)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+  @@map("prescription_items")
 }

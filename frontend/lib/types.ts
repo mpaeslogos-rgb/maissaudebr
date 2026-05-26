@@ -61,12 +61,72 @@ export interface Patient {
   id: string
   fullName: string
   cpf?: string
+  rg?: string
   birthDate?: string
   gender?: Gender
   phone: string
   email?: string
-  address?: string
+  // Endereço estruturado
+  zipCode?: string
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  // Clínico
+  bloodType?: string
+  allergies?: string
   notes?: string
+  // Convênio
+  healthInsurance?: string
+  healthInsuranceNumber?: string
+  // Foto
+  photoUrl?: string
+  // Relações (carregadas no detalhe)
+  appointments?: PatientAppointmentSummary[]
+  medicalRecords?: PatientMedicalRecordSummary[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PatientAppointmentSummary {
+  id: string
+  startTime: string
+  endTime: string
+  status: AppointmentStatus
+  reason?: string
+  notes?: string
+  doctor: {
+    id: string
+    crm: string
+    crmState: string
+    specialty: string
+    user: { name: string }
+  }
+}
+
+export interface PatientMedicalRecordSummary {
+  id: string
+  appointmentId?: string
+  chiefComplaint?: string
+  historyOfIllness?: string
+  diagnosis?: string
+  observations?: string
+  transcript?: string
+  bloodPressure?: string
+  heartRate?: number
+  temperature?: number
+  weight?: number
+  height?: number
+  oxygenSaturation?: number
+  currentMedications?: string
+  pastConditions?: string
+  pastSurgeries?: string
+  familyHistory?: string
+  smokingStatus?: string
+  alcoholStatus?: string
+  physicalActivity?: string
   createdAt: string
   updatedAt: string
 }
@@ -335,6 +395,8 @@ export interface MedicalRecord {
   attachmentUrl?: string
   ocrText?: string
   ocrSummary?: string
+  // Transcrição
+  transcript?: string
   patient: { fullName: string; cpf?: string }
   doctor: {
     crm: string
@@ -374,6 +436,36 @@ export interface Exam {
   examDate?:       string
   createdAt:       string
   updatedAt:       string
+}
+
+// ─── Prescrições ──────────────────────────────────────────────────────────────
+
+export interface PrescriptionItem {
+  id: string
+  prescriptionId: string
+  medication: string
+  dosage: string
+  frequency: string
+  duration?: string
+  instructions?: string
+  order: number
+}
+
+export interface Prescription {
+  id: string
+  patientId: string
+  doctorId: string
+  appointmentId?: string
+  emittedAt: string
+  validUntil?: string
+  notes?: string
+  items: PrescriptionItem[]
+  doctor: {
+    crm: string
+    crmState: string
+    specialty: string
+    user: { name: string }
+  }
 }
 
 // ─── Erros da API ─────────────────────────────────────────────────────────────

@@ -1,5 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import path from 'node:path'
+import fs from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import { pipeline } from 'node:stream/promises'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma2'
 import { requireRole } from '../plugins/auth'
@@ -207,6 +211,29 @@ export async function patientsRoutes(app: FastifyInstance) {
       }
       throw error
     }
+  })
+
+  // ----- UPLOAD DE FOTO -----
+  app.patch('/patients/:id/photo', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    const existing = await prisma.patient.findUnique({ where: { id }, select: { id: true } })
+    if (!existing) return reply.code(404).send({ error: 'Paciente não encontrado' })
+
+    const data = await request.file()
+    if (!data) return reply.code(400).send({ error: 'Arquivo não enviado' })
+
+    const ext = path.extname(data.filename) || '.jpg'
+    const filename = `${Date.now()}-${randomUUID()}${ext}`
+    const dir = path.resolve(process.cwd(), 'uploads', 'patients')
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    await pipeline(data.file, fs.createWriteStream(path.join(dir, filename)))
+
+    const photoUrl = `/uploads/patients/${filename}`
+    await prisma.patient.update({ where: { id }, data: { photoUrl } })
+
+    const uid = (request.user as JwtPayload)?.sub ?? null
+    logAudit({ userId: uid, action: 'UPDATE', entity: 'Patient', entityId: id, metadata: { field: 'photoUrl' }, request })
+    return { photoUrl }
   })
 
   // ----- EXCLUIR (anonimização LGPD Art. 18) -----
