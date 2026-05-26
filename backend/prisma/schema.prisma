@@ -443,6 +443,8 @@ model DoctorPayment {
   amount        Float
   status        DoctorPaymentStatus @default(PENDING)
   paidAt        DateTime?
+  nfNumber      String?             // Número da NF ou Recibo do médico
+  nfFileUrl     String?             // URL do arquivo da NF (opcional)
   notes         String?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt

@@ -18,7 +18,12 @@ const listQuerySchema = z.object({
 })
 
 const markPaidSchema = z.object({
-  ids:   z.array(z.string().min(1)).min(1),
+  payments: z.array(
+    z.object({
+      id:       z.string().min(1),
+      nfNumber: z.string().min(1, 'Número da NF/Recibo é obrigatório'),
+    })
+  ).min(1),
   notes: z.string().optional(),
 })
 
@@ -111,22 +116,39 @@ export async function doctorPaymentsRoutes(app: FastifyInstance) {
   })
 
   // POST /doctor-payments/mark-paid — marca repasses como pagos em lote
+  // Cada item deve ter nfNumber (NF ou recibo do médico)
   app.post('/doctor-payments/mark-paid', async (request, reply) => {
     const parsed = markPaidSchema.safeParse(request.body)
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() })
 
-    const { ids, notes } = parsed.data
+    const { payments: items, notes } = parsed.data
     const now = new Date()
+    const ids = items.map(p => p.id)
 
-    const updated = await prisma.doctorPayment.updateMany({
-      where: { id: { in: ids }, status: 'PENDING' },
-      data:  { status: 'PAID', paidAt: now, notes: notes ?? null },
+    // Garante que todos estão PENDING antes de prosseguir
+    const existing = await prisma.doctorPayment.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, status: true },
     })
+    const notPending = existing.filter(p => p.status !== 'PENDING').map(p => p.id)
+    if (notPending.length > 0) {
+      return reply.code(409).send({ error: `Repasse(s) não estão pendentes: ${notPending.join(', ')}` })
+    }
+
+    // Atualiza individualmente para salvar nfNumber por repasse
+    await prisma.$transaction(
+      items.map(({ id, nfNumber }) =>
+        prisma.doctorPayment.update({
+          where: { id },
+          data:  { status: 'PAID', paidAt: now, nfNumber, notes: notes ?? null },
+        })
+      )
+    )
 
     const uid = (request.user as JwtPayload)?.sub ?? null
-    logAudit({ userId: uid, action: 'MARK_PAID_DOCTOR_PAYMENTS', entity: 'DoctorPayment', metadata: { ids, count: updated.count }, request })
+    logAudit({ userId: uid, action: 'MARK_PAID_DOCTOR_PAYMENTS', entity: 'DoctorPayment', metadata: { ids, count: items.length }, request })
 
-    return reply.send({ updated: updated.count })
+    return reply.send({ updated: items.length })
   })
 
   // PATCH /doctor-payments/:id/cancel — cancela repasse individual

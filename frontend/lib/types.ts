@@ -204,6 +204,8 @@ export interface DoctorPayment {
   amount: number
   status: DoctorPaymentStatus
   paidAt?: string
+  nfNumber?: string
+  nfFileUrl?: string
   notes?: string
   doctor?: {
     id: string
