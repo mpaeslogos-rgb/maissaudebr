@@ -167,7 +167,6 @@ async function doctorsRoutes(app) {
             return reply.code(400).send({ error: body.error.flatten() });
         try {
             const d = body.data;
-            request.log.info({ bodyData: d }, '[PATCH doctor] body.data recebido');
             const updateData = {};
             if (d.specialty !== undefined)
                 updateData.specialty = d.specialty;
@@ -189,7 +188,6 @@ async function doctorsRoutes(app) {
                 updateData.repasseType = d.repasseType;
             if (d.repasseValue !== undefined)
                 updateData.repasseValue = d.repasseValue;
-            request.log.info({ updateData }, '[PATCH doctor] updateData a persistir');
             const updated = await prisma2_1.prisma.doctor.update({
                 where: { id: params.data.id },
                 data: updateData,

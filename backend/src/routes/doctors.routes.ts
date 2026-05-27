@@ -181,7 +181,6 @@ export async function doctorsRoutes(app: FastifyInstance) {
 
     try {
       const d = body.data
-      request.log.info({ bodyData: d }, '[PATCH doctor] body.data recebido')
       const updateData: Prisma.DoctorUpdateInput = {}
       if (d.specialty        !== undefined) updateData.specialty       = d.specialty
       if (d.crmState        !== undefined) updateData.crmState        = d.crmState.toUpperCase()
@@ -193,7 +192,6 @@ export async function doctorsRoutes(app: FastifyInstance) {
       if (d.workEndHour     !== undefined) updateData.workEndHour     = d.workEndHour
       if (d.repasseType     !== undefined) updateData.repasseType     = d.repasseType
       if (d.repasseValue    !== undefined) updateData.repasseValue    = d.repasseValue
-      request.log.info({ updateData }, '[PATCH doctor] updateData a persistir')
       const updated = await prisma.doctor.update({
         where: { id: params.data.id },
         data:  updateData,
