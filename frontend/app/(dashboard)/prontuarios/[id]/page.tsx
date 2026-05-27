@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Calendar,
   FileText, Pill, Clipboard, MessageSquare, Loader2, Printer,
-  FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart
+  FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart, ClipboardCheck
 } from "lucide-react";
 import Link from "next/link";
 import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, ClinicConfig } from "@/lib/api";
@@ -28,6 +28,8 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const [uploadForm, setUploadForm] = useState({ name: '', type: 'OTHER' as ExamType, notes: '', examDate: '' });
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showAtestadoModal, setShowAtestadoModal] = useState(false);
+  const [atestadoForm, setAtestadoForm] = useState({ dias: '', cid: '', finalidade: 'trabalho', observacoes: '', mostrarDiagnostico: false });
 
   useEffect(() => {
     getClinicConfig().then(setClinicConfig).catch(() => {})
@@ -133,6 +135,129 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
     if (win) { win.document.write(html); win.document.close() }
   }
 
+  function printAtestado() {
+    if (!record) return
+    const clinicName  = clinicConfig?.clinicName || 'Clínica Médica'
+    const doctorName  = record.doctor?.user?.name || 'Médico(a)'
+    const crm         = record.doctor?.crm ? `${record.doctor.crm}${record.doctor.crmState ? '-' + record.doctor.crmState : ''}` : ''
+    const specialty   = record.doctor?.specialty || ''
+    const patName     = record.patient?.fullName || ''
+    const patCpf      = record.patient?.cpf || ''
+    const dateStr     = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    const finalidadeLabel: Record<string, string> = {
+      trabalho: 'afastamento do trabalho',
+      escola:   'afastamento escolar',
+      outro:    'fins que se fizerem necessários',
+    }
+    const finalidade  = finalidadeLabel[atestadoForm.finalidade] ?? 'fins que se fizerem necessários'
+    const diasNum     = parseInt(atestadoForm.dias, 10)
+    const diasTexto   = diasNum === 1 ? '1 (um) dia' : `${diasNum} (${numberToWords(diasNum)}) dias`
+    const diagLine    = atestadoForm.mostrarDiagnostico && record.diagnosis
+      ? `<p class="diag"><strong>CID / Diagnóstico:</strong> ${record.diagnosis.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`
+      : ''
+    const cidLine     = atestadoForm.cid
+      ? `<p class="diag"><strong>CID-10:</strong> ${atestadoForm.cid.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`
+      : ''
+    const obsLine     = atestadoForm.observacoes
+      ? `<p class="obs">${atestadoForm.observacoes.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`
+      : ''
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Atestado Médico — ${patName}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; padding: 18mm 20mm 32mm; max-width: 210mm; }
+    .logo-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:14px; }
+    .logo-img  { width:110px; height:110px; object-fit:contain; }
+    .logo-sub  { font-size:8pt; color:#555; margin-top:4px; letter-spacing:0.5px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-top:2px solid #1B5E3F; border-bottom:1px solid #ccc; padding:10px 0; margin-bottom:18px; }
+    .header-left p  { font-size:9.5pt; color:#333; line-height:1.6; }
+    .header-left strong { color:#1B5E3F; }
+    .header-right   { text-align:right; font-size:9pt; color:#666; }
+    .title { text-align:center; font-size:14pt; font-weight:bold; letter-spacing:4px; text-transform:uppercase; margin:0 0 20px; color:#1B5E3F; }
+    .patient-box { border:1px solid #bbb; border-radius:4px; padding:8px 12px; margin-bottom:24px; display:grid; grid-template-columns:1fr 1fr; gap:4px 24px; background:#fafafa; }
+    .patient-box p { font-size:10pt; }
+    .patient-box span { font-weight:bold; }
+    .body-text { font-size:11pt; line-height:1.9; margin-bottom:10px; text-align:justify; }
+    .diag { font-size:10pt; color:#444; margin:8px 0; }
+    .obs  { font-size:10pt; color:#444; margin:12px 0; font-style:italic; }
+    .sign-area { border-top:1px solid #1B5E3F; padding-top:16px; margin-top:48px; display:flex; justify-content:flex-end; }
+    .sign-block { text-align:center; min-width:230px; }
+    .sign-line  { border-top:1px solid #111; padding-top:8px; margin-top:52px; }
+    .sign-block p { font-size:10pt; line-height:1.6; }
+    .sign-block .name { font-weight:bold; }
+    .date-line { margin-top:16px; font-size:10pt; text-align:right; color:#555; }
+    .page-footer { position:fixed; bottom:0; left:0; right:0; border-top:1px solid #ccc; padding:6px 20mm; text-align:center; font-size:7.5pt; color:#777; background:#fff; line-height:1.5; }
+    @media print { body { padding:15mm 15mm 28mm; } @page { size:A4 portrait; margin:10mm; } }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="${window.location.origin}/logo.svg" alt="MaisSaúdeBR" class="logo-img" />
+    <span class="logo-sub">${clinicName}</span>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <p><strong>Dr(a). ${doctorName}</strong><br>${specialty}<br>CRM ${crm}</p>
+    </div>
+    <div class="header-right"><p>Teleconsulta / Consulta Presencial</p></div>
+  </div>
+  <div class="title">Atestado Médico</div>
+  <div class="patient-box">
+    <p><span>Paciente:</span> ${patName}</p>
+    <p><span>CPF:</span> ${patCpf}</p>
+    <p><span>Data:</span> ${dateStr}</p>
+  </div>
+  <p class="body-text">
+    Atesto, para os devidos fins, que o(a) paciente <strong>${patName}</strong>,
+    portador(a) do CPF <strong>${patCpf}</strong>,
+    esteve sob meus cuidados médicos nesta data,
+    necessitando de afastamento de suas atividades de <strong>${finalidade}</strong>
+    pelo período de <strong>${diasTexto}</strong>,
+    a contar desta data.
+  </p>
+  ${cidLine}
+  ${diagLine}
+  ${obsLine}
+  <div class="sign-area">
+    <div class="sign-block">
+      <div class="sign-line">
+        <p class="name">Dr(a). ${doctorName}</p>
+        <p>CRM ${crm} &nbsp;·&nbsp; ${specialty}</p>
+      </div>
+    </div>
+  </div>
+  <p class="date-line">${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</p>
+  <div class="page-footer">
+    <strong>+SaúdeBR</strong> — MAIS SAUDE SERVIÇO DE TELEMEDICINA LTDA &nbsp;|&nbsp;
+    CNPJ: 56.990.029/0001-12 &nbsp;|&nbsp;
+    R. Acre, 820 Cj. 610 — Vieiralves — Manaus / AM &nbsp; CEP: 69053-130
+  </div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=820,height=1000')
+    if (win) { win.document.write(html); win.document.close() }
+    setShowAtestadoModal(false)
+  }
+
+  function numberToWords(n: number): string {
+    const units = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez',
+      'onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove']
+    const tens  = ['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa']
+    if (n < 20) return units[n] ?? String(n)
+    if (n < 100) {
+      const t = tens[Math.floor(n / 10)]
+      const u = n % 10
+      return u === 0 ? t : `${t} e ${units[u]}`
+    }
+    return String(n)
+  }
+
   async function loadExams(patientId: string, medicalRecordId: string) {
     try {
       const res = await getExams({ patientId, medicalRecordId })
@@ -214,6 +339,12 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAtestadoModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <ClipboardCheck size={16} /> Emitir Atestado
+              </button>
               {record.prescription && (
                 <button
                   onClick={printReceituario}
@@ -486,6 +617,91 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
               >
                 {uploadingExam ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
                 {uploadingExam ? 'Enviando...' : 'Salvar Exame'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Atestado Médico */}
+      {showAtestadoModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <ClipboardCheck size={18} className="text-emerald-600" /> Emitir Atestado Médico
+              </h2>
+              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Dias de afastamento *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    placeholder="Ex: 3"
+                    value={atestadoForm.dias}
+                    onChange={e => setAtestadoForm(f => ({ ...f, dias: e.target.value }))}
+                    className="input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Finalidade</label>
+                  <select
+                    value={atestadoForm.finalidade}
+                    onChange={e => setAtestadoForm(f => ({ ...f, finalidade: e.target.value }))}
+                    className="input w-full"
+                  >
+                    <option value="trabalho">Trabalho</option>
+                    <option value="escola">Escola</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">CID-10 (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: J06.9"
+                  value={atestadoForm.cid}
+                  onChange={e => setAtestadoForm(f => ({ ...f, cid: e.target.value }))}
+                  className="input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Observações (opcional)</label>
+                <textarea
+                  placeholder="Informações adicionais a constar no atestado..."
+                  value={atestadoForm.observacoes}
+                  onChange={e => setAtestadoForm(f => ({ ...f, observacoes: e.target.value }))}
+                  rows={2}
+                  className="input w-full resize-none"
+                />
+              </div>
+              {record?.diagnosis && (
+                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={atestadoForm.mostrarDiagnostico}
+                    onChange={e => setAtestadoForm(f => ({ ...f, mostrarDiagnostico: e.target.checked }))}
+                    className="accent-emerald-600"
+                  />
+                  Incluir diagnóstico no atestado
+                </label>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t">
+              <button onClick={() => setShowAtestadoModal(false)} className="btn-secondary text-sm">Cancelar</button>
+              <button
+                onClick={printAtestado}
+                disabled={!atestadoForm.dias || parseInt(atestadoForm.dias, 10) < 1}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Printer size={15} /> Gerar Atestado
               </button>
             </div>
           </div>
