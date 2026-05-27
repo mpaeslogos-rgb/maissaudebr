@@ -1,4 +1,4 @@
-# v33 — módulo de Leads (importação Excel, decrypt PII)
+# v34 — fix: inclui dist/ pré-compilado para garantir Prisma client correto
 FROM node:22-slim
 
 WORKDIR /app
