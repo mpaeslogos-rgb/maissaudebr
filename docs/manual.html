@@ -265,6 +265,7 @@
     <div class="toc-item"><span class="num">12.</span> Relatórios <span class="dots"></span></div>
     <div class="toc-item"><span class="num">13.</span> Configurações <span class="dots"></span></div>
     <div class="toc-item"><span class="num">14.</span> Auditoria (Admin) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">15.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -785,12 +786,36 @@
     <div class="label">[ Inserir print da aba Prontuário ]</div>
   </div>
 
-  <h3>Imprimir Prescrição</h3>
+  <h3>Imprimir Receituário</h3>
   <ol class="steps">
-    <li><span>Com o prontuário preenchido, clique em <strong>"Imprimir Receita"</strong>.</span></li>
-    <li><span>O sistema gerará um PDF formatado com dados do paciente, médico, CRM e a conduta/prescrição.</span></li>
-    <li><span>Imprima ou salve o PDF diretamente pelo navegador.</span></li>
+    <li><span>Com o prontuário preenchido, acesse o detalhe do prontuário.</span></li>
+    <li><span>Clique em <strong>"Imprimir Receituário"</strong> (visível somente se houver prescrição registrada).</span></li>
+    <li><span>O sistema abrirá uma nova aba com o documento formatado (dados do paciente, médico, CRM e prescrição). Use <strong>Ctrl+P</strong> para imprimir ou salvar como PDF.</span></li>
   </ol>
+
+  <h3>Emitir Atestado Médico</h3>
+  <ol class="steps">
+    <li><span>No detalhe do prontuário, clique em <strong>"Emitir Atestado"</strong> (botão verde, sempre visível).</span></li>
+    <li><span>Preencha o modal que será exibido:</span>
+      <ul>
+        <li><strong>Dias de afastamento</strong> (obrigatório) — número inteiro de dias.</li>
+        <li><strong>Finalidade</strong> — Trabalho, Escola ou Outro.</li>
+        <li><strong>CID-10</strong> (opcional) — código da doença a constar no atestado.</li>
+        <li><strong>Observações</strong> (opcional) — texto livre adicional.</li>
+        <li><strong>Incluir diagnóstico</strong> — marque se quiser que o diagnóstico registrado no prontuário apareça no atestado (por padrão fica oculto para preservar a privacidade do paciente).</li>
+      </ul>
+    </li>
+    <li><span>Clique em <strong>"Gerar Atestado"</strong>. O sistema abre uma nova aba com o documento formatado, pronto para imprimir.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ A data do atestado é sempre a data atual (dia em que o botão é clicado), independente da data do prontuário. O atestado usa o cabeçalho e rodapé oficiais da clínica, com nome do médico e número do CRM.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do modal de Emitir Atestado ]</div>
+  </div>
 
   <h3>Buscar Prontuários</h3>
   <ol class="steps">
@@ -1149,6 +1174,66 @@
 
   <div class="info">
     ℹ️ Todos os acessos ficam registrados com data, hora e endereço IP. O sistema cumpre os requisitos de rastreabilidade da LGPD.
+  </div>
+</div>
+
+<!-- ────────────────────────────────── 15. GESTÃO DE USUÁRIOS ── -->
+<div class="module" id="usuarios">
+  <div class="module-header">
+    <div class="module-icon">👤</div>
+    <div>
+      <h2>15. Gestão de Usuários (Admin)</h2>
+      <p>Criar, editar e desativar contas de acesso ao sistema</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>O administrador gerencia todas as contas de acesso pelo menu <strong>Admin → Usuários</strong>. Cada usuário tem nome, e-mail, perfil (role) e senha cadastrados aqui.</p>
+
+  <h3>Cadastrar Novo Usuário</h3>
+  <ol class="steps">
+    <li><span>Acesse <strong>Admin → Usuários</strong> no menu lateral.</span></li>
+    <li><span>Clique em <strong>"Novo Usuário"</strong>.</span></li>
+    <li><span>Preencha <strong>Nome completo</strong>, <strong>E-mail</strong> e selecione o <strong>Perfil</strong> (Admin, Médico, Recepcionista ou Paciente).</span></li>
+    <li><span>Defina a <strong>Senha inicial</strong>. Clique no ícone de olho 👁 à direita do campo para visualizar ou ocultar a senha digitada.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>. O usuário receberá as credenciais para acessar o sistema.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ A senha inicial deve ser comunicada ao usuário por outro canal (WhatsApp, e-mail). Oriente-o a guardá-la com segurança.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do modal Novo Usuário ]</div>
+  </div>
+
+  <h3>Editar Usuário</h3>
+  <ol class="steps">
+    <li><span>Na lista de usuários, clique no ícone de lápis ✏️ ao lado do usuário.</span></li>
+    <li><span>Atualize o <strong>Nome</strong> ou o <strong>Perfil</strong> conforme necessário. O e-mail não pode ser alterado após o cadastro.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <h3>Redefinir Senha</h3>
+  <ol class="steps">
+    <li><span>Clique no ícone de chave 🔑 ao lado do usuário.</span></li>
+    <li><span>Digite a nova senha no modal exibido (mínimo 6 caracteres).</span></li>
+    <li><span>Clique em <strong>"Redefinir"</strong>. A senha é alterada imediatamente.</span></li>
+  </ol>
+
+  <h3>Desativar / Reativar Usuário</h3>
+  <ol class="steps">
+    <li><span>Clique no ícone de desativar (pessoa com X) ao lado do usuário ativo.</span></li>
+    <li><span>Confirme a ação. O usuário ficará com status <strong>Inativo</strong> e não conseguirá fazer login.</span></li>
+    <li><span>Para reativar, clique no ícone correspondente na linha do usuário inativo.</span></li>
+  </ol>
+
+  <div class="warn">
+    ⚠️ Não é possível excluir usuários permanentemente — apenas desativar. Isso preserva o histórico de auditoria e os prontuários vinculados ao usuário.
   </div>
 </div>
 
