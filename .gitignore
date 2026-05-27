@@ -7,6 +7,7 @@ node_modules/
 out/
 build/
 dist/
+!backend/dist/
 
 # Logs
 npm-debug.log*
