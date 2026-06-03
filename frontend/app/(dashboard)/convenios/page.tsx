@@ -270,8 +270,8 @@ export default function ConveniosPage() {
       {/* Info TISS */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
         <span className="font-semibold">Faturamento TISS:</span> Cadastre os procedimentos com código TUSS para cada contrato.
-        O sistema gera o arquivo XML TISS 3.05 para envio manual no portal do convênio.
-        {' '}<span className="italic">(exportação disponível no módulo Financeiro → Faturamento)</span>
+        Ao registrar consultas e exames vinculados a um convênio, o sistema acumula os dados necessários para o faturamento.
+        {' '}<span className="italic">A exportação do arquivo XML TISS 3.05 será disponibilizada em breve nesta mesma tela.</span>
       </div>
 
       {/* Lista de planos */}
