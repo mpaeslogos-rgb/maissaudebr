@@ -7,7 +7,7 @@ import {
   FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart, ClipboardCheck
 } from "lucide-react";
 import Link from "next/link";
-import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, ClinicConfig } from "@/lib/api";
+import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, getExamCatalog, createExamOrder, ClinicConfig, ExamCatalog } from "@/lib/api";
 import { MedicalRecord, Exam, ExamType, EXAM_TYPE_LABEL } from "@/lib/types";
 
 interface PageProps {
@@ -30,9 +30,15 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showAtestadoModal, setShowAtestadoModal] = useState(false);
   const [atestadoForm, setAtestadoForm] = useState({ dias: '', cid: '', finalidade: 'trabalho', observacoes: '', mostrarDiagnostico: false });
+  const [showExameModal, setShowExameModal]       = useState(false);
+  const [examCatalog, setExamCatalog]             = useState<ExamCatalog[]>([]);
+  const [exameForm, setExameForm]                 = useState({ catalogId: '', scheduledAt: '', notes: '' });
+  const [savingExame, setSavingExame]             = useState(false);
+  const [exameError, setExameError]               = useState('');
 
   useEffect(() => {
     getClinicConfig().then(setClinicConfig).catch(() => {})
+    getExamCatalog().then(setExamCatalog).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -340,6 +346,12 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
             </div>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => { setExameForm({ catalogId: '', scheduledAt: '', notes: '' }); setExameError(''); setShowExameModal(true) }}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <FlaskConical size={16} /> Solicitar Exame
+              </button>
+              <button
                 onClick={() => setShowAtestadoModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
               >
@@ -618,6 +630,115 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                 {uploadingExam ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
                 {uploadingExam ? 'Enviando...' : 'Salvar Exame'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Solicitar Exame / Procedimento */}
+      {showExameModal && record && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-surface-border">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <FlaskConical size={18} className="text-teal-600" /> Solicitar Exame / Procedimento
+              </h2>
+              <button onClick={() => setShowExameModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Contexto do prontuário */}
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-sm space-y-1">
+                <p><span className="text-teal-700 font-medium">Paciente:</span> <span className="text-slate-700">{record.patient?.fullName}</span></p>
+                <p><span className="text-teal-700 font-medium">Médico:</span> <span className="text-slate-700">Dr(a). {record.doctor?.user?.name} — {record.doctor?.specialty}</span></p>
+              </div>
+
+              {exameError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{exameError}</div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Exame / Procedimento <span className="text-red-500">*</span></label>
+                {examCatalog.length === 0 ? (
+                  <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    Nenhum exame cadastrado no catálogo.{' '}
+                    <a href="/exames" className="underline font-medium">Cadastrar em Exames e Procedimentos</a>
+                  </p>
+                ) : (
+                  <select
+                    value={exameForm.catalogId}
+                    onChange={e => setExameForm(f => ({ ...f, catalogId: e.target.value }))}
+                    className="input"
+                  >
+                    <option value="">Selecione…</option>
+                    {examCatalog.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} — R$ {c.price.toFixed(2)}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Data/Hora do exame <span className="text-slate-400 text-xs">(deixe em branco para Pendente)</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={exameForm.scheduledAt}
+                  onChange={e => setExameForm(f => ({ ...f, scheduledAt: e.target.value }))}
+                  className="input"
+                />
+                {exameForm.scheduledAt
+                  ? <p className="text-xs text-teal-600 mt-1">Entrará na Agenda como <strong>Agendado</strong></p>
+                  : <p className="text-xs text-amber-600 mt-1">Ficará como <strong>Pendente</strong> até ser agendado</p>
+                }
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Observações</label>
+                <textarea
+                  value={exameForm.notes}
+                  onChange={e => setExameForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={2}
+                  placeholder="Indicação clínica, preparo necessário…"
+                  className="input resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExameModal(false)}
+                  className="btn-outline flex-1"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={savingExame || !exameForm.catalogId}
+                  onClick={async () => {
+                    if (!exameForm.catalogId) return setExameError('Selecione um exame.')
+                    setSavingExame(true)
+                    setExameError('')
+                    try {
+                      await createExamOrder({
+                        patientId:    record.patientId,
+                        doctorId:     record.doctorId,
+                        catalogId:    exameForm.catalogId,
+                        scheduledAt:  exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
+                        notes:        exameForm.notes || undefined,
+                      })
+                      setShowExameModal(false)
+                    } catch (err: any) {
+                      setExameError(err.message || 'Erro ao solicitar exame.')
+                    } finally {
+                      setSavingExame(false)
+                    }
+                  }}
+                  className="btn-primary flex-1"
+                >
+                  {savingExame ? 'Solicitando…' : 'Solicitar Exame'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
