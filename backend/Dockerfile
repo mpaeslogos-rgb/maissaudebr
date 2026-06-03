@@ -1,4 +1,4 @@
-# v34 — fix: inclui dist/ pré-compilado para garantir Prisma client correto
+# v35 — feat: Exames/Procedimentos, Convênios, Estoque, isReturn, Agenda integrada
 FROM node:22-slim
 
 WORKDIR /app
