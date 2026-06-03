@@ -775,11 +775,13 @@ export interface ExamOrder {
   updatedAt:      string
 }
 
-export function getExamOrders(params?: { patientId?: string; doctorId?: string; status?: string }): Promise<ExamOrder[]> {
+export function getExamOrders(params?: { patientId?: string; doctorId?: string; status?: string; from?: string; to?: string }): Promise<(ExamOrder & { computedStatus?: string })[]> {
   const sp = new URLSearchParams()
   if (params?.patientId) sp.set('patientId', params.patientId)
   if (params?.doctorId)  sp.set('doctorId',  params.doctorId)
   if (params?.status)    sp.set('status',    params.status)
+  if (params?.from)      sp.set('from',      params.from)
+  if (params?.to)        sp.set('to',        params.to)
   return apiGet(`/exam-orders${sp.toString() ? `?${sp}` : ''}`)
 }
 
@@ -794,7 +796,7 @@ export function createExamOrder(data: {
   return apiPost('/exam-orders', data)
 }
 
-export function updateExamOrder(id: string, data: { status?: string; notes?: string; completedAt?: string }): Promise<ExamOrder> {
+export function updateExamOrder(id: string, data: { status?: string; notes?: string; completedAt?: string; scheduledAt?: string }): Promise<ExamOrder & { computedStatus?: string }> {
   return apiPatch(`/exam-orders/${id}`, data)
 }
 
