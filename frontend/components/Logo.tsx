@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -15,30 +14,32 @@ export const Logo: React.FC<LogoProps> = ({ size = "md", variant = "full" }) => 
   };
   const s = sizes[size];
 
-  const customLogoUrl  = process.env.NEXT_PUBLIC_LOGO_URL   || "";
-  const customName     = process.env.NEXT_PUBLIC_CLINIC_NAME || "";
+  const customLogoUrl = process.env.NEXT_PUBLIC_LOGO_URL   || "";
+  const customName    = process.env.NEXT_PUBLIC_CLINIC_NAME || "";
 
-  // Logo customizado: exibe imagem fornecida via env var
+  // Logo customizado: usa <img> para suportar SVG/PNG sem restrições do next/image
   if (customLogoUrl) {
     if (variant === "icon") {
       return (
-        <Image
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={customLogoUrl}
           alt={customName || "Logo"}
           width={s.icon}
           height={s.icon}
-          className="object-contain"
+          style={{ objectFit: "contain" }}
         />
       );
     }
     return (
       <div className="flex items-center gap-3">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={customLogoUrl}
           alt={customName || "Logo"}
           width={s.icon}
           height={s.icon}
-          className="object-contain"
+          style={{ objectFit: "contain" }}
         />
         {customName && (
           <div className={`${s.text} font-bold leading-tight tracking-tight`}>
@@ -67,7 +68,6 @@ export const Logo: React.FC<LogoProps> = ({ size = "md", variant = "full" }) => 
     </svg>
   );
 
-  const displayName = customName || "+SaúdeBR";
   const [namePart1, namePart2] = customName
     ? [customName, ""]
     : ["+Saúde", "BR"];
