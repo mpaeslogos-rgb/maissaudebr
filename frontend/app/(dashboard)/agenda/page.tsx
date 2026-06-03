@@ -14,7 +14,9 @@ import {
   createMedicalRecord,
   updateMedicalRecord,
   getClinicConfig,
+  getInsurancePlans,
   type ClinicConfig,
+  type InsurancePlan,
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
@@ -76,30 +78,34 @@ interface NewAppointmentModalProps {
 }
 
 function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: NewAppointmentModalProps) {
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [doctors, setDoctors]   = useState<Doctor[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [saving, setSaving]     = useState(false)
-  const [error, setError]       = useState('')
-  const [showNewDoctor, setShowNewDoctor] = useState(false)
+  const [patients, setPatients]           = useState<Patient[]>([])
+  const [doctors, setDoctors]             = useState<Doctor[]>([])
+  const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [saving, setSaving]               = useState(false)
+  const [error, setError]                 = useState('')
+  const [showNewDoctor, setShowNewDoctor]  = useState(false)
 
-  const [patientId, setPatientId]     = useState('')
-  const [doctorId, setDoctorId]       = useState('')
-  const [date, setDate]               = useState(prefillDate ?? formatDateISO(new Date()))
-  const [startHour, setStartHour]     = useState(prefillHour ?? 8)
-  const [startMin, setStartMin]       = useState(0)
-  const [durationMin, setDurationMin] = useState(30)
-  const [reason, setReason]           = useState('')
-  const [amount, setAmount]           = useState('')
+  const [patientId, setPatientId]         = useState('')
+  const [doctorId, setDoctorId]           = useState('')
+  const [date, setDate]                   = useState(prefillDate ?? formatDateISO(new Date()))
+  const [startHour, setStartHour]         = useState(prefillHour ?? 8)
+  const [startMin, setStartMin]           = useState(0)
+  const [durationMin, setDurationMin]     = useState(30)
+  const [reason, setReason]               = useState('')
+  const [amount, setAmount]               = useState('')
+  const [isReturn, setIsReturn]           = useState(false)
+  const [insurancePlanId, setInsurancePlanId] = useState('')
 
   useEffect(() => {
     Promise.all([
       getPatients({ limit: 200 }),
       getDoctors({ limit: 100 }),
-    ]).then(([p, d]) => {
+      getInsurancePlans(),
+    ]).then(([p, d, plans]) => {
       setPatients(p.data)
-      // ✅ CORREÇÃO: isActive mora em doc.user?.isActive, não em doc.isActive
       setDoctors(d.data.filter(doc => doc.user?.isActive))
+      setInsurancePlans(plans)
     }).catch(() => setError('Erro ao carregar pacientes/médicos.'))
       .finally(() => setLoading(false))
   }, [])
@@ -118,10 +124,12 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
       await createAppointment({
         patientId,
         doctorId,
-        startTime: start.toISOString(),
-        endTime:   end.toISOString(),
-        reason:    reason.trim() || undefined,
-        amount:    amount ? parseFloat(amount.replace(',', '.')) : undefined,
+        startTime:      start.toISOString(),
+        endTime:        end.toISOString(),
+        reason:         reason.trim() || undefined,
+        amount:         amount ? parseFloat(amount.replace(',', '.')) : undefined,
+        isReturn,
+        insurancePlanId: insurancePlanId || undefined,
       })
       onSaved()
     } catch (err: unknown) {
@@ -242,23 +250,59 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                 </select>
               </div>
 
-              {/* Valor */}
+              {/* Convênio */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Valor da consulta <span className="text-slate-400 text-xs">(edite para negociar)</span>
+                  Convênio <span className="text-slate-400 text-xs">(deixe em branco para Particular)</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">R$</span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    placeholder="0,00"
-                    className="input pl-9"
-                  />
-                </div>
+                <select value={insurancePlanId} onChange={e => setInsurancePlanId(e.target.value)} className="input">
+                  <option value="">Particular</option>
+                  {insurancePlans.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
+
+              {/* Retorno */}
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-surface-border bg-cream-50">
+                <input
+                  type="checkbox"
+                  id="isReturn"
+                  checked={isReturn}
+                  onChange={e => setIsReturn(e.target.checked)}
+                  className="w-4 h-4 accent-primary-600 cursor-pointer"
+                />
+                <label htmlFor="isReturn" className="text-sm text-slate-700 cursor-pointer select-none">
+                  <span className="font-medium">Consulta de retorno</span>
+                  <span className="text-slate-400 ml-2">
+                    {isReturn && !insurancePlanId
+                      ? '— sem cobrança (particular)'
+                      : isReturn && insurancePlanId
+                        ? '— convênio cobra normalmente'
+                        : ''}
+                  </span>
+                </label>
+              </div>
+
+              {/* Valor */}
+              {(!isReturn || insurancePlanId) && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Valor da consulta <span className="text-slate-400 text-xs">(edite para negociar)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">R$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      placeholder="0,00"
+                      className="input pl-9"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Motivo */}
               <div>

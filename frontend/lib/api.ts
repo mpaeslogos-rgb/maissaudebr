@@ -721,3 +721,216 @@ export function getAuditLogsSummary(): Promise<{
 }> {
   return apiGet('/api/audit-logs/summary')
 }
+
+// ─── Catálogo de Exames ───────────────────────────────────────────────────────
+
+export interface ExamCatalog {
+  id:           string
+  name:         string
+  description:  string | null
+  price:        number
+  duration:     number | null
+  repasseType:  string | null
+  repasseValue: number | null
+  isActive:     boolean
+  createdAt:    string
+  updatedAt:    string
+}
+
+export function getExamCatalog(): Promise<ExamCatalog[]> {
+  return apiGet('/exam-catalog')
+}
+
+export function createExamCatalogItem(data: Omit<ExamCatalog, 'id' | 'createdAt' | 'updatedAt'>): Promise<ExamCatalog> {
+  return apiPost('/exam-catalog', data)
+}
+
+export function updateExamCatalogItem(id: string, data: Partial<Omit<ExamCatalog, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ExamCatalog> {
+  return apiPatch(`/exam-catalog/${id}`, data)
+}
+
+export function deleteExamCatalogItem(id: string): Promise<void> {
+  return apiDelete(`/exam-catalog/${id}`)
+}
+
+// ─── Pedidos de Exame ─────────────────────────────────────────────────────────
+
+export interface ExamOrder {
+  id:             string
+  patientId:      string
+  doctorId:       string
+  catalogId:      string
+  appointmentId:  string | null
+  scheduledAt:    string | null
+  completedAt:    string | null
+  status:         'PENDING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  notes:          string | null
+  paymentId:      string | null
+  doctorPaymentId: string | null
+  catalog:        ExamCatalog
+  patient:        { id: string; fullName: string }
+  doctor:         { id: string; user: { name: string } }
+  payment:        { amount: number; status: string } | null
+  createdAt:      string
+  updatedAt:      string
+}
+
+export function getExamOrders(params?: { patientId?: string; doctorId?: string; status?: string }): Promise<ExamOrder[]> {
+  const sp = new URLSearchParams()
+  if (params?.patientId) sp.set('patientId', params.patientId)
+  if (params?.doctorId)  sp.set('doctorId',  params.doctorId)
+  if (params?.status)    sp.set('status',    params.status)
+  return apiGet(`/exam-orders${sp.toString() ? `?${sp}` : ''}`)
+}
+
+export function createExamOrder(data: {
+  patientId: string
+  doctorId:  string
+  catalogId: string
+  appointmentId?: string
+  scheduledAt?:   string
+  notes?:         string
+}): Promise<ExamOrder> {
+  return apiPost('/exam-orders', data)
+}
+
+export function updateExamOrder(id: string, data: { status?: string; notes?: string; completedAt?: string }): Promise<ExamOrder> {
+  return apiPatch(`/exam-orders/${id}`, data)
+}
+
+export function cancelExamOrder(id: string): Promise<void> {
+  return apiDelete(`/exam-orders/${id}`)
+}
+
+// ─── Convênios ────────────────────────────────────────────────────────────────
+
+export interface InsurancePlan {
+  id:        string
+  name:      string
+  ansCode:   string | null
+  phone:     string | null
+  email:     string | null
+  isActive:  boolean
+  contracts: InsuranceContract[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InsuranceContract {
+  id:             string
+  planId:         string
+  startDate:      string
+  endDate:        string | null
+  consultationFee: number | null
+  notes:          string | null
+  procedures:     InsuranceProcedure[]
+  createdAt:      string
+  updatedAt:      string
+}
+
+export interface InsuranceProcedure {
+  id:          string
+  contractId:  string
+  tussCode:    string
+  description: string
+  price:       number
+  createdAt:   string
+  updatedAt:   string
+}
+
+export function getInsurancePlans(): Promise<InsurancePlan[]> {
+  return apiGet('/insurance-plans')
+}
+
+export function createInsurancePlan(data: Pick<InsurancePlan, 'name' | 'ansCode' | 'phone' | 'email'>): Promise<InsurancePlan> {
+  return apiPost('/insurance-plans', data)
+}
+
+export function updateInsurancePlan(id: string, data: Partial<Pick<InsurancePlan, 'name' | 'ansCode' | 'phone' | 'email' | 'isActive'>>): Promise<InsurancePlan> {
+  return apiPatch(`/insurance-plans/${id}`, data)
+}
+
+export function deleteInsurancePlan(id: string): Promise<void> {
+  return apiDelete(`/insurance-plans/${id}`)
+}
+
+export function createInsuranceContract(data: Omit<InsuranceContract, 'id' | 'procedures' | 'createdAt' | 'updatedAt'>): Promise<InsuranceContract> {
+  return apiPost('/insurance-contracts', data)
+}
+
+export function updateInsuranceContract(id: string, data: Partial<Omit<InsuranceContract, 'id' | 'planId' | 'procedures' | 'createdAt' | 'updatedAt'>>): Promise<InsuranceContract> {
+  return apiPatch(`/insurance-contracts/${id}`, data)
+}
+
+export function deleteInsuranceContract(id: string): Promise<void> {
+  return apiDelete(`/insurance-contracts/${id}`)
+}
+
+export function createInsuranceProcedure(data: Omit<InsuranceProcedure, 'id' | 'createdAt' | 'updatedAt'>): Promise<InsuranceProcedure> {
+  return apiPost('/insurance-procedures', data)
+}
+
+export function updateInsuranceProcedure(id: string, data: Partial<Omit<InsuranceProcedure, 'id' | 'contractId' | 'createdAt' | 'updatedAt'>>): Promise<InsuranceProcedure> {
+  return apiPatch(`/insurance-procedures/${id}`, data)
+}
+
+export function deleteInsuranceProcedure(id: string): Promise<void> {
+  return apiDelete(`/insurance-procedures/${id}`)
+}
+
+// ─── Estoque ──────────────────────────────────────────────────────────────────
+
+export interface Material {
+  id:           string
+  name:         string
+  unit:         string
+  minStock:     number
+  currentStock: number
+  costPrice:    number | null
+  isActive:     boolean
+  createdAt:    string
+  updatedAt:    string
+}
+
+export interface StockMovement {
+  id:            string
+  materialId:    string
+  type:          'IN' | 'OUT'
+  quantity:      number
+  reason:        string | null
+  appointmentId: string | null
+  userId:        string | null
+  material:      Pick<Material, 'id' | 'name' | 'unit'> & { currentStock?: number }
+  createdAt:     string
+  updatedAt:     string
+}
+
+export function getMaterials(): Promise<Material[]> {
+  return apiGet('/materials')
+}
+
+export function createMaterial(data: Omit<Material, 'id' | 'createdAt' | 'updatedAt'>): Promise<Material> {
+  return apiPost('/materials', data)
+}
+
+export function updateMaterial(id: string, data: Partial<Omit<Material, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Material> {
+  return apiPatch(`/materials/${id}`, data)
+}
+
+export function deleteMaterial(id: string): Promise<void> {
+  return apiDelete(`/materials/${id}`)
+}
+
+export function getStockMovements(materialId?: string): Promise<StockMovement[]> {
+  return apiGet(`/stock-movements${materialId ? `?materialId=${materialId}` : ''}`)
+}
+
+export function createStockMovement(data: {
+  materialId:    string
+  type:          'IN' | 'OUT'
+  quantity:      number
+  reason?:       string
+  appointmentId?: string
+}): Promise<StockMovement> {
+  return apiPost('/stock-movements', data)
+}

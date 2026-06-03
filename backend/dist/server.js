@@ -39,6 +39,10 @@ const consents_routes_1 = require("./routes/consents.routes");
 const leads_routes_1 = require("./routes/leads.routes");
 const prescriptions_routes_1 = require("./routes/prescriptions.routes");
 const doctor_payments_routes_1 = require("./routes/doctor-payments.routes");
+const exam_catalog_routes_1 = require("./routes/exam-catalog.routes");
+const exam_orders_routes_1 = require("./routes/exam-orders.routes");
+const insurance_plans_routes_1 = require("./routes/insurance-plans.routes");
+const stock_routes_1 = require("./routes/stock.routes");
 const app = (0, fastify_1.default)({ logger: true });
 const WEAK_SECRETS = new Set([
     'troque-este-segredo',
@@ -128,6 +132,10 @@ async function bootstrap() {
     await app.register(leads_routes_1.leadsRoutes);
     await app.register(prescriptions_routes_1.prescriptionsRoutes);
     await app.register(doctor_payments_routes_1.doctorPaymentsRoutes);
+    await app.register(exam_catalog_routes_1.examCatalogRoutes);
+    await app.register(exam_orders_routes_1.examOrdersRoutes);
+    await app.register(insurance_plans_routes_1.insurancePlansRoutes);
+    await app.register(stock_routes_1.stockRoutes);
     const PORT = Number(process.env.PORT) || 3001;
     const HOST = '0.0.0.0';
     await app.ready();

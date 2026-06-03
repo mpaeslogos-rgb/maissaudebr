@@ -25,13 +25,15 @@ const statusEnum = z.enum([
 
 const createSchema = z
   .object({
-    patientId: z.string().min(1, 'patientId obrigatório'),
-    doctorId: z.string().min(1, 'doctorId obrigatório'),
-    startTime: z.coerce.date(),
-    endTime: z.coerce.date(),
-    reason: z.string().max(500).optional(),
-    notes: z.string().max(2000).optional(),
-    amount: z.number().positive().optional(),
+    patientId:      z.string().min(1, 'patientId obrigatório'),
+    doctorId:       z.string().min(1, 'doctorId obrigatório'),
+    startTime:      z.coerce.date(),
+    endTime:        z.coerce.date(),
+    reason:         z.string().max(500).optional(),
+    notes:          z.string().max(2000).optional(),
+    amount:         z.number().positive().optional(),
+    isReturn:       z.boolean().optional(),
+    insurancePlanId: z.string().optional(),
   })
   .refine((d) => d.startTime < d.endTime, {
     message: 'startTime deve ser anterior a endTime',
@@ -149,7 +151,7 @@ export async function appointmentsRoutes(app: FastifyInstance) {
     if (!parsed.success) {
       return reply.code(400).send({ error: parsed.error.flatten() })
     }
-    const { patientId, doctorId, startTime, endTime, reason, notes, amount } = parsed.data
+    const { patientId, doctorId, startTime, endTime, reason, notes, amount, isReturn, insurancePlanId } = parsed.data
 
     try {
       // Valida existência ANTES de tentar inserir (mensagens mais claras que P2003)
@@ -157,7 +159,7 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } }),
         prisma.doctor.findUnique({
           where: { id: doctorId },
-          select: { id: true, consultationFee: true, specialty: true, user: { select: { name: true } } },
+          select: { id: true, consultationFee: true, specialty: true, repasseType: true, repasseValue: true, user: { select: { name: true } } },
         }),
       ])
       if (!patient) return reply.code(404).send({ error: 'Paciente não encontrado' })
@@ -170,23 +172,44 @@ export async function appointmentsRoutes(app: FastifyInstance) {
       }
 
       const created = await prisma.appointment.create({
-        data: { patientId, doctorId, startTime, endTime, reason, notes },
+        data: { patientId, doctorId, startTime, endTime, reason, notes, isReturn: isReturn ?? false, insurancePlanId },
         include: appointmentInclude,
       })
 
-      // Auto-criar cobrança: usa valor negociado se fornecido, senão o fee do médico
-      const chargeAmount = amount ?? doctor.consultationFee
-      if (chargeAmount) {
-        const doctorName = doctor.user?.name ?? doctorId
-        await prisma.payment.create({
-          data: {
-            patientId,
-            appointmentId: created.id,
-            amount: chargeAmount,
-            dueDate: startTime,
-            description: `Consulta — ${doctor.specialty} (${doctorName})`,
-          },
-        })
+      // Regra de cobrança:
+      // - Retorno particular → sem cobrança
+      // - Retorno convênio  → cobra pelo contrato do plano
+      // - Primeira consulta → cobra normalmente
+      const isParticularReturn = (isReturn === true) && !insurancePlanId
+      if (!isParticularReturn) {
+        let chargeAmount = amount ?? doctor.consultationFee
+
+        // Se tem convênio, busca valor do contrato ativo
+        if (insurancePlanId) {
+          const contract = await prisma.insuranceContract.findFirst({
+            where: {
+              planId: insurancePlanId,
+              startDate: { lte: startTime },
+              OR: [{ endDate: null }, { endDate: { gte: startTime } }],
+            },
+          })
+          if (contract?.consultationFee != null) chargeAmount = contract.consultationFee
+        }
+
+        if (chargeAmount) {
+          const doctorName = doctor.user?.name ?? doctorId
+          const paymentMethod = insurancePlanId ? 'HEALTH_INSURANCE' : undefined
+          await prisma.payment.create({
+            data: {
+              patientId,
+              appointmentId: created.id,
+              amount: chargeAmount,
+              dueDate: startTime,
+              method: paymentMethod,
+              description: `Consulta${isReturn ? ' (retorno)' : ''} — ${doctor.specialty} (${doctorName})`,
+            },
+          })
+        }
       }
 
       const uid = (request.user as JwtPayload)?.sub ?? null
