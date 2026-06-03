@@ -41,7 +41,7 @@ const menu: MenuItem[] = [
   { href: "/leads",         label: "Leads",          icon: UserPlus,       roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/medicos",       label: "Médicos",        icon: Stethoscope,    roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/prontuarios",   label: "Prontuários",    icon: FileText,       roles: ['ADMIN', 'DOCTOR'] },
-  { href: "/exames",        label: "Exames",         icon: FlaskConical,   roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/exames",        label: "Exames e Proced.", icon: FlaskConical,  roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/estoque",       label: "Estoque",        icon: Package,        roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/convenios",     label: "Convênios",      icon: HeartHandshake, roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },

@@ -15,8 +15,10 @@ import {
   updateMedicalRecord,
   getClinicConfig,
   getInsurancePlans,
+  getExamOrders,
   type ClinicConfig,
   type InsurancePlan,
+  type ExamOrder,
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
@@ -1344,6 +1346,7 @@ export default function AgendaPage() {
   const [currentDate, setCurrentDate]                 = useState(new Date())
   const [viewMode, setViewMode]                       = useState<ViewMode>('week')
   const [appointments, setAppointments]               = useState<Appointment[]>([])
+  const [examOrders, setExamOrders]                   = useState<(ExamOrder & { computedStatus?: string })[]>([])
   const [doctors, setDoctors]                         = useState<Doctor[]>([])
   const [filterDoctorId, setFilterDoctorId]           = useState('')
   const [loading, setLoading]                         = useState(true)
@@ -1368,21 +1371,34 @@ export default function AgendaPage() {
       .catch(() => {})
   }, [])
 
-  // ── Busca consultas da semana ──────────────────────────────────────────────
+  // ── Busca consultas + exames da semana ────────────────────────────────────
   const fetchAppointments = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       const params: Record<string, string | number> = { limit: 200 }
       if (filterDoctorId) params.doctorId = filterDoctorId
-      const res = await getAppointments(params)
+
+      const weekStart = startOfWeekDate(currentDate)
+      const weekEnd   = new Date(weekStart)
+      weekEnd.setDate(weekEnd.getDate() + 7)
+
+      const [res, exams] = await Promise.all([
+        getAppointments(params),
+        getExamOrders({
+          from: weekStart.toISOString(),
+          to:   weekEnd.toISOString(),
+          ...(filterDoctorId && { doctorId: filterDoctorId }),
+        }).catch(() => [] as (ExamOrder & { computedStatus?: string })[]),
+      ])
       setAppointments(res.data)
+      setExamOrders(exams.filter(e => e.scheduledAt && (e.computedStatus || e.status) !== 'CANCELLED'))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar agenda.')
     } finally {
       setLoading(false)
     }
-  }, [filterDoctorId])
+  }, [filterDoctorId, currentDate])
 
   useEffect(() => { fetchAppointments() }, [fetchAppointments])
 
@@ -1415,6 +1431,23 @@ export default function AgendaPage() {
         t <= new Date(days[6].getTime() + 86_400_000 - 1)
       )
     })
+  }
+
+  // ── Filtra exames/procedimentos para uma célula ────────────────────────────
+  function getExamsForCell(day: Date, hour: number): (ExamOrder & { computedStatus?: string })[] {
+    return examOrders.filter(e => {
+      if (!e.scheduledAt) return false
+      const t = new Date(e.scheduledAt)
+      return t.toDateString() === day.toDateString() && t.getHours() === hour
+    })
+  }
+
+  const EXAM_STATUS_STYLES: Record<string, string> = {
+    PENDING:     'bg-amber-50 border-amber-400 text-amber-800',
+    SCHEDULED:   'bg-teal-50 border-teal-500 text-teal-800',
+    IN_PROGRESS: 'bg-cyan-100 border-cyan-500 text-cyan-800',
+    COMPLETED:   'bg-teal-100 border-teal-600 text-teal-900',
+    CANCELLED:   'bg-slate-100 border-slate-400 text-slate-500',
   }
 
   function handleCellClick(day: Date, hour: number) {
@@ -1477,6 +1510,8 @@ export default function AgendaPage() {
           <Legend color="bg-blue-300"    label="Em atendimento" />
           <Legend color="bg-green-300"   label="Concluída" />
           <Legend color="bg-red-300"     label="Cancelada" />
+          <span className="w-px h-4 bg-surface-border" />
+          <Legend color="bg-teal-400"    label="Exame/Proced." />
         </div>
       </div>
 
@@ -1569,12 +1604,14 @@ export default function AgendaPage() {
                     {String(hour).padStart(2, '0')}:00
                   </div>
                   {days.map((day, di) => {
-                    const apts = getApts(day, hour)
+                    const apts  = getApts(day, hour)
+                    const exams = getExamsForCell(day, hour)
                     const outside = isOutsideWorkHours(hour)
+                    const hasItems = apts.length > 0 || exams.length > 0
                     return (
                       <div
                         key={`${hour}-${di}`}
-                        onClick={() => { if (apts.length === 0) handleCellClick(day, hour) }}
+                        onClick={() => { if (!hasItems) handleCellClick(day, hour) }}
                         className={`border-r border-b border-surface-border min-h-[60px] p-1 cursor-pointer relative ${outside ? 'bg-slate-100 hover:bg-slate-200' : 'hover:bg-cream-50'}`}
                       >
                         {apts.map(apt => (
@@ -1590,6 +1627,23 @@ export default function AgendaPage() {
                             <div className="opacity-80 truncate">{apt.doctor.specialty}</div>
                           </div>
                         ))}
+                        {exams.map(exam => {
+                          const st = exam.computedStatus || exam.status
+                          return (
+                            <div
+                              key={exam.id}
+                              onClick={e => { e.stopPropagation(); window.location.href = '/exames' }}
+                              className={`text-xs p-1.5 rounded border-l-4 mb-1 cursor-pointer hover:shadow-md transition-shadow ${EXAM_STATUS_STYLES[st] ?? EXAM_STATUS_STYLES['SCHEDULED']}`}
+                              title={`Exame: ${exam.catalog.name} — ${exam.patient.fullName}`}
+                            >
+                              <div className="font-semibold truncate">
+                                🔬 {new Date(exam.scheduledAt!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{' '}
+                                {exam.catalog.name}
+                              </div>
+                              <div className="opacity-80 truncate">{exam.patient.fullName}</div>
+                            </div>
+                          )
+                        })}
                       </div>
                     )
                   })}
