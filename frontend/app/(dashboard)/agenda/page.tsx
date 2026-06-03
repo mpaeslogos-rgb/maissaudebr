@@ -974,36 +974,30 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary flex-1">
-                      {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
-                    </button>
-                    <button onClick={requestClose} className="btn-outline px-4 text-sm text-slate-600 hover:text-red-600 hover:border-red-300">
-                      Sair
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={printReceituario}
-                    disabled={!form.prescription.trim()}
-                    className="btn-outline w-full flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <Printer size={15} /> Imprimir Receituário
+                  <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary w-full">
+                    {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
                   </button>
 
-                  {/* Solicitar Exame + Emitir Atestado */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* Imprimir Receituário | Solicitar Exame | Emitir Atestado */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={printReceituario}
+                      disabled={!form.prescription.trim()}
+                      className="flex items-center justify-center gap-1.5 py-2 btn-outline text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Printer size={13} /> Receituário
+                    </button>
                     <button
                       onClick={() => { setExameForm({ catalogId: '', scheduledAt: '', notes: '' }); setExameError(''); setShowExameModal(true) }}
-                      className="flex items-center justify-center gap-2 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition-colors"
                     >
-                      <FlaskIcon size={14} /> Solicitar Exame
+                      <FlaskIcon size={13} /> Solicitar Exame
                     </button>
                     <button
                       onClick={() => setShowAtestadoModal(true)}
-                      className="flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-1.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors"
                     >
-                      <ClipboardCheck size={14} /> Emitir Atestado
+                      <ClipboardCheck size={13} /> Emitir Atestado
                     </button>
                   </div>
 
