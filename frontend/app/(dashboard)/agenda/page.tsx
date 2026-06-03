@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText, FlaskConical as FlaskIcon, ClipboardCheck } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
@@ -16,9 +16,12 @@ import {
   getClinicConfig,
   getInsurancePlans,
   getExamOrders,
+  getExamCatalog,
+  createExamOrder,
   type ClinicConfig,
   type InsurancePlan,
   type ExamOrder,
+  type ExamCatalog,
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
@@ -551,6 +554,17 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   // Status local: atualizado imediatamente após ações sem esperar o refresh do pai
   const [localStatus, setLocalStatus] = useState<AppointmentStatus>(apt.status)
 
+  // Modal: Solicitar Exame
+  const [showExameModal, setShowExameModal]   = useState(false)
+  const [examCatalog, setExamCatalog]         = useState<ExamCatalog[]>([])
+  const [exameForm, setExameForm]             = useState({ catalogId: '', scheduledAt: '', notes: '' })
+  const [savingExame, setSavingExame]         = useState(false)
+  const [exameError, setExameError]           = useState('')
+
+  // Modal: Atestado Médico
+  const [showAtestadoModal, setShowAtestadoModal] = useState(false)
+  const [atestadoForm, setAtestadoForm]           = useState({ dias: '', cid: '', finalidade: 'trabalho', observacoes: '', mostrarDiagnostico: false })
+
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
   const durMin = Math.round((end.getTime() - start.getTime()) / 60_000)
@@ -566,8 +580,10 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
       getMedicalRecords({ appointmentId: apt.id, limit: 1 }),
       getMedicalRecords({ patientId: apt.patientId, limit: 5 }),
       getClinicConfig(),
-    ]).then(([recRes, histRes, cfg]) => {
+      getExamCatalog().catch(() => [] as ExamCatalog[]),
+    ]).then(([recRes, histRes, cfg, catalog]) => {
       setClinicConfig(cfg)
+      setExamCatalog(catalog)
       const current = recRes.data[0] ?? null
       setRecord(current)
       if (current) {
@@ -975,6 +991,22 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     <Printer size={15} /> Imprimir Receituário
                   </button>
 
+                  {/* Solicitar Exame + Emitir Atestado */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => { setExameForm({ catalogId: '', scheduledAt: '', notes: '' }); setExameError(''); setShowExameModal(true) }}
+                      className="flex items-center justify-center gap-2 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <FlaskIcon size={14} /> Solicitar Exame
+                    </button>
+                    <button
+                      onClick={() => setShowAtestadoModal(true)}
+                      className="flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <ClipboardCheck size={14} /> Emitir Atestado
+                    </button>
+                  </div>
+
                   {/* Histórico do paciente */}
                   {history.length > 0 && (
                     <div className="mt-4">
@@ -1217,6 +1249,191 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
             />
           </div>
         )
+      )}
+
+      {/* ── Modal: Solicitar Exame / Procedimento ── */}
+      {showExameModal && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-surface-border">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <FlaskIcon size={18} className="text-teal-600" /> Solicitar Exame / Procedimento
+              </h2>
+              <button onClick={() => setShowExameModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-sm space-y-0.5">
+                <p><span className="text-teal-700 font-medium">Paciente:</span> {apt.patient.fullName}</p>
+                <p><span className="text-teal-700 font-medium">Médico:</span> Dr(a). {apt.doctor.user.name} — {apt.doctor.specialty}</p>
+              </div>
+
+              {exameError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{exameError}</div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Exame / Procedimento <span className="text-red-500">*</span></label>
+                {examCatalog.length === 0 ? (
+                  <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    Nenhum exame cadastrado.{' '}
+                    <a href="/exames" className="underline font-medium">Cadastrar em Exames e Proced.</a>
+                  </p>
+                ) : (
+                  <select value={exameForm.catalogId} onChange={e => setExameForm(f => ({ ...f, catalogId: e.target.value }))} className="input">
+                    <option value="">Selecione…</option>
+                    {examCatalog.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} — R$ {c.price.toFixed(2)}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Data/Hora <span className="text-slate-400 text-xs">(em branco = Pendente)</span>
+                </label>
+                <input type="datetime-local" value={exameForm.scheduledAt}
+                  onChange={e => setExameForm(f => ({ ...f, scheduledAt: e.target.value }))} className="input" />
+                {exameForm.scheduledAt
+                  ? <p className="text-xs text-teal-600 mt-1">Entrará na Agenda como <strong>Agendado</strong></p>
+                  : <p className="text-xs text-amber-600 mt-1">Ficará como <strong>Pendente</strong> até ser agendado</p>
+                }
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Observações</label>
+                <textarea value={exameForm.notes} onChange={e => setExameForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={2} className="input resize-none" placeholder="Indicação clínica, preparo…" />
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setShowExameModal(false)} className="btn-outline flex-1">Cancelar</button>
+                <button
+                  disabled={savingExame || !exameForm.catalogId}
+                  onClick={async () => {
+                    if (!exameForm.catalogId) return setExameError('Selecione um exame.')
+                    setSavingExame(true); setExameError('')
+                    try {
+                      await createExamOrder({
+                        patientId: apt.patientId,
+                        doctorId:  apt.doctorId,
+                        catalogId: exameForm.catalogId,
+                        scheduledAt: exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
+                        notes: exameForm.notes || undefined,
+                      })
+                      setShowExameModal(false)
+                    } catch (err: any) { setExameError(err.message || 'Erro ao solicitar.') }
+                    finally { setSavingExame(false) }
+                  }}
+                  className="btn-primary flex-1"
+                >
+                  {savingExame ? 'Solicitando…' : 'Solicitar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Emitir Atestado Médico ── */}
+      {showAtestadoModal && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-surface-border">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <ClipboardCheck size={18} className="text-emerald-600" /> Emitir Atestado Médico
+              </h2>
+              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Dias de afastamento <span className="text-red-500">*</span></label>
+                  <input type="number" min={1} value={atestadoForm.dias}
+                    onChange={e => setAtestadoForm(f => ({ ...f, dias: e.target.value }))}
+                    className="input" placeholder="Ex: 3" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Finalidade</label>
+                  <select value={atestadoForm.finalidade}
+                    onChange={e => setAtestadoForm(f => ({ ...f, finalidade: e.target.value }))} className="input">
+                    <option value="trabalho">Trabalho</option>
+                    <option value="escola">Escola</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">CID-10 <span className="text-slate-400 text-xs">(opcional)</span></label>
+                <input value={atestadoForm.cid} onChange={e => setAtestadoForm(f => ({ ...f, cid: e.target.value }))}
+                  className="input" placeholder="Ex: J11" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Observações</label>
+                <textarea value={atestadoForm.observacoes}
+                  onChange={e => setAtestadoForm(f => ({ ...f, observacoes: e.target.value }))}
+                  rows={2} className="input resize-none" />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input type="checkbox" checked={atestadoForm.mostrarDiagnostico}
+                  onChange={e => setAtestadoForm(f => ({ ...f, mostrarDiagnostico: e.target.checked }))}
+                  className="w-4 h-4 accent-emerald-600" />
+                Incluir diagnóstico no atestado
+              </label>
+              <div className="flex gap-3">
+                <button onClick={() => setShowAtestadoModal(false)} className="btn-outline flex-1">Cancelar</button>
+                <button
+                  disabled={!atestadoForm.dias}
+                  onClick={() => {
+                    if (!atestadoForm.dias) return
+                    const clinicName = clinicConfig?.clinicName || 'Clínica Médica'
+                    const doctorName = apt.doctor.user.name
+                    const crm = `${apt.doctor.crm}-${apt.doctor.crmState}`
+                    const specialty = apt.doctor.specialty
+                    const patName = apt.patient.fullName
+                    const patCpf  = (apt.patient as any).cpf || ''
+                    const dateStr = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+                    const labels: Record<string,string> = { trabalho:'afastamento do trabalho', escola:'afastamento escolar', outro:'fins que se fizerem necessários' }
+                    const finalidade = labels[atestadoForm.finalidade] ?? 'fins que se fizerem necessários'
+                    const diasNum = parseInt(atestadoForm.dias, 10)
+                    const words = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove','vinte']
+                    const diasTexto = diasNum === 1 ? '1 (um) dia' : diasNum <= 20 ? `${diasNum} (${words[diasNum]}) dias` : `${diasNum} dias`
+                    const cidLine = atestadoForm.cid ? `<p style="font-size:10pt;color:#444;margin:8px 0"><strong>CID-10:</strong> ${atestadoForm.cid}</p>` : ''
+                    const obsLine = atestadoForm.observacoes ? `<p style="font-size:10pt;color:#444;margin:12px 0;font-style:italic">${atestadoForm.observacoes}</p>` : ''
+                    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Atestado</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11pt;color:#111;padding:18mm 20mm 32mm;max-width:210mm}
+.header{display:flex;justify-content:space-between;border-top:2px solid #1B5E3F;border-bottom:1px solid #ccc;padding:10px 0;margin-bottom:18px}
+.header-left p{font-size:9.5pt;color:#333;line-height:1.6}.header-left strong{color:#1B5E3F}.header-right{text-align:right;font-size:9pt;color:#666}
+.title{text-align:center;font-size:14pt;font-weight:bold;letter-spacing:4px;text-transform:uppercase;margin:0 0 20px;color:#1B5E3F}
+.patient-box{border:1px solid #bbb;border-radius:4px;padding:8px 12px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;background:#fafafa}
+.patient-box p{font-size:10pt}.patient-box span{font-weight:bold}
+.body-text{font-size:11pt;line-height:1.9;margin-bottom:10px;text-align:justify}
+.sign-area{border-top:1px solid #1B5E3F;padding-top:16px;margin-top:48px;display:flex;justify-content:flex-end}
+.sign-block{text-align:center;min-width:230px}.sign-line{border-top:1px solid #111;padding-top:8px;margin-top:52px}
+.sign-block p{font-size:10pt;line-height:1.6}.sign-block .name{font-weight:bold}
+.date-line{margin-top:16px;font-size:10pt;text-align:right;color:#555}
+@media print{body{padding:15mm}@page{size:A4 portrait;margin:10mm}}</style></head><body>
+<div class="header"><div class="header-left"><p><strong>Dr(a). ${doctorName}</strong><br>${specialty}<br>CRM ${crm}</p></div>
+<div class="header-right"><p>${clinicName}</p></div></div>
+<div class="title">Atestado Médico</div>
+<div class="patient-box"><p><span>Paciente:</span> ${patName}</p><p><span>CPF:</span> ${patCpf}</p><p><span>Data:</span> ${dateStr}</p></div>
+<p class="body-text">Atesto, para os devidos fins, que o(a) paciente <strong>${patName}</strong>, portador(a) do CPF <strong>${patCpf}</strong>, esteve sob meus cuidados médicos nesta data, necessitando de afastamento de suas atividades de <strong>${finalidade}</strong> pelo período de <strong>${diasTexto}</strong>, a contar desta data.</p>
+${cidLine}${obsLine}
+<div class="sign-area"><div class="sign-block"><div class="sign-line"><p class="name">Dr(a). ${doctorName}</p><p>CRM ${crm} · ${specialty}</p></div></div></div>
+<p class="date-line">${dateStr}</p>
+<script>window.onload=function(){window.print()}<\/script></body></html>`
+                    const win = window.open('', '_blank', 'width=820,height=1000')
+                    if (win) { win.document.write(html); win.document.close() }
+                    setShowAtestadoModal(false)
+                  }}
+                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
+                >
+                  Imprimir Atestado
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
