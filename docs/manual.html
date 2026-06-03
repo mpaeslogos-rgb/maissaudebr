@@ -234,8 +234,8 @@
     <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
   </div>
   <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
-  <div class="tag">Versão 1.0 · Maio 2026</div>
-  <p class="version">Documento de uso interno · Atualizado em 25/05/2026</p>
+  <div class="tag">Versão 2.0 · Junho 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 03/06/2026</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -259,13 +259,17 @@
     <div class="toc-item"><span class="num">7.</span> Leads — Prospecção <span class="dots"></span></div>
     <div class="toc-item"><span class="num">8.</span> Médicos <span class="dots"></span></div>
     <div class="toc-item"><span class="num">9.</span> Prontuários Médicos <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">10.</span> Financeiro <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">10a.</span> &nbsp;&nbsp;↳ Conciliação de Médicos (Repasses) <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">11.</span> Chats / WhatsApp <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">12.</span> Relatórios <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">13.</span> Configurações <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">14.</span> Auditoria (Admin) <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">15.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">9a.</span> &nbsp;&nbsp;↳ Atestado Médico <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">10.</span> Exames e Procedimentos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">11.</span> Convênios e Planos de Saúde <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">12.</span> Estoque de Materiais <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">13.</span> Financeiro <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">13a.</span> &nbsp;&nbsp;↳ Conciliação de Médicos (Repasses) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">14.</span> Chats / WhatsApp <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">15.</span> Relatórios <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">16.</span> Configurações <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">17.</span> Auditoria (Admin) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">18.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -817,6 +821,23 @@
     <div class="label">[ Inserir print do modal de Emitir Atestado ]</div>
   </div>
 
+  <h3>Solicitar Exame / Procedimento a partir do Prontuário</h3>
+  <p>No detalhe do prontuário, clique em <strong>"Solicitar Exame"</strong> (botão teal no cabeçalho). O sistema abre um modal onde você pode:</p>
+  <ul>
+    <li>Selecionar o exame do <strong>catálogo</strong> (pré-cadastrado em Exames e Procedimentos)</li>
+    <li>Definir data/hora (opcional — sem data = status <em>Pendente</em>)</li>
+    <li>Adicionar observações e indicação clínica</li>
+  </ul>
+  <p>O paciente e médico do prontuário são preenchidos automaticamente. O exame entra na esteira de <strong>Exames e Procedimentos</strong> e gera cobrança em <strong>Contas a Receber</strong> automaticamente.</p>
+
+  <h3>Ações rápidas também disponíveis na Agenda</h3>
+  <p>Na <strong>Agenda</strong>, ao clicar em uma consulta e abrir a aba <strong>Prontuário</strong>, os mesmos botões estão disponíveis:</p>
+  <ul>
+    <li>🧪 <strong>Solicitar Exame</strong> — abre o modal de solicitação</li>
+    <li>📋 <strong>Emitir Atestado</strong> — abre o modal do atestado</li>
+    <li>🖨️ <strong>Receituário</strong> — imprime a prescrição atual</li>
+  </ul>
+
   <h3>Buscar Prontuários</h3>
   <ol class="steps">
     <li><span>Acesse o menu <strong>"Prontuários"</strong> no menu lateral.</span></li>
@@ -1302,9 +1323,141 @@
   <p>Não. Mensagens enviadas pelo WhatsApp não podem ser editadas. Envie uma nova mensagem com a correção.</p>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 10 — Exames e Procedimentos                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <h2>10. Exames e Procedimentos</h2>
+  <p>O módulo <strong>Exames e Procedimentos</strong> gerencia exames realizados na própria clínica (Holter 24h, ECG, MAPA, Teste Ergométrico, etc.) e outros procedimentos com cobrança independente da consulta.</p>
+
+  <h3>Catálogo de Exames</h3>
+  <p>Antes de solicitar exames, é necessário cadastrá-los no <strong>Catálogo</strong> (aba "Catálogo" na página Exames e Procedimentos).</p>
+  <table>
+    <tr><th>Campo</th><th>Descrição</th></tr>
+    <tr><td>Nome</td><td>Ex: "Holter 24h", "ECG de Repouso", "MAPA 24h"</td></tr>
+    <tr><td>Valor (R$)</td><td>Preço cobrado ao paciente</td></tr>
+    <tr><td>Duração (min)</td><td>Tempo estimado para o exame</td></tr>
+    <tr><td>Tipo de Repasse</td><td>Percentual (%) ou Fixo (R$) — sobrescreve o padrão do médico</td></tr>
+    <tr><td>Valor do Repasse</td><td>Valor para cálculo do repasse ao médico responsável</td></tr>
+  </table>
+
+  <h3>Solicitando um Exame / Procedimento</h3>
+  <p>A solicitação pode ser feita de três formas:</p>
+  <ul>
+    <li><strong>Página Exames e Procedimentos</strong> → botão "Solicitar" → selecione exame, paciente e médico</li>
+    <li><strong>Prontuário do paciente</strong> → botão "Solicitar Exame" no cabeçalho</li>
+    <li><strong>Agenda</strong> → painel da consulta → aba Prontuário → botão "Solicitar Exame"</li>
+  </ul>
+  <p>Ao informar data e hora, o exame entra na <strong>Agenda</strong> como evento teal (visualmente distinto das consultas). Sem data, fica como <strong>Pendente</strong>.</p>
+
+  <h3>Esteira de Status</h3>
+  <table>
+    <tr><th>Status</th><th>Quando ocorre</th></tr>
+    <tr><td>Pendente</td><td>Solicitado sem data/hora definida</td></tr>
+    <tr><td>Agendado</td><td>Data/hora definida e ainda no futuro — aparece na Agenda</td></tr>
+    <tr><td>Em andamento</td><td>Após o horário agendado — automaticamente</td></tr>
+    <tr><td>Concluído</td><td>Somente após o pagamento ser validado em Contas a Receber</td></tr>
+    <tr><td>Cancelado</td><td>Cancelado manualmente — também cancela a cobrança vinculada</td></tr>
+  </table>
+
+  <div class="alert">
+    ⚠️ <strong>Regra financeira:</strong> O sistema bloqueia a conclusão do exame enquanto o pagamento estiver pendente. Registre o recebimento em <strong>Financeiro → Contas a Receber</strong> antes de marcar como concluído.
+  </div>
+
+  <h3>Cobrança e Repasse</h3>
+  <p>Ao criar o pedido de exame, o sistema gera automaticamente:</p>
+  <ul>
+    <li>Um lançamento em <strong>Contas a Receber</strong> com o valor do exame</li>
+    <li>Um <strong>Repasse ao Médico</strong> calculado pela regra do catálogo (ou padrão do médico)</li>
+  </ul>
+  <p>[ Inserir print da tela ]</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 11 — Convênios e Planos de Saúde                     -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <h2>11. Convênios e Planos de Saúde</h2>
+  <p>O módulo <strong>Convênios</strong> permite cadastrar planos de saúde, seus contratos com a clínica e a tabela de procedimentos com códigos TUSS (padrão ANS para faturamento TISS).</p>
+
+  <h3>Cadastro de Planos</h3>
+  <p>Clique em <strong>+ Novo Convênio</strong> e preencha:</p>
+  <table>
+    <tr><th>Campo</th><th>Descrição</th></tr>
+    <tr><td>Nome</td><td>Ex: Unimed, Bradesco Saúde, SulAmérica</td></tr>
+    <tr><td>Código ANS</td><td>Número registrado na ANS (opcional)</td></tr>
+    <tr><td>Telefone / E-mail</td><td>Contato da operadora</td></tr>
+  </table>
+
+  <h3>Contratos</h3>
+  <p>Cada plano pode ter um ou mais contratos com vigência definida. No contrato, é possível informar o <strong>valor da consulta</strong> negociado com o plano (substitui o valor padrão do médico).</p>
+
+  <h3>Procedimentos TUSS</h3>
+  <p>Dentro de cada contrato, cadastre os procedimentos cobertos com:</p>
+  <ul>
+    <li><strong>Código TUSS</strong> — código padrão ANS (ex: 10101012)</li>
+    <li><strong>Descrição</strong> — nome do procedimento</li>
+    <li><strong>Valor contratado</strong> — o que o plano paga à clínica</li>
+  </ul>
+
+  <h3>Usando Convênios no Agendamento</h3>
+  <p>Ao criar uma nova consulta na Agenda, selecione o <strong>Convênio</strong> no campo correspondente. O sistema usará automaticamente o valor do contrato ativo do plano.</p>
+
+  <h3>Consulta de Retorno com Convênio</h3>
+  <table>
+    <tr><th>Situação</th><th>Gera cobrança?</th></tr>
+    <tr><td>Retorno — Particular</td><td>Não — retorno particular é gratuito</td></tr>
+    <tr><td>Retorno — Convênio</td><td>Sim — convênio sempre cobra (mesmo em retorno)</td></tr>
+    <tr><td>Primeira consulta (qualquer)</td><td>Sim</td></tr>
+  </table>
+
+  <h3>Faturamento TISS</h3>
+  <p>Com os procedimentos TUSS cadastrados, o sistema acumula os dados necessários para o faturamento. A exportação do arquivo XML TISS 3.05 (para envio no portal do convênio) será disponibilizada em breve nesta mesma tela.</p>
+  <p>[ Inserir print da tela ]</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 12 — Estoque de Materiais                            -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <h2>12. Estoque de Materiais</h2>
+  <p>O módulo <strong>Estoque</strong> controla os materiais e insumos utilizados nas consultas e procedimentos.</p>
+
+  <h3>Cadastro de Materiais</h3>
+  <p>Na aba <strong>Materiais</strong>, clique em <strong>+ Novo Material</strong>:</p>
+  <table>
+    <tr><th>Campo</th><th>Descrição</th></tr>
+    <tr><td>Nome</td><td>Ex: Luva descartável, Eletrodo ECG, Gel condutor</td></tr>
+    <tr><td>Unidade</td><td>caixa, unidade, frasco, par…</td></tr>
+    <tr><td>Estoque mínimo</td><td>Alerta quando o saldo atingir este valor</td></tr>
+    <tr><td>Estoque inicial</td><td>Quantidade atual ao cadastrar</td></tr>
+    <tr><td>Custo unitário (R$)</td><td>Valor de compra para controle de custos</td></tr>
+  </table>
+
+  <h3>Movimentações</h3>
+  <p>Registre entradas (compras) e saídas (uso em procedimentos) na aba <strong>Movimentações</strong>:</p>
+  <ul>
+    <li><strong>Entrada:</strong> compra de fornecedor, doação, ajuste de inventário</li>
+    <li><strong>Saída:</strong> uso em consulta, descarte, perda</li>
+  </ul>
+  <p>O saldo é atualizado automaticamente e em tempo real.</p>
+
+  <h3>Alertas de Estoque Baixo</h3>
+  <p>Quando o saldo de um material atingir ou ficar abaixo do estoque mínimo configurado, o sistema exibe:</p>
+  <ul>
+    <li>Badge <strong>"Baixo"</strong> em laranja na linha do material</li>
+    <li>Banner amarelo no topo da página com todos os materiais críticos</li>
+  </ul>
+
+  <div class="tip">
+    💡 <strong>Dica:</strong> Configure o estoque mínimo para receber alertas antes que o material acabe. Ex: luvas em caixa → mínimo = 2 caixas.
+  </div>
+  <p>[ Inserir print da tela ]</p>
+</div>
+
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v1.2 · Maio 2026<br>
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.0 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
