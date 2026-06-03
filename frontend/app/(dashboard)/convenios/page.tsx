@@ -100,9 +100,9 @@ function ContractModal({ planId, contract, onClose, onSaved }: {
       const data = {
         planId,
         startDate: new Date(startDate).toISOString(),
-        endDate:   endDate ? new Date(endDate).toISOString() : undefined,
-        consultationFee: consultationFee ? parseFloat(consultationFee.replace(',', '.')) : undefined,
-        notes: notes || undefined,
+        endDate:   endDate ? new Date(endDate).toISOString() : null,
+        consultationFee: consultationFee ? parseFloat(consultationFee.replace(',', '.')) : null,
+        notes: notes || null,
       }
       if (contract) await updateInsuranceContract(contract.id, data)
       else          await createInsuranceContract(data)
