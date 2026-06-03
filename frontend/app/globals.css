@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paleta padrão MaisSaúdeBR — sobrescrita pelo ThemeProvider via env vars */
+:root {
+  --color-primary-50:  #E8F0EB;
+  --color-primary-100: #C9DDD0;
+  --color-primary-200: #A5C6AF;
+  --color-primary-300: #7FAE8C;
+  --color-primary-400: #5A9670;
+  --color-primary-500: #2D7D5A;
+  --color-primary-600: #1B5E3F;
+  --color-primary-700: #154A32;
+  --color-primary-800: #0F3624;
+  --color-primary-900: #082217;
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;

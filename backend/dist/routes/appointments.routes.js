@@ -30,6 +30,8 @@ const createSchema = zod_1.z
     reason: zod_1.z.string().max(500).optional(),
     notes: zod_1.z.string().max(2000).optional(),
     amount: zod_1.z.number().positive().optional(),
+    isReturn: zod_1.z.boolean().optional(),
+    insurancePlanId: zod_1.z.string().optional(),
 })
     .refine((d) => d.startTime < d.endTime, {
     message: 'startTime deve ser anterior a endTime',
@@ -131,14 +133,14 @@ async function appointmentsRoutes(app) {
         if (!parsed.success) {
             return reply.code(400).send({ error: parsed.error.flatten() });
         }
-        const { patientId, doctorId, startTime, endTime, reason, notes, amount } = parsed.data;
+        const { patientId, doctorId, startTime, endTime, reason, notes, amount, isReturn, insurancePlanId } = parsed.data;
         try {
             // Valida existência ANTES de tentar inserir (mensagens mais claras que P2003)
             const [patient, doctor] = await Promise.all([
                 prisma2_1.prisma.patient.findUnique({ where: { id: patientId }, select: { id: true } }),
                 prisma2_1.prisma.doctor.findUnique({
                     where: { id: doctorId },
-                    select: { id: true, consultationFee: true, specialty: true, user: { select: { name: true } } },
+                    select: { id: true, consultationFee: true, specialty: true, repasseType: true, repasseValue: true, user: { select: { name: true } } },
                 }),
             ]);
             if (!patient)
@@ -151,22 +153,42 @@ async function appointmentsRoutes(app) {
                 });
             }
             const created = await prisma2_1.prisma.appointment.create({
-                data: { patientId, doctorId, startTime, endTime, reason, notes },
+                data: { patientId, doctorId, startTime, endTime, reason, notes, isReturn: isReturn ?? false, insurancePlanId },
                 include: appointmentInclude,
             });
-            // Auto-criar cobrança: usa valor negociado se fornecido, senão o fee do médico
-            const chargeAmount = amount ?? doctor.consultationFee;
-            if (chargeAmount) {
-                const doctorName = doctor.user?.name ?? doctorId;
-                await prisma2_1.prisma.payment.create({
-                    data: {
-                        patientId,
-                        appointmentId: created.id,
-                        amount: chargeAmount,
-                        dueDate: startTime,
-                        description: `Consulta — ${doctor.specialty} (${doctorName})`,
-                    },
-                });
+            // Regra de cobrança:
+            // - Retorno particular → sem cobrança
+            // - Retorno convênio  → cobra pelo contrato do plano
+            // - Primeira consulta → cobra normalmente
+            const isParticularReturn = (isReturn === true) && !insurancePlanId;
+            if (!isParticularReturn) {
+                let chargeAmount = amount ?? doctor.consultationFee;
+                // Se tem convênio, busca valor do contrato ativo
+                if (insurancePlanId) {
+                    const contract = await prisma2_1.prisma.insuranceContract.findFirst({
+                        where: {
+                            planId: insurancePlanId,
+                            startDate: { lte: startTime },
+                            OR: [{ endDate: null }, { endDate: { gte: startTime } }],
+                        },
+                    });
+                    if (contract?.consultationFee != null)
+                        chargeAmount = contract.consultationFee;
+                }
+                if (chargeAmount) {
+                    const doctorName = doctor.user?.name ?? doctorId;
+                    const paymentMethod = insurancePlanId ? 'HEALTH_INSURANCE' : undefined;
+                    await prisma2_1.prisma.payment.create({
+                        data: {
+                            patientId,
+                            appointmentId: created.id,
+                            amount: chargeAmount,
+                            dueDate: startTime,
+                            method: paymentMethod,
+                            description: `Consulta${isReturn ? ' (retorno)' : ''} — ${doctor.specialty} (${doctorName})`,
+                        },
+                    });
+                }
             }
             const uid = request.user?.sub ?? null;
             (0, audit_1.logAudit)({ userId: uid, action: 'CREATE', entity: 'Appointment', entityId: created.id, request });

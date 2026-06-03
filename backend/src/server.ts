@@ -35,6 +35,10 @@ import { consentsRoutes } from './routes/consents.routes'
 import { leadsRoutes } from './routes/leads.routes'
 import { prescriptionsRoutes } from './routes/prescriptions.routes'
 import { doctorPaymentsRoutes } from './routes/doctor-payments.routes'
+import { examCatalogRoutes } from './routes/exam-catalog.routes'
+import { examOrdersRoutes } from './routes/exam-orders.routes'
+import { insurancePlansRoutes } from './routes/insurance-plans.routes'
+import { stockRoutes } from './routes/stock.routes'
 
 const app = Fastify({ logger: true })
 
@@ -136,6 +140,10 @@ async function bootstrap() {
   await app.register(leadsRoutes)
   await app.register(prescriptionsRoutes)
   await app.register(doctorPaymentsRoutes)
+  await app.register(examCatalogRoutes)
+  await app.register(examOrdersRoutes)
+  await app.register(insurancePlansRoutes)
+  await app.register(stockRoutes)
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

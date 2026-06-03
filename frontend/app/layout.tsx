@@ -1,12 +1,8 @@
-// app/layout.tsx
-// Root layout — envolve toda a aplicação com o AuthProvider
-// Por quê aqui? É o único lugar que garante que o contexto
-// de autenticação esteja disponível em TODAS as páginas.
-
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,8 +16,10 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const clinicName = process.env.NEXT_PUBLIC_CLINIC_NAME || "MaisSaúdeBR";
+
 export const metadata: Metadata = {
-  title: "MaisSaúdeBR — Gestão de Clínica",
+  title: `${clinicName} — Gestão de Clínica`,
   description: "Plataforma completa de gestão para clínicas médicas",
 };
 
@@ -32,11 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <ThemeProvider />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* AuthProvider aqui garante que useAuth() funciona
-            em qualquer página, incluindo /dashboard e seus filhos */}
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

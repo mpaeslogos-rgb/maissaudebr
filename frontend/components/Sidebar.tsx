@@ -20,6 +20,9 @@ import {
   BookOpen,
   X,
   UserPlus,
+  FlaskConical,
+  Package,
+  HeartHandshake,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 
@@ -38,6 +41,9 @@ const menu: MenuItem[] = [
   { href: "/leads",         label: "Leads",          icon: UserPlus,       roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/medicos",       label: "Médicos",        icon: Stethoscope,    roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/prontuarios",   label: "Prontuários",    icon: FileText,       roles: ['ADMIN', 'DOCTOR'] },
+  { href: "/exames",        label: "Exames",         icon: FlaskConical,   roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/estoque",       label: "Estoque",        icon: Package,        roles: ['ADMIN', 'RECEPTIONIST'] },
+  { href: "/convenios",     label: "Convênios",      icon: HeartHandshake, roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,      roles: ['ADMIN'] },
   { href: "/configuracoes", label: "Configurações",  icon: Settings,       roles: ['ADMIN'] },
@@ -124,7 +130,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <LogOut size={16} />
             Sair do sistema
           </button>
-          <p className="text-xs text-slate-400 text-center">+SaúdeBR v1.0.0</p>
+          <p className="text-xs text-slate-400 text-center">
+            {process.env.NEXT_PUBLIC_CLINIC_NAME || "+SaúdeBR"} v1.0.0
+          </p>
         </div>
       </aside>
     </>
