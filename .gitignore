@@ -37,3 +37,7 @@ uploads/
 # caches
 .cache/
 .eslintcache
+
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/

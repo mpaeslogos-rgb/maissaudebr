@@ -5,7 +5,13 @@
       "Bash(xargs grep -l \"SECRETARY\\\\|JWT\\\\|jwtDecode\\\\|fastify-jwt\")",
       "Bash(xargs grep -l \"declare module\\\\|FastifyJWT\\\\|SECRETARY\")",
       "Bash(npm install *)",
-      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")"
+      "Bash(node -e \"const p = require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Marcos Paes\\\\OneDrive\\\\Desktop\\\\quantitech-backend\\\\src\" -Recurse -Filter \"*.ts\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "PowerShell($result = Test-NetConnection -ComputerName \"aws-1-us-west-2.pooler.supabase.com\" -Port 5432 -WarningAction SilentlyContinue; Write-Output \"TcpTestSucceeded: $\\($result.TcpTestSucceeded\\)\")",
+      "Bash(ls \"C:\\\\Users\\\\Marcos Paes\\\\OneDrive\\\\Desktop\\\\quantitech-backend\\\\prisma\\\\migrations\" 2>/dev/null || echo \"no migrations dir\")",
+      "Read(//c/Users/Marcos Paes/OneDrive/Desktop/quantitech-backend/prisma/migrations/**)"
     ]
   }
 }

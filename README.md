@@ -43,3 +43,9 @@ Para deploy na web, defina também no backend:
 CORS_ALLOW_ORIGIN=https://seu-dominio.com
 ```
 
+## Relatório de atualização (2026-06-08)
+
+- Adicionadas fixtures Cypress em `frontend/cypress/fixtures/`.
+- Implementados comandos de suporte e atualizadas specs para API login.
+- Tentativa de smoke local executada com backend em `http://localhost:3002` e frontend em `http://localhost:3001`, mas a instalação do Cypress ficou travada em `Unzipping Cypress`.
+

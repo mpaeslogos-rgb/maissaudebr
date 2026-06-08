@@ -1,0 +1,6 @@
+{
+  "patientCpf": "12345678909",
+  "amount": 150.0,
+  "method": "card",
+  "notes": "Pagamento consulta"
+}
