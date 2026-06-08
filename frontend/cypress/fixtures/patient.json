@@ -1,0 +1,8 @@
+{
+  "firstName": "João",
+  "lastName": "Silva",
+  "cpf": "12345678909",
+  "birthDate": "1980-05-12",
+  "phone": "+5511999999999",
+  "email": "joao.silva@example.com"
+}

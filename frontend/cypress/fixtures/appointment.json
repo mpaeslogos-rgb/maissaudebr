@@ -1,0 +1,7 @@
+{
+  "patientCpf": "12345678909",
+  "date": "2026-06-15T10:00:00.000Z",
+  "clinicId": 1,
+  "doctorId": 1,
+  "notes": "Consulta de rotina"
+}
