@@ -10,7 +10,7 @@ export const Logo: React.FC<LogoProps> = ({ size = "md", variant = "full" }) => 
     sm: { icon: 32, text: "text-base", logoH: 40,  logoMaxW: 140 },
     md: { icon: 44, text: "text-xl",   logoH: 60,  logoMaxW: 200 },
     lg: { icon: 64, text: "text-3xl",  logoH: 80,  logoMaxW: 280 },
-    xl: { icon: 96, text: "text-5xl",  logoH: 127, logoMaxW: 437 },
+    xl: { icon: 96, text: "text-5xl",  logoH: 165, logoMaxW: 568 },
   };
   const s = sizes[size];
 
