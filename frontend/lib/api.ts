@@ -936,3 +936,127 @@ export function createStockMovement(data: {
 }): Promise<StockMovement> {
   return apiPost('/stock-movements', data)
 }
+
+// ─── TISS — Faturamento ───────────────────────────────────────────────────────
+
+export type GuiaTipo   = 'CONSULTA' | 'SP_SADT'
+export type GuiaStatus = 'PENDENTE' | 'AUTORIZADA' | 'NEGADA' | 'FATURADA' | 'PAGA' | 'GLOSADA'
+export type LoteStatus = 'ABERTO' | 'FECHADO' | 'ENVIADO' | 'LIQUIDADO'
+
+export interface GuiaProcedimento {
+  id:            string
+  guiaId:        string
+  tussCode:      string
+  descricao:     string
+  quantidade:    number
+  valorUnitario: number
+  valorTotal:    number
+}
+
+export interface GuiaFaturamento {
+  id:                         string
+  loteId:                     string | null
+  insurancePlanId:            string
+  appointmentId:              string | null
+  tipo:                       GuiaTipo
+  status:                     GuiaStatus
+  numeroGuia:                 string
+  numeroAutorizacao:          string | null
+  dataAutorizacao:            string | null
+  nomeBeneficiario:           string
+  numeroCarteirinha:          string
+  validadeCarteirinha:        string | null
+  codigoPrestadorNaOperadora: string | null
+  valorApresentado:           number
+  valorAprovado:              number | null
+  motivoGlosa:                string | null
+  tipoConsulta:               number | null
+  tussCode:                   string | null
+  cbos:                       string | null
+  crmExecutante:              string | null
+  crmEstado:                  string | null
+  nomeExecutante:             string | null
+  indicacaoAcidente:          number
+  createdAt:                  string
+  updatedAt:                  string
+  procedimentos:              GuiaProcedimento[]
+  plan?:                      InsurancePlan
+  appointment?:               any
+}
+
+export interface LoteFaturamento {
+  id:              string
+  insurancePlanId: string
+  numeroLote:      number
+  competencia:     string
+  status:          LoteStatus
+  valorTotal:      number
+  dataEnvio:       string | null
+  observacoes:     string | null
+  createdAt:       string
+  updatedAt:       string
+  plan?:           InsurancePlan
+  guias:           GuiaFaturamento[]
+}
+
+export function getGuias(params?: { planId?: string; status?: GuiaStatus; loteId?: string; sem_lote?: boolean }): Promise<GuiaFaturamento[]> {
+  const q = new URLSearchParams()
+  if (params?.planId)   q.set('planId',   params.planId)
+  if (params?.status)   q.set('status',   params.status)
+  if (params?.loteId)   q.set('loteId',   params.loteId)
+  if (params?.sem_lote) q.set('sem_lote', 'true')
+  return apiGet(`/tiss/guias${q.toString() ? '?' + q : ''}`)
+}
+
+export function createGuiaFromAppointment(appointmentId: string): Promise<GuiaFaturamento> {
+  return apiPost(`/tiss/guias/from-appointment/${appointmentId}`, {})
+}
+
+export function createGuia(data: Partial<GuiaFaturamento> & { insurancePlanId: string; tipo: GuiaTipo; nomeBeneficiario: string; numeroCarteirinha: string; valorApresentado: number }): Promise<GuiaFaturamento> {
+  return apiPost('/tiss/guias', data)
+}
+
+export function updateGuia(id: string, data: Partial<GuiaFaturamento>): Promise<GuiaFaturamento> {
+  return apiPatch(`/tiss/guias/${id}`, data)
+}
+
+export function deleteGuia(id: string): Promise<void> {
+  return apiDelete(`/tiss/guias/${id}`)
+}
+
+export function getLotes(planId?: string): Promise<LoteFaturamento[]> {
+  return apiGet(`/tiss/lotes${planId ? '?planId=' + planId : ''}`)
+}
+
+export function createLote(data: { insurancePlanId: string; competencia: string; observacoes?: string }): Promise<LoteFaturamento> {
+  return apiPost('/tiss/lotes', data)
+}
+
+export function updateLote(id: string, data: {
+  status?:        LoteStatus
+  observacoes?:   string
+  dataEnvio?:     string
+  addGuiaIds?:    string[]
+  removeGuiaIds?: string[]
+}): Promise<LoteFaturamento> {
+  return apiPatch(`/tiss/lotes/${id}`, data)
+}
+
+export function deleteLote(id: string): Promise<void> {
+  return apiDelete(`/tiss/lotes/${id}`)
+}
+
+export function getConsultasElegiveis(planId?: string): Promise<any[]> {
+  return apiGet(`/tiss/consultas-elegiveis${planId ? '?planId=' + planId : ''}`)
+}
+
+export function downloadXmlTiss(loteId: string): Promise<string> {
+  const token = getToken()
+  const base  = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+  return fetch(`${base}/api/tiss/lotes/${loteId}/xml`, {
+    headers: { Authorization: `Bearer ${token}` },
+  }).then(r => {
+    if (!r.ok) throw new Error('Erro ao gerar XML')
+    return r.text()
+  })
+}
