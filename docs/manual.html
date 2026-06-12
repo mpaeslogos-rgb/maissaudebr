@@ -234,8 +234,8 @@
     <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
   </div>
   <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
-  <div class="tag">Versão 2.0 · Junho 2026</div>
-  <p class="version">Documento de uso interno · Atualizado em 03/06/2026</p>
+  <div class="tag">Versão 2.1 · Junho 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 12/06/2026</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -262,14 +262,15 @@
     <div class="toc-item"><span class="num">9a.</span> &nbsp;&nbsp;↳ Atestado Médico <span class="dots"></span></div>
     <div class="toc-item"><span class="num">10.</span> Exames e Procedimentos <span class="dots"></span></div>
     <div class="toc-item"><span class="num">11.</span> Convênios e Planos de Saúde <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">12.</span> Estoque de Materiais <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">13.</span> Financeiro <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">13a.</span> &nbsp;&nbsp;↳ Conciliação de Médicos (Repasses) <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">14.</span> Chats / WhatsApp <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">15.</span> Relatórios <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">16.</span> Configurações <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">17.</span> Auditoria (Admin) <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">18.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">12.</span> Faturamento TISS <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">13.</span> Estoque de Materiais <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">14.</span> Financeiro <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">14a.</span> &nbsp;&nbsp;↳ Conciliação de Médicos (Repasses) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">15.</span> Chats / WhatsApp <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">16.</span> Relatórios <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">17.</span> Configurações <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">18.</span> Auditoria (Admin) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">19.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -463,17 +464,18 @@
   <h3>Agendar Nova Consulta</h3>
   <ol class="steps">
     <li><span>Clique no botão <strong>"+ Nova Consulta"</strong> (canto superior direito) <em>ou</em> clique diretamente em um horário vazio na grade semanal.</span></li>
-    <li><span>Selecione o <strong>Paciente</strong> no menu suspenso. A lista mostra nome e CPF.</span></li>
+    <li><span>Selecione o <strong>Paciente</strong> no menu suspenso. A lista mostra nome e CPF. Caso o paciente ainda não esteja cadastrado, clique em <strong>"+ Novo paciente"</strong> ao lado do campo para cadastrá-lo na hora sem sair do formulário.</span></li>
     <li><span>Selecione o <strong>Médico</strong>. O campo <strong>Valor da consulta</strong> é preenchido automaticamente com o valor cadastrado do médico.</span></li>
     <li><span>Informe a <strong>Data</strong> e o <strong>Horário de início</strong> (hora e minuto).</span></li>
     <li><span>Escolha a <strong>Duração</strong> (15 min a 2 horas).</span></li>
+    <li><span><em>Opcional:</em> Selecione o <strong>Convênio</strong> se a consulta for por plano de saúde. O valor do contrato ativo é preenchido automaticamente.</span></li>
     <li><span><em>Opcional:</em> Edite o <strong>Valor</strong> se houver negociação de preço diferente do padrão.</span></li>
     <li><span><em>Opcional:</em> Adicione um <strong>Motivo</strong> da consulta.</span></li>
     <li><span>Clique em <strong>"Agendar Consulta"</strong>.</span></li>
   </ol>
 
   <div class="tip">
-    💡 O valor da consulta digitado vai automaticamente para o <strong>Contas a Receber</strong> do módulo Financeiro.
+    💡 O valor da consulta digitado vai automaticamente para o <strong>Contas a Receber</strong> do módulo Financeiro. Consultas com convênio ficam disponíveis para faturamento TISS no módulo <strong>12. Faturamento TISS</strong>.
   </div>
 
   <div class="screenshot">
@@ -1113,6 +1115,19 @@
     </div>
   </div>
 
+  <h3>Atividades realizadas em 12/06/2026</h3>
+  <ul class="steps">
+    <li><span><strong>Faturamento TISS — Fase 1 completa:</strong> modelos Prisma (<code>GuiaFaturamento</code>, <code>LoteFaturamento</code>, <code>GuiaProcedimento</code>), migration aplicada, rotas REST no backend (<code>/api/tiss/*</code>), gerador de XML TISS 3.05 com hash MD5, página frontend com abas Guias e Lotes, menu lateral atualizado.</span></li>
+    <li><span><strong>+Novo Paciente na Agenda:</strong> botão adicionado ao formulário de nova consulta; abre modal de cadastro rápido (<code>PatientCreateModal</code>) com formatação automática de CPF e telefone. Ao salvar, o paciente já fica selecionado na consulta.</span></li>
+    <li><span><strong>Logo CardioSul:</strong> logotipo retangular ampliado na sidebar/header (sem exibir nome em texto) e 30% maior na página de login.</span></li>
+    <li><span><strong>Saudação dinâmica no Dashboard:</strong> nome exibido agora reflete o usuário logado via <code>useAuth()</code> — regra aplicada a todo o sistema.</span></li>
+    <li><span><strong>Reset CardioSul:</strong> dados operacionais zerados (agendamentos, prontuários, financeiro, estoque, TISS) mantendo todos os cadastros, usuários e configurações.</span></li>
+  </ul>
+
+  <div class="tip">
+    ✅ Versão 2.1 — Faturamento TISS disponível para uso operacional.
+  </div>
+
   <h3>Atividades realizadas em 2026-06-08</h3>
   <ul class="steps">
     <li><span>Adicionadas fixtures de teste Cypress em <code>frontend/cypress/fixtures/</code>.</span></li>
@@ -1435,15 +1450,84 @@
   </table>
 
   <h3>Faturamento TISS</h3>
-  <p>Com os procedimentos TUSS cadastrados, o sistema acumula os dados necessários para o faturamento. A exportação do arquivo XML TISS 3.05 (para envio no portal do convênio) será disponibilizada em breve nesta mesma tela.</p>
+  <p>Com os procedimentos TUSS cadastrados, o sistema acumula os dados necessários para o faturamento eletrônico. Consulte o módulo <strong>12. Faturamento TISS</strong> para gerar guias, organizar lotes e exportar o arquivo XML TISS 3.05 para envio no portal da operadora.</p>
   <p>[ Inserir print da tela ]</p>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════ -->
-<!-- CAP. 12 — Estoque de Materiais                            -->
+<!-- CAP. 12 — Faturamento TISS                                -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="chapter">
-  <h2>12. Estoque de Materiais</h2>
+  <h2>12. Faturamento TISS</h2>
+  <p>O módulo <strong>Faturamento TISS</strong> implementa a <em>Fase 1 — Faturamento</em> do padrão TISS 3.05 (Troca de Informações em Saúde Suplementar, ANS). Permite criar guias de atendimento, organizá-las em lotes e exportar o arquivo XML oficial para envio às operadoras de planos de saúde.</p>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-yellow">RECEPCIONISTA</span>
+  </div>
+
+  <h3>Conceitos Principais</h3>
+  <table>
+    <tr><th>Termo</th><th>Definição</th></tr>
+    <tr><td>Guia</td><td>Documento eletrônico que registra um atendimento realizado ao beneficiário (consulta ou procedimento). Corresponde a uma <strong>Guia de Consulta</strong> ou <strong>Guia SP/SADT</strong> no padrão TISS.</td></tr>
+    <tr><td>Lote</td><td>Agrupamento de guias enviadas à operadora em um único arquivo XML. Cada lote possui um número sequencial por plano.</td></tr>
+    <tr><td>Código TUSS</td><td>Código de procedimento padrão ANS (ex: 10101012 = Consulta em consultório). Deve estar cadastrado na tabela de procedimentos do convênio.</td></tr>
+    <tr><td>XML TISS 3.05</td><td>Arquivo no formato oficial ANS com hash MD5 de integridade. É o arquivo entregue à operadora para reembolso.</td></tr>
+  </table>
+
+  <h3>Pré-requisitos</h3>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li>Convênio cadastrado com <strong>Código ANS</strong> e <strong>Código do Prestador na Operadora</strong>.</li>
+    <li>Procedimentos TUSS vinculados ao contrato do plano.</li>
+    <li>Consultas no status <strong>Concluída</strong> com convênio selecionado.</li>
+  </ul>
+
+  <h3>Aba — Guias Avulsas</h3>
+  <ol class="steps">
+    <li><span>Acesse <strong>Faturamento TISS</strong> no menu lateral.</span></li>
+    <li><span>Na aba <strong>"Guias Avulsas"</strong>, visualize as consultas concluídas com convênio ainda sem guia gerada.</span></li>
+    <li><span>Clique em <strong>"Gerar Guia"</strong> na linha da consulta desejada. O sistema cria automaticamente a guia com os dados da consulta (paciente, médico, data, procedimentos).</span></li>
+    <li><span>A guia aparece na lista com status <strong>Pendente</strong>.</span></li>
+    <li><span>Use os botões de status para atualizar conforme necessário: <em>Autorizada → Em Recurso → Glosada → Paga</em>.</span></li>
+  </ol>
+
+  <h3>Esteira de Status das Guias</h3>
+  <table>
+    <tr><th>Status</th><th>Significado</th></tr>
+    <tr><td><span class="badge badge-yellow">Pendente</span></td><td>Guia gerada, aguardando envio ao convênio</td></tr>
+    <tr><td><span class="badge badge-blue">Enviada</span></td><td>Incluída em um lote e XML exportado</td></tr>
+    <tr><td><span class="badge badge-green">Autorizada</span></td><td>Convênio autorizou o pagamento</td></tr>
+    <tr><td><span class="badge badge-red">Glosada</span></td><td>Convênio recusou total ou parcialmente</td></tr>
+    <tr><td><span class="badge badge-blue">Em Recurso</span></td><td>Glosa contestada, aguardando resposta</td></tr>
+    <tr><td><span class="badge badge-green">Paga</span></td><td>Pagamento confirmado pela operadora</td></tr>
+  </table>
+
+  <h3>Aba — Lotes</h3>
+  <ol class="steps">
+    <li><span>Na aba <strong>"Lotes"</strong>, clique em <strong>"+ Novo Lote"</strong> e selecione o convênio.</span></li>
+    <li><span>Selecione as guias que devem compor o lote marcando as caixas de seleção.</span></li>
+    <li><span>Clique em <strong>"Adicionar Guias Selecionadas"</strong>. O sistema calcula automaticamente o valor total do lote.</span></li>
+    <li><span>Quando pronto para envio, mude o status para <strong>"Fechado"</strong>.</span></li>
+    <li><span>Clique em <strong>"Exportar XML TISS"</strong> para baixar o arquivo <code>.xml</code> no padrão TISS 3.05.</span></li>
+    <li><span>Faça o upload do arquivo no portal da operadora.</span></li>
+  </ol>
+
+  <div class="alert">
+    ⚠️ <strong>Integridade do arquivo:</strong> O XML exportado contém um hash MD5 no epilogo conforme exigido pela ANS. Não modifique o arquivo manualmente — qualquer alteração invalidará o hash.
+  </div>
+
+  <div class="tip">
+    💡 <strong>Dica:</strong> Um lote deve conter guias de um único convênio. O número do lote é sequencial por operadora (reinicia em 1 a cada plano).
+  </div>
+
+  <p>[ Inserir print da tela ]</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 13 — Estoque de Materiais                            -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="chapter">
+  <h2>13. Estoque de Materiais</h2>
   <p>O módulo <strong>Estoque</strong> controla os materiais e insumos utilizados nas consultas e procedimentos.</p>
 
   <h3>Cadastro de Materiais</h3>
@@ -1480,7 +1564,7 @@
 
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.0 · Junho 2026<br>
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.1 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
