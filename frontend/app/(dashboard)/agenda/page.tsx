@@ -25,6 +25,7 @@ import {
 } from '@/lib/api'
 import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '@/lib/types'
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
+import { PatientCreateModal } from '@/components/PatientCreateModal'
 import { Cid10Search } from '@/components/Cid10Search'
 
 // ─── Helpers de status ───────────────────────────────────────────────────────
@@ -90,6 +91,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
   const [saving, setSaving]               = useState(false)
   const [error, setError]                 = useState('')
   const [showNewDoctor, setShowNewDoctor]  = useState(false)
+  const [showNewPatient, setShowNewPatient] = useState(false)
 
   const [patientId, setPatientId]         = useState('')
   const [doctorId, setDoctorId]           = useState('')
@@ -164,13 +166,22 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
             <>
               {/* Paciente */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Paciente <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Paciente <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPatient(true)}
+                    className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                  >
+                    + Novo paciente
+                  </button>
+                </div>
                 <select value={patientId} onChange={e => setPatientId(e.target.value)} className="input">
                   <option value="">Selecione um paciente</option>
                   {patients.map(p => (
-                    <option key={p.id} value={p.id}>{p.fullName} — {p.cpf}</option>
+                    <option key={p.id} value={p.id}>{p.fullName} — {p.cpf ?? p.phone}</option>
                   ))}
                 </select>
               </div>
@@ -334,6 +345,17 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
           )}
         </form>
       </div>
+
+      {showNewPatient && (
+        <PatientCreateModal
+          onClose={() => setShowNewPatient(false)}
+          onSaved={(newPat) => {
+            setPatients(prev => [newPat, ...prev])
+            setPatientId(newPat.id)
+            setShowNewPatient(false)
+          }}
+        />
+      )}
 
       {showNewDoctor && (
         <DoctorCreateModal
