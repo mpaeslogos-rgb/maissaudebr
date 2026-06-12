@@ -23,6 +23,7 @@ import {
   FlaskConical,
   Package,
   HeartHandshake,
+  ReceiptText,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 
@@ -44,6 +45,7 @@ const menu: MenuItem[] = [
   { href: "/exames",        label: "Exames e Proced.", icon: FlaskConical,  roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/estoque",       label: "Estoque",        icon: Package,        roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/convenios",     label: "Convênios",      icon: HeartHandshake, roles: ['ADMIN', 'RECEPTIONIST'] },
+  { href: "/faturamento",   label: "Faturamento TISS", icon: ReceiptText,  roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,      roles: ['ADMIN'] },
   { href: "/configuracoes", label: "Configurações",  icon: Settings,       roles: ['ADMIN'] },

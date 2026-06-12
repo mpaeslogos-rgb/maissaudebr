@@ -299,6 +299,7 @@ model Appointment {
   doctorPayment  DoctorPayment?
   examOrders     ExamOrder[]
   stockMovements StockMovement[]
+  guia           GuiaFaturamento?
 
   @@index([patientId])
   @@index([doctorId])
@@ -650,15 +651,19 @@ model PrescriptionItem {
 model InsurancePlan {
   id          String   @id @default(cuid())
   name        String
-  ansCode     String?  // Código ANS do plano
+  ansCode     String?  // Código ANS (registro da operadora na ANS)
   phone       String?
   email       String?
   isActive    Boolean  @default(true)
+  // Código do prestador (clínica) junto a esta operadora — obrigatório para XML TISS
+  codigoPrestadorNaOperadora String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   contracts    InsuranceContract[]
   appointments Appointment[]
+  guias        GuiaFaturamento[]
+  lotes        LoteFaturamento[]
 
   @@index([name])
   @@map("insurance_plans")
@@ -786,4 +791,114 @@ model StockMovement {
   @@index([materialId])
   @@index([type])
   @@map("stock_movements")
+}
+
+// ============================================
+// TISS — FATURAMENTO A CONVÊNIOS
+// ============================================
+
+enum GuiaTipo {
+  CONSULTA
+  SP_SADT
+}
+
+enum GuiaStatus {
+  PENDENTE
+  AUTORIZADA
+  NEGADA
+  FATURADA
+  PAGA
+  GLOSADA
+}
+
+enum LoteStatus {
+  ABERTO
+  FECHADO
+  ENVIADO
+  LIQUIDADO
+}
+
+model LoteFaturamento {
+  id              String     @id @default(cuid())
+  insurancePlanId String
+  numeroLote      Int
+  competencia     String     // "YYYY-MM"
+  status          LoteStatus @default(ABERTO)
+  valorTotal      Float      @default(0)
+  dataEnvio       DateTime?
+  observacoes     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  plan  InsurancePlan   @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
+  guias GuiaFaturamento[]
+
+  @@unique([insurancePlanId, numeroLote])
+  @@index([insurancePlanId])
+  @@index([status])
+  @@map("lotes_faturamento")
+}
+
+model GuiaFaturamento {
+  id              String     @id @default(cuid())
+  loteId          String?
+  insurancePlanId String
+  appointmentId   String?    @unique
+  tipo            GuiaTipo
+  status          GuiaStatus @default(PENDENTE)
+  numeroGuia      String
+
+  // Autorização
+  numeroAutorizacao   String?
+  dataAutorizacao     DateTime?
+
+  // Beneficiário (desnormalizado para o XML)
+  nomeBeneficiario    String
+  numeroCarteirinha   String
+  validadeCarteirinha String?  // "MM/YYYY"
+
+  // Executante
+  codigoPrestadorNaOperadora String?
+
+  // Valores
+  valorApresentado Float
+  valorAprovado    Float?
+  motivoGlosa      String?
+
+  // Dados clínicos (Guia Consulta)
+  tipoConsulta       Int?    // 1=1º atend, 2=retorno, 3=pré-natal
+  tussCode           String? // código TUSS principal
+  cbos               String? // CBOS do médico executante
+  crmExecutante      String?
+  crmEstado          String?
+  nomeExecutante     String?
+  indicacaoAcidente  Int     @default(9) // 9=outros, 1=trabalho, 2=trânsito
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lote          LoteFaturamento?  @relation(fields: [loteId], references: [id], onDelete: SetNull)
+  plan          InsurancePlan     @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
+  appointment   Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  procedimentos GuiaProcedimento[]
+
+  @@index([insurancePlanId])
+  @@index([loteId])
+  @@index([status])
+  @@map("guias_faturamento")
+}
+
+model GuiaProcedimento {
+  id            String  @id @default(cuid())
+  guiaId        String
+  tussCode      String
+  descricao     String
+  quantidade    Float   @default(1)
+  valorUnitario Float
+  valorTotal    Float
+
+  guia GuiaFaturamento @relation(fields: [guiaId], references: [id], onDelete: Cascade)
+
+  @@index([guiaId])
+  @@map("guia_procedimentos")
 }

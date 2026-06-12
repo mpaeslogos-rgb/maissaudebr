@@ -39,6 +39,7 @@ import { examCatalogRoutes } from './routes/exam-catalog.routes'
 import { examOrdersRoutes } from './routes/exam-orders.routes'
 import { insurancePlansRoutes } from './routes/insurance-plans.routes'
 import { stockRoutes } from './routes/stock.routes'
+import { tissRoutes } from './routes/tiss.routes'
 
 const app = Fastify({ logger: true })
 
@@ -144,6 +145,7 @@ async function bootstrap() {
   await app.register(examOrdersRoutes)
   await app.register(insurancePlansRoutes)
   await app.register(stockRoutes)
+  await app.register(tissRoutes, { prefix: '/api' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'
