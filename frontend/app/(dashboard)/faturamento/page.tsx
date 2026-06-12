@@ -136,7 +136,7 @@ export default function FaturamentoPage() {
 
   async function handleAddGuiasAoLote() {
     if (!showAddGuias || selectedGuias.size === 0) return;
-    const lote = await updateLote(showAddGuias, { addGuiaIds: [...selectedGuias] });
+    const lote = await updateLote(showAddGuias, { addGuiaIds: Array.from(selectedGuias) });
     setLotes(prev => prev.map(l => l.id === showAddGuias ? lote : l));
     setGuias(prev => prev.filter(g => !selectedGuias.has(g.id)));
     setSelectedGuias(new Set());
