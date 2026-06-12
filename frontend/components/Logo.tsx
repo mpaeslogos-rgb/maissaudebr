@@ -7,10 +7,10 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ size = "md", variant = "full" }) => {
   const sizes = {
-    sm: { icon: 32, text: "text-base" },
-    md: { icon: 44, text: "text-xl" },
-    lg: { icon: 64, text: "text-3xl" },
-    xl: { icon: 96, text: "text-5xl" },
+    sm: { icon: 32, text: "text-base", logoH: 40,  logoMaxW: 140 },
+    md: { icon: 44, text: "text-xl",   logoH: 60,  logoMaxW: 200 },
+    lg: { icon: 64, text: "text-3xl",  logoH: 80,  logoMaxW: 280 },
+    xl: { icon: 96, text: "text-5xl",  logoH: 110, logoMaxW: 380 },
   };
   const s = sizes[size];
 
@@ -19,34 +19,14 @@ export const Logo: React.FC<LogoProps> = ({ size = "md", variant = "full" }) => 
 
   // Logo customizado: usa <img> para suportar SVG/PNG sem restrições do next/image
   if (customLogoUrl) {
-    if (variant === "icon") {
-      return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={customLogoUrl}
-          alt={customName || "Logo"}
-          width={s.icon}
-          height={s.icon}
-          style={{ objectFit: "contain" }}
-        />
-      );
-    }
     return (
-      <div className="flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={customLogoUrl}
-          alt={customName || "Logo"}
-          width={s.icon}
-          height={s.icon}
-          style={{ objectFit: "contain" }}
-        />
-        {customName && (
-          <div className={`${s.text} font-bold leading-tight tracking-tight`}>
-            <span className="text-primary-600">{customName}</span>
-          </div>
-        )}
-      </div>
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={customLogoUrl}
+        alt={customName || "Logo"}
+        height={s.logoH}
+        style={{ width: "auto", maxWidth: s.logoMaxW, objectFit: "contain" }}
+      />
     );
   }
 
