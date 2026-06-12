@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, Calendar, Wallet, AlertCircle,
   ArrowRight, Plus, Clock, TrendingUp, Loader2, X,
@@ -32,6 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState({
     patients: [] as any[],
     appointments: [] as Appointment[],
@@ -113,7 +115,7 @@ export default function DashboardPage() {
       {/* Saudação */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Olá, Dr(a). Marcos!</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Olá, {user?.name}!</h1>
           <p className="text-slate-500 text-sm">Aqui está o que está acontecendo na clínica hoje.</p>
         </div>
         <Link href="/agenda" className="btn-primary flex items-center gap-2">
