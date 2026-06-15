@@ -14,8 +14,8 @@ export default function LoginPage() {
   const { login } = useAuth();
 
   // ── Estado do formulário ───────────────────────────────────────────────────
-  const [email, setEmail] = useState("admin@maissaudebr.com");
-  const [password, setPassword] = useState("senha123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
 
   // ── Estado de feedback ────────────────────────────────────────────────────
