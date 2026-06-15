@@ -43,6 +43,12 @@ const exam_catalog_routes_1 = require("./routes/exam-catalog.routes");
 const exam_orders_routes_1 = require("./routes/exam-orders.routes");
 const insurance_plans_routes_1 = require("./routes/insurance-plans.routes");
 const stock_routes_1 = require("./routes/stock.routes");
+const tiss_routes_1 = require("./routes/tiss.routes");
+const preventivo_programs_routes_1 = require("./routes/preventivo-programs.routes");
+const patient_enrollments_routes_1 = require("./routes/patient-enrollments.routes");
+const metabolic_markers_routes_1 = require("./routes/metabolic-markers.routes");
+const nps_routes_1 = require("./routes/nps.routes");
+const analytics_routes_1 = require("./routes/analytics.routes");
 const app = (0, fastify_1.default)({ logger: true });
 const WEAK_SECRETS = new Set([
     'troque-este-segredo',
@@ -136,6 +142,12 @@ async function bootstrap() {
     await app.register(exam_orders_routes_1.examOrdersRoutes);
     await app.register(insurance_plans_routes_1.insurancePlansRoutes);
     await app.register(stock_routes_1.stockRoutes);
+    await app.register(tiss_routes_1.tissRoutes, { prefix: '/api' });
+    await app.register(preventivo_programs_routes_1.preventivoProgramsRoutes, { prefix: '/api' });
+    await app.register(patient_enrollments_routes_1.patientEnrollmentsRoutes, { prefix: '/api' });
+    await app.register(metabolic_markers_routes_1.metabolicMarkersRoutes, { prefix: '/api' });
+    await app.register(nps_routes_1.npsRoutes, { prefix: '/api' });
+    await app.register(analytics_routes_1.analyticsRoutes, { prefix: '/api' });
     const PORT = Number(process.env.PORT) || 3001;
     const HOST = '0.0.0.0';
     await app.ready();

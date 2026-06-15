@@ -40,6 +40,11 @@ import { examOrdersRoutes } from './routes/exam-orders.routes'
 import { insurancePlansRoutes } from './routes/insurance-plans.routes'
 import { stockRoutes } from './routes/stock.routes'
 import { tissRoutes } from './routes/tiss.routes'
+import { preventivoProgramsRoutes } from './routes/preventivo-programs.routes'
+import { patientEnrollmentsRoutes } from './routes/patient-enrollments.routes'
+import { metabolicMarkersRoutes } from './routes/metabolic-markers.routes'
+import { npsRoutes } from './routes/nps.routes'
+import { analyticsRoutes } from './routes/analytics.routes'
 
 const app = Fastify({ logger: true })
 
@@ -146,6 +151,11 @@ async function bootstrap() {
   await app.register(insurancePlansRoutes)
   await app.register(stockRoutes)
   await app.register(tissRoutes, { prefix: '/api' })
+  await app.register(preventivoProgramsRoutes, { prefix: '/api' })
+  await app.register(patientEnrollmentsRoutes, { prefix: '/api' })
+  await app.register(metabolicMarkersRoutes,   { prefix: '/api' })
+  await app.register(npsRoutes,                { prefix: '/api' })
+  await app.register(analyticsRoutes,          { prefix: '/api' })
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'
