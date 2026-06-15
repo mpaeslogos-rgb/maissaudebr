@@ -9,6 +9,9 @@ import {
   deletePrescription,
   uploadPatientPhoto,
   getDoctors,
+  apiGet,
+  apiPost,
+  apiDelete,
 } from '@/lib/api'
 import type {
   Patient,
@@ -578,15 +581,147 @@ function HistoricoTab({
   )
 }
 
+// ─── Aba MARCADORES METABÓLICOS ───────────────────────────────────────────────
+
+interface MetabolicMarker {
+  id: string; date: string; weight?: number; bmi?: number;
+  systolicBP?: number; diastolicBP?: number; glucose?: number; hba1c?: number;
+  totalChol?: number; ldl?: number; hdl?: number; triglycerides?: number; notes?: string;
+}
+
+function MarcadoresTab({ patientId }: { patientId: string }) {
+  const [markers, setMarkers] = useState<MetabolicMarker[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const empty = { date: new Date().toISOString().slice(0, 10), weight: '', bmi: '', systolicBP: '', diastolicBP: '', glucose: '', hba1c: '', totalChol: '', ldl: '', hdl: '', triglycerides: '', notes: '' }
+  const [form, setForm] = useState(empty)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const r = await apiGet<MetabolicMarker[]>(`/metabolic-markers?patientId=${patientId}`)
+    setMarkers(r)
+    setLoading(false)
+  }, [patientId])
+
+  useEffect(() => { load() }, [load])
+
+  const save = async () => {
+    const payload: Record<string, unknown> = { patientId, date: form.date }
+    const numFields = ['weight','bmi','systolicBP','diastolicBP','glucose','hba1c','totalChol','ldl','hdl','triglycerides'] as const
+    for (const f of numFields) {
+      if (form[f] !== '') payload[f] = parseFloat(form[f] as string)
+    }
+    if (form.notes) payload.notes = form.notes
+    await apiPost('/metabolic-markers', payload)
+    setShowForm(false)
+    setForm(empty)
+    load()
+  }
+
+  const del = async (id: string) => {
+    if (!confirm('Remover marcador?')) return
+    await apiDelete(`/metabolic-markers/${id}`)
+    load()
+  }
+
+  const cols: { key: keyof MetabolicMarker; label: string; unit: string }[] = [
+    { key: 'date',        label: 'Data',        unit: '' },
+    { key: 'weight',      label: 'Peso',        unit: 'kg' },
+    { key: 'bmi',         label: 'IMC',         unit: 'kg/m²' },
+    { key: 'systolicBP',  label: 'PA Sistólica',unit: 'mmHg' },
+    { key: 'diastolicBP', label: 'PA Diastól.', unit: 'mmHg' },
+    { key: 'glucose',     label: 'Glicemia',    unit: 'mg/dL' },
+    { key: 'hba1c',       label: 'HbA1c',       unit: '%' },
+    { key: 'totalChol',   label: 'Col. Total',  unit: 'mg/dL' },
+    { key: 'ldl',         label: 'LDL',         unit: 'mg/dL' },
+    { key: 'hdl',         label: 'HDL',         unit: 'mg/dL' },
+    { key: 'triglycerides',label:'Triglicérides',unit: 'mg/dL' },
+  ]
+
+  if (loading) return <p className="text-slate-400 text-sm py-8 text-center">Carregando…</p>
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-slate-500">{markers.length} registro{markers.length !== 1 ? 's' : ''}</p>
+        <button onClick={() => setShowForm(true)} className="text-sm px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700">+ Novo registro</button>
+      </div>
+
+      {markers.length === 0 && !showForm && (
+        <p className="text-slate-400 text-sm py-8 text-center">Nenhum marcador registrado ainda.</p>
+      )}
+
+      {markers.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-50 text-slate-500 uppercase">
+              <tr>
+                {cols.map(c => <th key={c.key} className="px-3 py-2 text-left whitespace-nowrap">{c.label}{c.unit ? ` (${c.unit})` : ''}</th>)}
+                <th className="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[...markers].reverse().map(m => (
+                <tr key={m.id} className="hover:bg-slate-50">
+                  {cols.map(c => (
+                    <td key={c.key} className="px-3 py-2 text-slate-700">
+                      {c.key === 'date'
+                        ? new Date(m.date).toLocaleDateString('pt-BR')
+                        : m[c.key] != null ? String(m[c.key]) : '—'}
+                    </td>
+                  ))}
+                  <td className="px-3 py-2">
+                    <button onClick={() => del(m.id)} className="text-red-400 hover:text-red-600 text-xs">Remover</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="border border-primary-200 bg-primary-50 rounded-xl p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-primary-800">Novo registro de marcadores</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="col-span-2 md:col-span-1">
+              <label className="block text-xs text-slate-600 mb-1">Data *</label>
+              <input type="date" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+            {(['weight','bmi','systolicBP','diastolicBP','glucose','hba1c','totalChol','ldl','hdl','triglycerides'] as const).map(field => {
+              const col = cols.find(c => c.key === field)!
+              return (
+                <div key={field}>
+                  <label className="block text-xs text-slate-600 mb-1">{col.label} ({col.unit})</label>
+                  <input type="number" step="0.1" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm" value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} />
+                </div>
+              )
+            })}
+            <div className="col-span-2 md:col-span-4">
+              <label className="block text-xs text-slate-600 mb-1">Observações</label>
+              <input className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={save} className="text-sm px-4 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Salvar</button>
+            <button onClick={() => { setShowForm(false); setForm(empty) }} className="text-sm px-4 py-1.5 border border-slate-300 rounded-lg">Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 
-type Tab = 'ficha' | 'anamnese' | 'prescricoes' | 'historico'
+type Tab = 'ficha' | 'anamnese' | 'prescricoes' | 'historico' | 'marcadores'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'ficha',       label: 'Ficha' },
   { key: 'anamnese',    label: 'Anamnese' },
   { key: 'prescricoes', label: 'Prescrições' },
   { key: 'historico',   label: 'Histórico' },
+  { key: 'marcadores',  label: 'Marcadores Metab.' },
 ]
 
 export default function PatientDetailPage() {
@@ -673,6 +808,7 @@ export default function PatientDetailPage() {
         {tab === 'anamnese' && <AnamneseTab records={records} />}
         {tab === 'prescricoes' && <PrescricoesTab patientId={id} />}
         {tab === 'historico' && <HistoricoTab appointments={appointments} records={records} />}
+        {tab === 'marcadores' && <MarcadoresTab patientId={id} />}
       </div>
     </div>
   )

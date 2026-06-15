@@ -24,6 +24,8 @@ import {
   Package,
   HeartHandshake,
   ReceiptText,
+  Activity,
+  TrendingUp,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 
@@ -47,6 +49,8 @@ const menu: MenuItem[] = [
   { href: "/convenios",     label: "Convênios",      icon: HeartHandshake, roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/faturamento",   label: "Faturamento TISS", icon: ReceiptText,  roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },
+  { href: "/programas",     label: "Prog. Preventivos", icon: Activity,   roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
+  { href: "/analytics",     label: "Analytics",      icon: TrendingUp,     roles: ['ADMIN'] },
   { href: "/relatorios",    label: "Relatórios",     icon: BarChart3,      roles: ['ADMIN'] },
   { href: "/configuracoes", label: "Configurações",  icon: Settings,       roles: ['ADMIN'] },
   { href: "/admin/usuarios",    label: "Usuários",    icon: ShieldCheck,    roles: ['ADMIN'] },

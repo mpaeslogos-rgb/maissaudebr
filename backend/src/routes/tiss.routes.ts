@@ -285,8 +285,8 @@ export async function tissRoutes(app: FastifyInstance) {
       .map(g => ({
         numeroGuia:                 g.numeroGuia,
         numeroAutorizacao:          g.numeroAutorizacao ?? undefined,
-        dataAtendimento:            (g.appointment as any)?.startTime
-                                      ? new Date((g.appointment as any).startTime).toISOString().substring(0, 10)
+        dataAtendimento:            (g as any).appointment?.startTime
+                                      ? new Date((g as any).appointment.startTime).toISOString().substring(0, 10)
                                       : new Date(g.createdAt).toISOString().substring(0, 10),
         nomeBeneficiario:           g.nomeBeneficiario,
         numeroCarteirinha:          g.numeroCarteirinha,

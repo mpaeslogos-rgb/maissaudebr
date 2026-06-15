@@ -108,6 +108,13 @@ enum Gender {
   OTHER
 }
 
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  COMPLETED
+}
+
 // ============================================
 // USUÁRIOS E AUTENTICAÇÃO
 // ============================================
@@ -223,6 +230,9 @@ model Patient {
   prescriptions   Prescription[]
   consents        Consent[]
   examOrders      ExamOrder[]
+  enrollments     PatientEnrollment[]
+  metabolicMarkers MetabolicMarker[]
+  npsResponses    NpsResponse[]
 
   @@index([cpf])
   @@index([fullName])
@@ -300,6 +310,7 @@ model Appointment {
   examOrders     ExamOrder[]
   stockMovements StockMovement[]
   guia           GuiaFaturamento?
+  npsResponse    NpsResponse?
 
   @@index([patientId])
   @@index([doctorId])
@@ -427,6 +438,7 @@ model Payment {
   id              String         @id @default(cuid())
   patientId       String
   appointmentId   String?        @unique
+  enrollmentId    String?
   amount          Float
   status          PaymentStatus  @default(PENDING)
   method          PaymentMethod?
@@ -437,8 +449,9 @@ model Payment {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  patient        Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment    Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  patient        Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment    Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  enrollment     PatientEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
   doctorPayment  DoctorPayment?
   examOrder      ExamOrder?
 
@@ -901,4 +914,101 @@ model GuiaProcedimento {
 
   @@index([guiaId])
   @@map("guia_procedimentos")
+}
+
+// ============================================
+// PROGRAMAS PREVENTIVOS
+// ============================================
+
+model PreventivoProgram {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  durationDays Int      // duração total do programa em dias
+  monthlyFee   Float    // mensalidade (R$)
+  entryFee     Float    @default(0) // taxa de entrada (R$)
+  clinicScope  String?  // escopo clínico (texto livre)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  enrollments PatientEnrollment[]
+
+  @@index([isActive])
+  @@map("preventivo_programs")
+}
+
+model PatientEnrollment {
+  id              String           @id @default(cuid())
+  patientId       String
+  programId       String
+  startDate       DateTime
+  endDate         DateTime?
+  status          EnrollmentStatus @default(ACTIVE)
+  monthlyFee      Float            // pode sobrescrever o valor do programa
+  nextBillingDate DateTime
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  patient  Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  program  PreventivoProgram @relation(fields: [programId], references: [id])
+  payments Payment[]
+
+  @@index([patientId])
+  @@index([status])
+  @@index([nextBillingDate])
+  @@map("patient_enrollments")
+}
+
+// ============================================
+// MARCADORES METABÓLICOS
+// ============================================
+
+model MetabolicMarker {
+  id            String   @id @default(cuid())
+  patientId     String
+  date          DateTime
+  weight        Float?   // kg
+  bmi           Float?   // kg/m²
+  systolicBP    Float?   // mmHg
+  diastolicBP   Float?   // mmHg
+  glucose       Float?   // mg/dL (glicemia em jejum)
+  hba1c         Float?   // % (hemoglobina glicada)
+  totalChol     Float?   // mg/dL (colesterol total)
+  ldl           Float?   // mg/dL
+  hdl           Float?   // mg/dL
+  triglycerides Float?   // mg/dL
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([date])
+  @@map("metabolic_markers")
+}
+
+// ============================================
+// NPS — SATISFAÇÃO PÓS-CONSULTA
+// ============================================
+
+model NpsResponse {
+  id            String    @id @default(cuid())
+  patientId     String
+  appointmentId String?   @unique
+  score         Int       // 0–10 (NPS)
+  comment       String?
+  sentAt        DateTime? // quando a mensagem Z-API foi enviada
+  respondedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([score])
+  @@map("nps_responses")
 }
