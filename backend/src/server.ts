@@ -151,11 +151,11 @@ async function bootstrap() {
   await app.register(insurancePlansRoutes)
   await app.register(stockRoutes)
   await app.register(tissRoutes, { prefix: '/api' })
-  await app.register(preventivoProgramsRoutes, { prefix: '/api' })
-  await app.register(patientEnrollmentsRoutes, { prefix: '/api' })
-  await app.register(metabolicMarkersRoutes,   { prefix: '/api' })
-  await app.register(npsRoutes,                { prefix: '/api' })
-  await app.register(analyticsRoutes,          { prefix: '/api' })
+  await app.register(preventivoProgramsRoutes)
+  await app.register(patientEnrollmentsRoutes)
+  await app.register(metabolicMarkersRoutes)
+  await app.register(npsRoutes)
+  await app.register(analyticsRoutes)
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

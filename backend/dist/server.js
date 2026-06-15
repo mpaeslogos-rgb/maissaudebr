@@ -143,11 +143,11 @@ async function bootstrap() {
     await app.register(insurance_plans_routes_1.insurancePlansRoutes);
     await app.register(stock_routes_1.stockRoutes);
     await app.register(tiss_routes_1.tissRoutes, { prefix: '/api' });
-    await app.register(preventivo_programs_routes_1.preventivoProgramsRoutes, { prefix: '/api' });
-    await app.register(patient_enrollments_routes_1.patientEnrollmentsRoutes, { prefix: '/api' });
-    await app.register(metabolic_markers_routes_1.metabolicMarkersRoutes, { prefix: '/api' });
-    await app.register(nps_routes_1.npsRoutes, { prefix: '/api' });
-    await app.register(analytics_routes_1.analyticsRoutes, { prefix: '/api' });
+    await app.register(preventivo_programs_routes_1.preventivoProgramsRoutes);
+    await app.register(patient_enrollments_routes_1.patientEnrollmentsRoutes);
+    await app.register(metabolic_markers_routes_1.metabolicMarkersRoutes);
+    await app.register(nps_routes_1.npsRoutes);
+    await app.register(analytics_routes_1.analyticsRoutes);
     const PORT = Number(process.env.PORT) || 3001;
     const HOST = '0.0.0.0';
     await app.ready();
