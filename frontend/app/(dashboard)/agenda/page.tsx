@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText, FlaskConical as FlaskIcon, ClipboardCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText, FlaskConical as FlaskIcon, ClipboardCheck, ShieldCheck, Loader2 } from 'lucide-react'
 import {
   getAppointments,
   createAppointment,
@@ -18,6 +18,8 @@ import {
   getExamOrders,
   getExamCatalog,
   createExamOrder,
+  createAtestado,
+  initSignature,
   type ClinicConfig,
   type InsurancePlan,
   type ExamOrder,
@@ -586,6 +588,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   // Modal: Atestado Médico
   const [showAtestadoModal, setShowAtestadoModal] = useState(false)
   const [atestadoForm, setAtestadoForm]           = useState({ dias: '', cid: '', finalidade: 'trabalho', observacoes: '', mostrarDiagnostico: false })
+  const [signingAtestado, setSigningAtestado]     = useState(false)
+  const [atestadoSignErr, setAtestadoSignErr]     = useState('')
 
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
@@ -1396,7 +1400,10 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                   className="w-4 h-4 accent-emerald-600" />
                 Incluir diagnóstico no atestado
               </label>
-              <div className="flex gap-3">
+              {atestadoSignErr && (
+                <div className="text-xs text-red-600 bg-red-50 rounded p-2">{atestadoSignErr}</div>
+              )}
+              <div className="flex gap-2 flex-wrap">
                 <button onClick={() => setShowAtestadoModal(false)} className="btn-outline flex-1">Cancelar</button>
                 <button
                   disabled={!atestadoForm.dias}
@@ -1444,7 +1451,39 @@ ${cidLine}${obsLine}
                   }}
                   className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
                 >
-                  Imprimir Atestado
+                  <Printer size={14} className="inline mr-1" /> Imprimir
+                </button>
+                <button
+                  disabled={!atestadoForm.dias || signingAtestado}
+                  onClick={async () => {
+                    const diasNum = parseInt(atestadoForm.dias, 10)
+                    if (!diasNum) return
+                    setSigningAtestado(true)
+                    setAtestadoSignErr('')
+                    try {
+                      const atestado = await createAtestado({
+                        patientId:  apt.patientId,
+                        doctorId:   apt.doctorId,
+                        appointmentId: apt.id,
+                        dias:        diasNum,
+                        cid:         atestadoForm.cid || undefined,
+                        finalidade:  atestadoForm.finalidade as 'trabalho' | 'escola' | 'outro',
+                        observacoes: atestadoForm.observacoes || undefined,
+                        dataAtestado: new Date().toISOString(),
+                      })
+                      const { redirectUrl } = await initSignature({ documentType: 'ATESTADO', referenceId: atestado.id })
+                      setShowAtestadoModal(false)
+                      window.location.href = redirectUrl
+                    } catch (e: any) {
+                      setAtestadoSignErr(e?.message ?? 'Erro ao iniciar assinatura')
+                    } finally {
+                      setSigningAtestado(false)
+                    }
+                  }}
+                  className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                >
+                  {signingAtestado ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                  Assinar Digitalmente
                 </button>
               </div>
             </div>

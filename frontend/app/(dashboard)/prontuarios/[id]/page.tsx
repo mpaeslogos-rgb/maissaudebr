@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Calendar,
   FileText, Pill, Clipboard, MessageSquare, Loader2, Printer,
-  FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart, ClipboardCheck
+  FlaskConical, Upload, Trash2, ExternalLink, X, Activity, Heart, ClipboardCheck, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
-import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, getExamCatalog, createExamOrder, ClinicConfig, ExamCatalog } from "@/lib/api";
+import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, getExamCatalog, createExamOrder, ClinicConfig, ExamCatalog, createAtestado, initSignature } from "@/lib/api";
 import { MedicalRecord, Exam, ExamType, EXAM_TYPE_LABEL } from "@/lib/types";
 
 interface PageProps {
@@ -35,6 +35,8 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const [exameForm, setExameForm]                 = useState({ catalogId: '', scheduledAt: '', notes: '' });
   const [savingExame, setSavingExame]             = useState(false);
   const [exameError, setExameError]               = useState('');
+  const [signingAtestado, setSigningAtestado]     = useState(false);
+  const [atestadoError, setAtestadoError]         = useState('');
 
   useEffect(() => {
     getClinicConfig().then(setClinicConfig).catch(() => {})
@@ -249,6 +251,33 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
     const win = window.open('', '_blank', 'width=820,height=1000')
     if (win) { win.document.write(html); win.document.close() }
     setShowAtestadoModal(false)
+  }
+
+  async function signAtestado() {
+    if (!record) return;
+    const diasNum = parseInt(atestadoForm.dias, 10);
+    if (!diasNum || diasNum < 1) return;
+    setSigningAtestado(true);
+    setAtestadoError('');
+    try {
+      const atestado = await createAtestado({
+        patientId:    record.patientId,
+        doctorId:     record.doctorId,
+        appointmentId: record.appointmentId ?? undefined,
+        dias:          diasNum,
+        cid:           atestadoForm.cid || undefined,
+        finalidade:    atestadoForm.finalidade as 'trabalho' | 'escola' | 'outro',
+        observacoes:   atestadoForm.observacoes || undefined,
+        dataAtestado:  new Date().toISOString(),
+      });
+      const { redirectUrl } = await initSignature({ documentType: 'ATESTADO', referenceId: atestado.id });
+      setShowAtestadoModal(false);
+      window.location.href = redirectUrl;
+    } catch (e: any) {
+      setAtestadoError(e?.message ?? 'Erro ao iniciar assinatura');
+    } finally {
+      setSigningAtestado(false);
+    }
   }
 
   function numberToWords(n: number): string {
@@ -815,14 +844,25 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                 </label>
               )}
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t">
+            {atestadoError && (
+              <div className="mx-5 mb-2 text-xs text-red-600 bg-red-50 rounded p-2">{atestadoError}</div>
+            )}
+            <div className="flex justify-end gap-2 p-5 border-t flex-wrap">
               <button onClick={() => setShowAtestadoModal(false)} className="btn-secondary text-sm">Cancelar</button>
               <button
                 onClick={printAtestado}
                 disabled={!atestadoForm.dias || parseInt(atestadoForm.dias, 10) < 1}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
               >
-                <Printer size={15} /> Gerar Atestado
+                <Printer size={15} /> Imprimir
+              </button>
+              <button
+                onClick={signAtestado}
+                disabled={!atestadoForm.dias || parseInt(atestadoForm.dias, 10) < 1 || signingAtestado}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {signingAtestado ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                Assinar Digitalmente
               </button>
             </div>
           </div>

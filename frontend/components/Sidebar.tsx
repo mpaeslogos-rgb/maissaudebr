@@ -26,6 +26,7 @@ import {
   ReceiptText,
   Activity,
   TrendingUp,
+  PenLine,
 } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 
@@ -48,6 +49,7 @@ const menu: MenuItem[] = [
   { href: "/estoque",       label: "Estoque",        icon: Package,        roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/convenios",     label: "Convênios",      icon: HeartHandshake, roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/faturamento",   label: "Faturamento TISS", icon: ReceiptText,  roles: ['ADMIN', 'RECEPTIONIST'] },
+  { href: "/assinaturas",  label: "Assin. Digital",  icon: PenLine,      roles: ['ADMIN', 'DOCTOR'] },
   { href: "/financeiro",    label: "Financeiro",     icon: DollarSign,     roles: ['ADMIN', 'RECEPTIONIST'] },
   { href: "/programas",     label: "Prog. Preventivos", icon: Activity,   roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'] },
   { href: "/analytics",     label: "Analytics",      icon: TrendingUp,     roles: ['ADMIN'] },
