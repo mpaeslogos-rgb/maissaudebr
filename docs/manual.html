@@ -234,8 +234,8 @@
     <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
   </div>
   <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
-  <div class="tag">Versão 2.2 · Junho 2026</div>
-  <p class="version">Documento de uso interno · Atualizado em 15/06/2026</p>
+  <div class="tag">Versão 2.4 · Junho 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 16/06/2026</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -281,6 +281,12 @@
     <div class="toc-item"><span class="num">20c.</span> &nbsp;&nbsp;↳ Perfil de Risco Preventivo <span class="dots"></span></div>
     <div class="toc-item"><span class="num">21.</span> Analytics e DRE <span class="dots"></span></div>
     <div class="toc-item"><span class="num">21a.</span> &nbsp;&nbsp;↳ KPIs do Piloto PREVIA-Digital <span class="dots"></span></div>
+  </div>
+
+  <div class="toc-section">
+    <h3>Assinatura Digital ICP-Brasil</h3>
+    <div class="toc-item"><span class="num">22.</span> Assinatura Digital <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">22a.</span> &nbsp;&nbsp;↳ Configuração do Provedor (Médico) <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -821,11 +827,15 @@
         <li><strong>Incluir diagnóstico</strong> — marque se quiser que o diagnóstico registrado no prontuário apareça no atestado (por padrão fica oculto para preservar a privacidade do paciente).</li>
       </ul>
     </li>
-    <li><span>Clique em <strong>"Gerar Atestado"</strong>. O sistema abre uma nova aba com o documento formatado, pronto para imprimir.</span></li>
+    <li><span>Clique em <strong>"Gerar Atestado"</strong> para imprimir, ou em <strong>"Assinar Digitalmente"</strong> para gerar o PDF com assinatura ICP-Brasil e validade jurídica.</span></li>
   </ol>
 
   <div class="info">
     ℹ️ A data do atestado é sempre a data atual (dia em que o botão é clicado), independente da data do prontuário. O atestado usa o cabeçalho e rodapé oficiais da clínica, com nome do médico e número do CRM.
+  </div>
+
+  <div class="tip">
+    🔐 <strong>Assinatura Digital:</strong> Ao clicar em <strong>"Assinar Digitalmente"</strong>, o sistema salva o atestado e redireciona o médico para o portal do provedor de certificado (Vidaas ou BirDI). Após autenticação, o PDF é assinado com certificado ICP-Brasil e o documento fica disponível para download em <strong>Assinaturas Digitais</strong>. Veja a seção 22 para configurar o provedor.
   </div>
 
   <div class="screenshot">
@@ -1956,9 +1966,126 @@
   </div>
 </div>
 
+<!-- ════════════════════════ 22. ASSINATURA DIGITAL ══════ -->
+<div class="module" id="assinatura-digital">
+  <div class="module-header">
+    <div class="module-icon">🔐</div>
+    <div>
+      <h2>22. Assinatura Digital ICP-Brasil</h2>
+      <p>Atestados, receitas e laudos com validade jurídica via certificado em nuvem</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-blue">MÉDICO</span>
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>O módulo de <strong>Assinatura Digital</strong> permite ao médico assinar documentos clínicos com certificado ICP-Brasil em nuvem, conferindo validade jurídica equivalente à assinatura manuscrita. O sistema integra dois provedores homologados pelo ICP-Brasil:</p>
+
+  <table>
+    <tr><th>Provedor</th><th>Empresa</th><th>Padrão de assinatura</th></tr>
+    <tr><td><strong>Vidaas</strong></td><td>Valid Certificadora</td><td>PAdES_AD_RB (PDF)</td></tr>
+    <tr><td><strong>BirDI</strong></td><td>Soluti / VaultID</td><td>CAdES_AD_RB</td></tr>
+    <tr><td><strong>Modo Teste</strong></td><td>Interno (Mock)</td><td>Simulação sem certificado real</td></tr>
+  </table>
+
+  <h3>Documentos que podem ser assinados</h3>
+  <table>
+    <tr><th>Documento</th><th>Onde iniciar</th></tr>
+    <tr><td>Atestado Médico</td><td>Prontuário → "Assinar Digitalmente" · Agenda → aba Prontuário → "Assinar Digitalmente"</td></tr>
+    <tr><td>Receita / Prescrição</td><td>Prontuário → aba Prescrições → "Assinar"</td></tr>
+    <tr><td>Laudo de Exame</td><td>Exames e Procedimentos → "Assinar Laudo"</td></tr>
+  </table>
+
+  <h3>Fluxo de Assinatura</h3>
+  <ol class="steps">
+    <li><span>Médico clica em <strong>"Assinar Digitalmente"</strong> no documento desejado.</span></li>
+    <li><span>O sistema gera o PDF do documento e cria um registro de assinatura com status <em>Pendente</em>.</span></li>
+    <li><span>O médico é redirecionado para o portal do provedor (Vidaas ou BirDI) para autenticação com o certificado em nuvem.</span></li>
+    <li><span>Após autenticação bem-sucedida, o provedor assina o PDF digitalmente.</span></li>
+    <li><span>O sistema recebe o callback e atualiza o status para <em>Assinado</em>.</span></li>
+    <li><span>O médico é redirecionado para a página <strong>Assinaturas Digitais</strong> onde pode baixar o PDF assinado.</span></li>
+  </ol>
+
+  <div class="info">
+    ℹ️ No <strong>Modo Teste (Mock)</strong>, o fluxo OAuth não redireciona para um portal externo. O sistema simula a assinatura instantaneamente e anexa um bloco informativo ao PDF. Use para homologação e treinamento.
+  </div>
+
+  <h3>Página Assinaturas Digitais (/assinaturas)</h3>
+  <p>Acesse pelo menu lateral <strong>"Assin. Digital"</strong> para visualizar todos os documentos assinados ou em andamento:</p>
+  <table>
+    <tr><th>Status</th><th>Significado</th></tr>
+    <tr><td><span class="badge badge-yellow">Pendente</span></td><td>Aguardando autenticação do médico no portal do provedor</td></tr>
+    <tr><td><span class="badge badge-green">Assinado</span></td><td>PDF assinado com certificado ICP-Brasil — disponível para download</td></tr>
+    <tr><td><span class="badge badge-red">Falhou</span></td><td>Erro no processo de assinatura (expirado, cancelado ou falha técnica)</td></tr>
+  </table>
+
+  <h3>Download do PDF Assinado</h3>
+  <p>Na lista de assinaturas, clique em <strong>"Baixar"</strong> na linha correspondente. O PDF contém a assinatura digital incorporada e pode ser validado em <a href="#">https://validar.iti.gov.br</a> (portal oficial do ITI).</p>
+
+  <div class="warn">
+    ⚠️ <strong>Certificado obrigatório:</strong> Para usar Vidaas ou BirDI, o médico precisa possuir um certificado ICP-Brasil em nuvem contratado diretamente com a Valid S.A. ou Soluti. O sistema não emite certificados — apenas os utiliza para assinar.
+  </div>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da página Assinaturas Digitais ]</div>
+  </div>
+</div>
+
+<!-- ════════════════════════ 22a. CONFIGURAÇÃO DO PROVEDOR ══ -->
+<div class="module" id="assinatura-config">
+  <div class="module-header">
+    <div class="module-icon">⚙️</div>
+    <div>
+      <h2>22a. Configuração do Provedor de Assinatura (Médico)</h2>
+      <p>Cada médico define uma vez qual provedor de certificado ICP-Brasil utiliza</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-blue">MÉDICO</span>
+  </div>
+
+  <p>Na primeira vez que o médico acessa a plataforma após o módulo de Assinatura Digital ser ativado, o sistema exibe automaticamente um <strong>modal de configuração</strong>. O médico seleciona o provedor correspondente ao seu certificado em nuvem e salva. A partir desse momento, todas as assinaturas usarão esse provedor automaticamente.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print do modal "Configure sua Assinatura Digital" ]</div>
+  </div>
+
+  <h3>Opções de Provedor</h3>
+  <table>
+    <tr><th>Opção</th><th>Quando usar</th></tr>
+    <tr><td><strong>Vidaas — Valid Certificadora</strong></td><td>Médico possui certificado ICP-Brasil emitido pela Valid S.A.</td></tr>
+    <tr><td><strong>BirDI — Soluti / VaultID</strong></td><td>Médico possui certificado ICP-Brasil emitido pela Soluti.</td></tr>
+    <tr><td><strong>Modo Teste (sem certificado)</strong></td><td>Médico ainda não possui certificado; deseja usar a funcionalidade em modo de simulação.</td></tr>
+  </table>
+
+  <h3>Como configurar</h3>
+  <ol class="steps">
+    <li><span>Ao fazer login, o modal aparece automaticamente se o provedor ainda não estiver definido.</span></li>
+    <li><span>Selecione o provedor correspondente ao seu certificado.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>. A configuração é gravada no seu perfil.</span></li>
+    <li><span>Da próxima vez que clicar em "Assinar Digitalmente", o sistema usará esse provedor automaticamente.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 <strong>"Configurar depois":</strong> Se o médico ainda não decidiu ou não possui certificado, pode clicar em <strong>"Configurar depois"</strong> para fechar o modal. O modal não reaparecerá na mesma sessão, mas voltará no próximo login até que um provedor seja selecionado.
+  </div>
+
+  <h3>Como alterar o provedor</h3>
+  <p>Caso o médico precise trocar de provedor (ex.: migrou da Valid para a Soluti), o administrador pode atualizar a preferência via API ou o próprio médico pode acessar as <strong>Configurações de Perfil</strong> (em desenvolvimento). Enquanto essa tela não está disponível, acione o suporte para atualizar.</p>
+
+  <div class="info">
+    ℹ️ A configuração do provedor é <strong>individual por médico</strong>. Médicos diferentes na mesma clínica podem usar provedores diferentes — um pode ter Vidaas enquanto outro usa BirDI. A escolha da clínica (admin) não afeta a configuração individual do médico.
+  </div>
+</div>
+
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.3 · Junho 2026<br>
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.4 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
