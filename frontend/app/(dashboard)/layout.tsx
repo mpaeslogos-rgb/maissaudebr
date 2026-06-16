@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { SignatureOnboardingModal } from "@/components/SignatureOnboardingModal";
+import { getDoctorMe, type SignatureProvider } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -12,15 +14,34 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSigModal, setShowSigModal] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/");
     }
   }, [isAuthenticated, isLoading, router]);
+
+  // Detecta se o médico ainda não configurou provedor de assinatura
+  useEffect(() => {
+    if (!user || user.role !== "DOCTOR") return;
+    if (typeof sessionStorage === "undefined") return;
+    if (sessionStorage.getItem("sig_onboarding_skipped")) return;
+
+    getDoctorMe()
+      .then((doctor) => {
+        if (!doctor.signatureProvider) {
+          setShowSigModal(true);
+        } else {
+          // Garante que o provider preferido esteja no localStorage
+          localStorage.setItem("maissaudebr_sig_provider", doctor.signatureProvider);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -44,6 +65,14 @@ export default function DashboardLayout({
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
+
+      {showSigModal && (
+        <SignatureOnboardingModal
+          onClose={(provider?: SignatureProvider) => {
+            setShowSigModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

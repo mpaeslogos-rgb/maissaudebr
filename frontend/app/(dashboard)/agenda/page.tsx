@@ -1471,7 +1471,14 @@ ${cidLine}${obsLine}
                         observacoes: atestadoForm.observacoes || undefined,
                         dataAtestado: new Date().toISOString(),
                       })
-                      const { redirectUrl } = await initSignature({ documentType: 'ATESTADO', referenceId: atestado.id })
+                      const preferredProvider = (typeof localStorage !== 'undefined'
+                        ? localStorage.getItem('maissaudebr_sig_provider')
+                        : null) as import('@/lib/api').SignatureProvider | null
+                      const { redirectUrl } = await initSignature({
+                        documentType: 'ATESTADO',
+                        referenceId: atestado.id,
+                        ...(preferredProvider ? { provider: preferredProvider } : {}),
+                      })
                       setShowAtestadoModal(false)
                       window.location.href = redirectUrl
                     } catch (e: any) {
