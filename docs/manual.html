@@ -234,8 +234,8 @@
     <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
   </div>
   <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
-  <div class="tag">Versão 2.1 · Junho 2026</div>
-  <p class="version">Documento de uso interno · Atualizado em 12/06/2026</p>
+  <div class="tag">Versão 2.2 · Junho 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 15/06/2026</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -271,6 +271,13 @@
     <div class="toc-item"><span class="num">17.</span> Configurações <span class="dots"></span></div>
     <div class="toc-item"><span class="num">18.</span> Auditoria (Admin) <span class="dots"></span></div>
     <div class="toc-item"><span class="num">19.</span> Gestão de Usuários (Admin) <span class="dots"></span></div>
+  </div>
+
+  <div class="toc-section">
+    <h3>Medicina Preventiva (Sprint A+B+C)</h3>
+    <div class="toc-item"><span class="num">20.</span> Programas Preventivos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">20a.</span> &nbsp;&nbsp;↳ Marcadores Metabólicos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">21.</span> Analytics e DRE <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -1106,41 +1113,6 @@
   </ol>
 </div>
 
-<div class="module" id="atualizacoes-recentes">
-  <div class="module-header">
-    <div class="module-icon">📝</div>
-    <div>
-      <h2>Atualizações Recentes</h2>
-      <p>Resumo das atividades de desenvolvimento e status atual do teste.</p>
-    </div>
-  </div>
-
-  <h3>Atividades realizadas em 12/06/2026</h3>
-  <ul class="steps">
-    <li><span><strong>Faturamento TISS — Fase 1 completa:</strong> modelos Prisma (<code>GuiaFaturamento</code>, <code>LoteFaturamento</code>, <code>GuiaProcedimento</code>), migration aplicada, rotas REST no backend (<code>/api/tiss/*</code>), gerador de XML TISS 3.05 com hash MD5, página frontend com abas Guias e Lotes, menu lateral atualizado.</span></li>
-    <li><span><strong>+Novo Paciente na Agenda:</strong> botão adicionado ao formulário de nova consulta; abre modal de cadastro rápido (<code>PatientCreateModal</code>) com formatação automática de CPF e telefone. Ao salvar, o paciente já fica selecionado na consulta.</span></li>
-    <li><span><strong>Logo CardioSul:</strong> logotipo retangular ampliado na sidebar/header (sem exibir nome em texto) e 30% maior na página de login.</span></li>
-    <li><span><strong>Saudação dinâmica no Dashboard:</strong> nome exibido agora reflete o usuário logado via <code>useAuth()</code> — regra aplicada a todo o sistema.</span></li>
-    <li><span><strong>Reset CardioSul:</strong> dados operacionais zerados (agendamentos, prontuários, financeiro, estoque, TISS) mantendo todos os cadastros, usuários e configurações.</span></li>
-  </ul>
-
-  <div class="tip">
-    ✅ Versão 2.1 — Faturamento TISS disponível para uso operacional.
-  </div>
-
-  <h3>Atividades realizadas em 2026-06-08</h3>
-  <ul class="steps">
-    <li><span>Adicionadas fixtures de teste Cypress em <code>frontend/cypress/fixtures/</code>.</span></li>
-    <li><span>Implementados comandos de suporte no arquivo <code>frontend/cypress/support/e2e.js</code>.</span></li>
-    <li><span>Atualizadas specs existentes para usar fixtures e login por API.</span></li>
-    <li><span>Iniciada execução local de smoke tests com backend em <code>http://localhost:3002</code> e frontend em <code>http://localhost:3001</code>.</span></li>
-    <li><span>A corrida do Cypress foi interrompida devido à instalação travada em <code>Unzipping Cypress</code>.</span></li>
-  </ul>
-
-  <div class="tip">
-    ✅ Próximo passo recomendado: rodar <code>npx cypress verify</code> e reexecutar os smoke tests após a instalação do Cypress ser concluída.
-  </div>
-</div>
 
 <!-- ────────────────────────────────── 13. CONFIGURAÇÕES ── -->
 <div class="module" id="configuracoes">
@@ -1562,9 +1534,232 @@
   <p>[ Inserir print da tela ]</p>
 </div>
 
+<!-- ════════════════════════════ 20. PROGRAMAS PREVENTIVOS ══ -->
+<div class="module" id="programas">
+  <div class="module-header">
+    <div class="module-icon">🏃</div>
+    <div>
+      <h2>20. Programas Preventivos</h2>
+      <p>Gestão de programas de medicina preventiva e matrículas de pacientes</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-yellow">RECEPCIONISTA</span>
+  </div>
+
+  <p>O módulo <strong>Programas Preventivos</strong> permite criar programas de acompanhamento longitudinal e matricular pacientes neles. Diferencia o modelo de assinatura preventiva da consulta avulsa.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da página Programas Preventivos ]</div>
+  </div>
+
+  <h3>KPIs no Topo</h3>
+  <table>
+    <tr><th>Card</th><th>O que mostra</th></tr>
+    <tr><td>Total de Programas</td><td>Quantidade de programas cadastrados</td></tr>
+    <tr><td>Matrículas Ativas</td><td>Pacientes atualmente ativos em algum programa</td></tr>
+    <tr><td>Receita Mensal</td><td>Soma das mensalidades dos contratos ativos (MRR)</td></tr>
+    <tr><td>Taxa de Churn</td><td>% de matrículas canceladas no mês corrente</td></tr>
+  </table>
+
+  <h3>Criar Novo Programa</h3>
+  <ol class="steps">
+    <li><span>Clique em <strong>"+ Novo Programa"</strong>.</span></li>
+    <li><span>Preencha o <strong>Nome</strong> do programa (ex: "Programa Cardiometabólico 90 dias").</span></li>
+    <li><span>Informe a <strong>Duração em dias</strong> (ex: 90, 180, 365).</span></li>
+    <li><span>Defina o <strong>Valor Mensal (R$)</strong> — mensalidade cobrada ao paciente.</span></li>
+    <li><span><em>Opcional:</em> Defina o <strong>Valor de Entrada (R$)</strong> para a primeira mensalidade diferenciada.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>. O programa aparece na lista como card expansível.</span></li>
+  </ol>
+
+  <h3>Matricular um Paciente</h3>
+  <ol class="steps">
+    <li><span>Clique no card do programa para expandi-lo.</span></li>
+    <li><span>Clique em <strong>"+ Matricular Paciente"</strong>.</span></li>
+    <li><span>Selecione o paciente no campo de busca.</span></li>
+    <li><span>O sistema define a data da próxima cobrança automaticamente (30 dias a partir de hoje).</span></li>
+    <li><span>Clique em <strong>"Confirmar Matrícula"</strong>. O status inicial é <span class="badge badge-green">Ativo</span>.</span></li>
+  </ol>
+
+  <h3>Status de Matrícula e Ações</h3>
+  <table>
+    <tr><th>Status</th><th>Significado</th><th>Ações disponíveis</th></tr>
+    <tr>
+      <td><span class="badge badge-green">Ativo</span></td>
+      <td>Paciente no programa, cobranças ativas</td>
+      <td>Cobrar · Pausar · Cancelar</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-yellow">Pausado</span></td>
+      <td>Temporariamente suspenso</td>
+      <td>Reativar · Cancelar</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-red">Cancelado</span></td>
+      <td>Matrícula encerrada</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-blue">Concluído</span></td>
+      <td>Ciclo do programa finalizado com sucesso</td>
+      <td>—</td>
+    </tr>
+  </table>
+
+  <h3>Cobrar Mensalidade</h3>
+  <ol class="steps">
+    <li><span>Na tabela de matrículas do programa, localize o paciente com status <span class="badge badge-green">Ativo</span>.</span></li>
+    <li><span>Clique em <strong>"Cobrar"</strong>.</span></li>
+    <li><span>O sistema gera um lançamento em <strong>Contas a Receber</strong> com o valor da mensalidade e atualiza a data da próxima cobrança.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 A cobrança manual gera a entrada em Contas a Receber. Registre o recebimento no módulo Financeiro quando o pagamento for confirmado.
+  </div>
+</div>
+
+<!-- ════════════════════════ 20a. MARCADORES METABÓLICOS ══ -->
+<div class="module" id="marcadores">
+  <div class="module-header">
+    <div class="module-icon">🩸</div>
+    <div>
+      <h2>20a. Marcadores Metabólicos</h2>
+      <p>Acompanhamento longitudinal dos indicadores clínicos do paciente</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-blue">MÉDICO</span>
+  </div>
+
+  <p>Os Marcadores Metabólicos são registros clínicos periódicos que permitem acompanhar a evolução do paciente ao longo do tempo. São acessados dentro do perfil do paciente, na aba <strong>"Marcadores Metab."</strong>.</p>
+
+  <h3>Acessar os Marcadores</h3>
+  <ol class="steps">
+    <li><span>Acesse o módulo <strong>Pacientes</strong> e clique no paciente desejado para abrir o perfil.</span></li>
+    <li><span>Na página do paciente, selecione a aba <strong>"Marcadores Metab."</strong>.</span></li>
+    <li><span>Visualize o histórico em tabela cronológica, com setas de tendência em relação à medição anterior.</span></li>
+  </ol>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da aba Marcadores Metabólicos ]</div>
+  </div>
+
+  <h3>Registrar Nova Medição</h3>
+  <ol class="steps">
+    <li><span>Na aba Marcadores Metab., clique em <strong>"+ Nova Medição"</strong>.</span></li>
+    <li><span>Preencha os campos disponíveis (todos opcionais exceto a data). Não é necessário preencher todos — registre apenas os marcadores coletados na consulta.</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <table>
+    <tr><th>Marcador</th><th>Unidade</th><th>Referência</th></tr>
+    <tr><td>Glicemia em jejum</td><td>mg/dL</td><td>Normal: &lt; 100</td></tr>
+    <tr><td>HbA1c</td><td>%</td><td>Normal: &lt; 5,7%</td></tr>
+    <tr><td>IMC</td><td>kg/m²</td><td>Normal: 18,5–24,9</td></tr>
+    <tr><td>Pressão sistólica / diastólica</td><td>mmHg</td><td>Normal: &lt; 120/80</td></tr>
+    <tr><td>LDL</td><td>mg/dL</td><td>Ótimo: &lt; 100</td></tr>
+    <tr><td>HDL</td><td>mg/dL</td><td>H: &gt; 40 · M: &gt; 50</td></tr>
+    <tr><td>Triglicérides</td><td>mg/dL</td><td>Normal: &lt; 150</td></tr>
+    <tr><td>Peso</td><td>kg</td><td>—</td></tr>
+    <tr><td>Circunferência abdominal</td><td>cm</td><td>H: &lt; 94 · M: &lt; 80</td></tr>
+  </table>
+
+  <h3>Interpretar as Setas de Tendência</h3>
+  <p>Na coluna de tendência, cada marcador exibe uma seta comparando com a medição anterior. Use os valores de referência acima para interpretar clinicamente — uma seta de subida pode ser positiva (HDL) ou negativa (glicemia), dependendo do marcador.</p>
+
+  <div class="info">
+    ℹ️ Os Marcadores Metabólicos integram o módulo de Programas Preventivos. Pacientes matriculados em um programa preventivo devem ter os marcadores registrados nos check-ins periódicos para acompanhar a evolução clínica.
+  </div>
+</div>
+
+<!-- ════════════════════════ 21. ANALYTICS / DRE ══════════ -->
+<div class="module" id="analytics">
+  <div class="module-header">
+    <div class="module-icon">📈</div>
+    <div>
+      <h2>21. Analytics e DRE</h2>
+      <p>Demonstrativo de Resultado, Unit Economics e indicadores estratégicos</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>O módulo <strong>Analytics</strong> oferece uma visão consolidada do desempenho financeiro e operacional da clínica: DRE, unit economics dos programas preventivos, mix de receita e NPS agregado.</p>
+
+  <div class="screenshot">
+    <div class="icon">🖼️</div>
+    <div class="label">[ Inserir print da página Analytics ]</div>
+  </div>
+
+  <h3>Período de Análise</h3>
+  <p>Use o seletor no topo para escolher o intervalo de dados:</p>
+  <table>
+    <tr><th>Opção</th><th>Período</th></tr>
+    <tr><td>Mês</td><td>Mês atual (1º ao último dia)</td></tr>
+    <tr><td>Trimestre</td><td>Últimos 3 meses</td></tr>
+    <tr><td>Ano</td><td>Ano corrente</td></tr>
+    <tr><td>Personalizado</td><td>Datas de início e fim livres</td></tr>
+  </table>
+
+  <h3>DRE — Demonstrativo de Resultado</h3>
+  <table>
+    <tr><th>Linha</th><th>Definição</th></tr>
+    <tr><td>Receita Bruta</td><td>Soma de todos os pagamentos confirmados no período</td></tr>
+    <tr><td>Custo dos Serviços</td><td>Repasses aos médicos pagos no período</td></tr>
+    <tr><td>Margem Bruta</td><td>Receita − Custo dos Serviços</td></tr>
+    <tr><td>Despesas Operacionais</td><td>Contas a pagar pagas no período (exceto repasses)</td></tr>
+    <tr><td>EBITDA</td><td>Margem Bruta − Despesas Operacionais</td></tr>
+  </table>
+
+  <h3>Unit Economics — Programas Preventivos</h3>
+  <table>
+    <tr><th>Indicador</th><th>Definição</th></tr>
+    <tr><td>MRR</td><td>Monthly Recurring Revenue — soma das mensalidades ativas</td></tr>
+    <tr><td>ARPU</td><td>Average Revenue Per User — receita média por matrícula ativa</td></tr>
+    <tr><td>Matrículas Ativas</td><td>Pacientes com status ATIVO nos programas preventivos</td></tr>
+    <tr><td>Receita por Paciente</td><td>Receita total ÷ pacientes distintos com pagamento no período</td></tr>
+  </table>
+
+  <h3>Mix de Receita</h3>
+  <p>Gráfico de distribuição percentual da receita por tipo no período:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li><strong>Consulta Particular</strong> — pagamentos de consultas sem convênio</li>
+    <li><strong>Convênio</strong> — pagamentos de consultas com plano de saúde</li>
+    <li><strong>Programa Preventivo</strong> — mensalidades de matrículas</li>
+    <li><strong>Exame / Procedimento</strong> — pagamentos de exames</li>
+  </ul>
+
+  <h3>NPS — Net Promoter Score</h3>
+  <p>Resumo das avaliações coletadas automaticamente por WhatsApp após as consultas:</p>
+  <table>
+    <tr><th>Métrica</th><th>Definição</th></tr>
+    <tr><td>Score NPS</td><td>% Promotores (9–10) − % Detratores (0–6) · Escala: −100 a +100</td></tr>
+    <tr><td>Promotores</td><td>Pacientes que deram nota 9 ou 10</td></tr>
+    <tr><td>Neutros</td><td>Pacientes que deram nota 7 ou 8</td></tr>
+    <tr><td>Detratores</td><td>Pacientes que deram nota 0 a 6</td></tr>
+    <tr><td>Total de Respostas</td><td>Avaliações recebidas no período selecionado</td></tr>
+  </table>
+
+  <div class="info">
+    ℹ️ O NPS é enviado automaticamente por WhatsApp ao paciente após a finalização de cada consulta. O paciente responde com um número de 0 a 10 diretamente pelo WhatsApp.
+  </div>
+
+  <div class="tip">
+    💡 Um NPS acima de 50 é considerado excelente. Use os comentários dos detratores (nota 0–6) para identificar pontos de melhoria no atendimento.
+  </div>
+</div>
+
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.1 · Junho 2026<br>
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.2 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
