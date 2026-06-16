@@ -1100,6 +1100,32 @@ export function getAtestados(params?: { patientId?: string; doctorId?: string })
   return apiGet(`/atestados${qs ? '?' + qs : ''}`)
 }
 
+// ─── Médico (perfil próprio) ──────────────────────────────────────────────────
+
+export interface DoctorProfile {
+  id: string
+  userId: string
+  crm: string
+  crmState: string
+  cpf?: string | null
+  specialty: string
+  phone?: string | null
+  bio?: string | null
+  consultationFee?: number | null
+  signatureProvider?: SignatureProvider | null
+  user: { id: string; name: string; email: string; isActive: boolean }
+}
+
+export function getDoctorMe(): Promise<DoctorProfile> {
+  return apiGet<DoctorProfile>('/doctors/me')
+}
+
+export function updateMySignatureProvider(
+  provider: SignatureProvider
+): Promise<{ signatureProvider: SignatureProvider }> {
+  return apiPatch('/doctors/me/signature-provider', { signatureProvider: provider })
+}
+
 // ─── Assinatura Digital ───────────────────────────────────────────────────────
 
 export type SignatureProvider = 'MOCK' | 'VIDAAS' | 'BIRDID'

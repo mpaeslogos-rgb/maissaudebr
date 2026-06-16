@@ -1,4 +1,4 @@
-# v36 — feat: Assinatura Digital (Vidaas/BirDI/Mock), Atestados DB, PDF generator
+# v37 — feat: Doctor signatureProvider preference + /doctors/me endpoints
 FROM node:22-slim
 
 WORKDIR /app

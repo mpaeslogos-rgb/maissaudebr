@@ -184,10 +184,11 @@ model Doctor {
   workStartHour   Int         @default(8)
   workEndHour     Int         @default(18)
   // Repasse ao médico por consulta paga
-  repasseType     RepasseType @default(PERCENTAGE)
-  repasseValue    Float? // % (0-100) ou valor fixo em R$
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  repasseType       RepasseType      @default(PERCENTAGE)
+  repasseValue      Float? // % (0-100) ou valor fixo em R$
+  signatureProvider SignatureProvider? // provedor preferido de assinatura digital ICP-Brasil
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments      Appointment[]
