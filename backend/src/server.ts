@@ -45,6 +45,7 @@ import { patientEnrollmentsRoutes } from './routes/patient-enrollments.routes'
 import { metabolicMarkersRoutes } from './routes/metabolic-markers.routes'
 import { npsRoutes } from './routes/nps.routes'
 import { analyticsRoutes } from './routes/analytics.routes'
+import { checkInsRoutes } from './routes/check-ins.routes'
 
 const app = Fastify({ logger: true })
 
@@ -155,6 +156,7 @@ async function bootstrap() {
   await app.register(patientEnrollmentsRoutes)
   await app.register(metabolicMarkersRoutes)
   await app.register(npsRoutes)
+  await app.register(checkInsRoutes)
   await app.register(analyticsRoutes)
 
   const PORT = Number(process.env.PORT) || 3001

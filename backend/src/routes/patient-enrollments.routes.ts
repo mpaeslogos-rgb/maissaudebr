@@ -126,20 +126,28 @@ export async function patientEnrollmentsRoutes(app: FastifyInstance) {
     return reply.status(201).send(payment)
   })
 
-  // Atualizar status / notas
+  // Atualizar status / notas / journeyStage / cancelReason
   app.patch('/patient-enrollments/:id', { preHandler: [requireAuth] }, async (req, reply) => {
     const { id } = req.params as { id: string }
     const data = z.object({
       status:          z.enum(['ACTIVE', 'PAUSED', 'CANCELLED', 'COMPLETED']).optional(),
+      journeyStage:    z.enum(['ONBOARDING', 'ACTIVE', 'AT_RISK', 'COMPLETED', 'CHURNED']).optional(),
       notes:           z.string().optional(),
+      cancelReason:    z.string().optional(),
       nextBillingDate: z.string().optional(),
     }).parse(req.body)
+
+    const setCancelledAt = data.status === 'CANCELLED' ? { cancelledAt: new Date() } : {}
 
     const updated = await prisma.patientEnrollment.update({
       where: { id },
       data: {
-        ...data,
+        ...(data.status       !== undefined ? { status: data.status } : {}),
+        ...(data.journeyStage !== undefined ? { journeyStage: data.journeyStage } : {}),
+        ...(data.notes        !== undefined ? { notes: data.notes } : {}),
+        ...(data.cancelReason !== undefined ? { cancelReason: data.cancelReason } : {}),
         ...(data.nextBillingDate ? { nextBillingDate: new Date(data.nextBillingDate) } : {}),
+        ...setCancelledAt,
       },
     })
     return reply.send(updated)
