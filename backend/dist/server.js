@@ -49,6 +49,7 @@ const patient_enrollments_routes_1 = require("./routes/patient-enrollments.route
 const metabolic_markers_routes_1 = require("./routes/metabolic-markers.routes");
 const nps_routes_1 = require("./routes/nps.routes");
 const analytics_routes_1 = require("./routes/analytics.routes");
+const check_ins_routes_1 = require("./routes/check-ins.routes");
 const app = (0, fastify_1.default)({ logger: true });
 const WEAK_SECRETS = new Set([
     'troque-este-segredo',
@@ -147,6 +148,7 @@ async function bootstrap() {
     await app.register(patient_enrollments_routes_1.patientEnrollmentsRoutes);
     await app.register(metabolic_markers_routes_1.metabolicMarkersRoutes);
     await app.register(nps_routes_1.npsRoutes);
+    await app.register(check_ins_routes_1.checkInsRoutes);
     await app.register(analytics_routes_1.analyticsRoutes);
     const PORT = Number(process.env.PORT) || 3001;
     const HOST = '0.0.0.0';

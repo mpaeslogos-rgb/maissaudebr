@@ -113,19 +113,26 @@ async function patientEnrollmentsRoutes(app) {
         ]);
         return reply.status(201).send(payment);
     });
-    // Atualizar status / notas
+    // Atualizar status / notas / journeyStage / cancelReason
     app.patch('/patient-enrollments/:id', { preHandler: [requireAuth] }, async (req, reply) => {
         const { id } = req.params;
         const data = zod_1.z.object({
             status: zod_1.z.enum(['ACTIVE', 'PAUSED', 'CANCELLED', 'COMPLETED']).optional(),
+            journeyStage: zod_1.z.enum(['ONBOARDING', 'ACTIVE', 'AT_RISK', 'COMPLETED', 'CHURNED']).optional(),
             notes: zod_1.z.string().optional(),
+            cancelReason: zod_1.z.string().optional(),
             nextBillingDate: zod_1.z.string().optional(),
         }).parse(req.body);
+        const setCancelledAt = data.status === 'CANCELLED' ? { cancelledAt: new Date() } : {};
         const updated = await prisma2_1.prisma.patientEnrollment.update({
             where: { id },
             data: {
-                ...data,
+                ...(data.status !== undefined ? { status: data.status } : {}),
+                ...(data.journeyStage !== undefined ? { journeyStage: data.journeyStage } : {}),
+                ...(data.notes !== undefined ? { notes: data.notes } : {}),
+                ...(data.cancelReason !== undefined ? { cancelReason: data.cancelReason } : {}),
                 ...(data.nextBillingDate ? { nextBillingDate: new Date(data.nextBillingDate) } : {}),
+                ...setCancelledAt,
             },
         });
         return reply.send(updated);

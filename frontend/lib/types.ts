@@ -78,6 +78,7 @@ export interface Patient {
   bloodType?: string
   allergies?: string
   notes?: string
+  riskProfile?: 'NONE' | 'METABOLIC' | 'CARDIOMETABOLIC' | 'HIGH'
   // Convênio
   healthInsurance?: string
   healthInsuranceNumber?: string

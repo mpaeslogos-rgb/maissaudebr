@@ -115,6 +115,29 @@ enum EnrollmentStatus {
   COMPLETED
 }
 
+enum RiskProfile {
+  NONE
+  METABOLIC
+  CARDIOMETABOLIC
+  HIGH
+}
+
+enum JourneyStage {
+  ONBOARDING
+  ACTIVE
+  AT_RISK
+  COMPLETED
+  CHURNED
+}
+
+enum CheckInType {
+  INITIAL_ASSESSMENT
+  MONTHLY_REVIEW
+  METABOLIC_REVIEW
+  LAB_RESULTS
+  FOLLOWUP
+}
+
 // ============================================
 // USUÁRIOS E AUTENTICAÇÃO
 // ============================================
@@ -207,6 +230,7 @@ model Patient {
   bloodType   String?
   allergies   String?
   notes       String?
+  riskProfile RiskProfile @default(NONE)
 
   // Convênio
   healthInsurance     String?
@@ -233,6 +257,7 @@ model Patient {
   enrollments     PatientEnrollment[]
   metabolicMarkers MetabolicMarker[]
   npsResponses    NpsResponse[]
+  checkIns        CheckIn[]
 
   @@index([cpf])
   @@index([fullName])
@@ -945,18 +970,24 @@ model PatientEnrollment {
   startDate       DateTime
   endDate         DateTime?
   status          EnrollmentStatus @default(ACTIVE)
+  journeyStage    JourneyStage     @default(ONBOARDING)
   monthlyFee      Float            // pode sobrescrever o valor do programa
   nextBillingDate DateTime
+  cancelReason    String?
+  cancelledAt     DateTime?
   notes           String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  patient  Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  program  PreventivoProgram @relation(fields: [programId], references: [id])
-  payments Payment[]
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  program   PreventivoProgram @relation(fields: [programId], references: [id])
+  payments  Payment[]
+  checkIns  CheckIn[]
+  npsResponses NpsResponse[]
 
   @@index([patientId])
   @@index([status])
+  @@index([journeyStage])
   @@index([nextBillingDate])
   @@map("patient_enrollments")
 }
@@ -998,6 +1029,7 @@ model NpsResponse {
   id            String    @id @default(cuid())
   patientId     String
   appointmentId String?   @unique
+  enrollmentId  String?
   score         Int       // 0–10 (NPS)
   comment       String?
   sentAt        DateTime? // quando a mensagem Z-API foi enviada
@@ -1005,10 +1037,36 @@ model NpsResponse {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  patient     Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  enrollment  PatientEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
+  @@index([enrollmentId])
   @@index([score])
   @@map("nps_responses")
+}
+
+// ============================================
+// CHECK-INS PREVENTIVOS
+// ============================================
+
+model CheckIn {
+  id           String      @id @default(cuid())
+  patientId    String
+  enrollmentId String
+  scheduledAt  DateTime
+  completedAt  DateTime?
+  type         CheckInType @default(MONTHLY_REVIEW)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  patient    Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  enrollment PatientEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([enrollmentId])
+  @@index([scheduledAt])
+  @@map("check_ins")
 }

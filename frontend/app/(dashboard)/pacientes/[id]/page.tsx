@@ -11,6 +11,7 @@ import {
   getDoctors,
   apiGet,
   apiPost,
+  apiPatch,
   apiDelete,
 } from '@/lib/api'
 import type {
@@ -58,6 +59,19 @@ const STATUS_COLOR: Record<string, string> = {
 
 const GENDER_LABEL: Record<string, string> = { MALE: 'Masculino', FEMALE: 'Feminino', OTHER: 'Outro' }
 
+const RISK_LABEL: Record<string, string> = {
+  NONE:            'Sem risco identificado',
+  METABOLIC:       'Risco Metabólico',
+  CARDIOMETABOLIC: 'Risco Cardiometabólico',
+  HIGH:            'Alto Risco',
+}
+const RISK_COLOR: Record<string, string> = {
+  NONE:            'bg-slate-100 text-slate-500',
+  METABOLIC:       'bg-yellow-100 text-yellow-700',
+  CARDIOMETABOLIC: 'bg-orange-100 text-orange-700',
+  HIGH:            'bg-red-100 text-red-700',
+}
+
 // ─── Linha de informação ──────────────────────────────────────────────────────
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
@@ -71,9 +85,22 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 
 // ─── Aba FICHA ────────────────────────────────────────────────────────────────
 
-function FichaTab({ patient, onPhotoUploaded }: { patient: Patient; onPhotoUploaded: (url: string) => void }) {
+function FichaTab({ patient, onPhotoUploaded, onPatientUpdated }: { patient: Patient; onPhotoUploaded: (url: string) => void; onPatientUpdated: (p: Patient) => void }) {
   const [uploading, setUploading] = useState(false)
+  const [savingRisk, setSavingRisk] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleRiskChange(riskProfile: string) {
+    setSavingRisk(true)
+    try {
+      const updated = await apiPatch<Patient>(`/patients/${patient.id}`, { riskProfile })
+      onPatientUpdated(updated)
+    } catch {
+      alert('Erro ao salvar perfil de risco.')
+    } finally {
+      setSavingRisk(false)
+    }
+  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -166,6 +193,31 @@ function FichaTab({ patient, onPhotoUploaded }: { patient: Patient; onPhotoUploa
           <InfoRow label="Convênio" value={patient.healthInsurance} />
           <InfoRow label="Nº do plano" value={patient.healthInsuranceNumber} />
         </div>
+      </div>
+
+      {/* Perfil de risco preventivo */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-700 mb-3 pb-1 border-b border-surface-border">Perfil de risco preventivo</h3>
+        <div className="flex items-center gap-4">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${RISK_COLOR[patient.riskProfile ?? 'NONE']}`}>
+            {RISK_LABEL[patient.riskProfile ?? 'NONE']}
+          </span>
+          <select
+            className="text-sm border border-surface-border rounded-lg px-3 py-1.5 bg-white"
+            value={patient.riskProfile ?? 'NONE'}
+            disabled={savingRisk}
+            onChange={e => handleRiskChange(e.target.value)}
+          >
+            <option value="NONE">Sem risco identificado</option>
+            <option value="METABOLIC">Risco Metabólico</option>
+            <option value="CARDIOMETABOLIC">Risco Cardiometabólico</option>
+            <option value="HIGH">Alto Risco</option>
+          </select>
+          {savingRisk && <span className="text-xs text-slate-400">Salvando…</span>}
+        </div>
+        <p className="text-xs text-slate-400 mt-2">
+          Pacientes com risco Metabólico, Cardiometabólico ou Alto Risco são elegíveis para programas preventivos.
+        </p>
       </div>
 
       <p className="text-xs text-slate-400">Cadastrado em {fmtDate(patient.createdAt)} · Atualizado em {fmtDate(patient.updatedAt)}</p>
@@ -803,6 +855,7 @@ export default function PatientDetailPage() {
           <FichaTab
             patient={patient}
             onPhotoUploaded={url => setPatient(prev => prev ? { ...prev, photoUrl: url } : prev)}
+            onPatientUpdated={updated => setPatient(updated)}
           />
         )}
         {tab === 'anamnese' && <AnamneseTab records={records} />}
