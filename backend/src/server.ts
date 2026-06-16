@@ -46,6 +46,8 @@ import { metabolicMarkersRoutes } from './routes/metabolic-markers.routes'
 import { npsRoutes } from './routes/nps.routes'
 import { analyticsRoutes } from './routes/analytics.routes'
 import { checkInsRoutes } from './routes/check-ins.routes'
+import { atestadosRoutes } from './routes/atestados.routes'
+import { digitalSignatureRoutes } from './routes/digital-signature.routes'
 
 const app = Fastify({ logger: true })
 
@@ -158,6 +160,8 @@ async function bootstrap() {
   await app.register(npsRoutes)
   await app.register(checkInsRoutes)
   await app.register(analyticsRoutes)
+  await app.register(atestadosRoutes)
+  await app.register(digitalSignatureRoutes)
 
   const PORT = Number(process.env.PORT) || 3001
   const HOST = '0.0.0.0'

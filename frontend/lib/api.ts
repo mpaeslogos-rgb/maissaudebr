@@ -1060,3 +1060,106 @@ export function downloadXmlTiss(loteId: string): Promise<string> {
     return r.text()
   })
 }
+
+// ─── Atestados ────────────────────────────────────────────────────────────────
+
+export interface AtestadoPayload {
+  patientId: string
+  doctorId: string
+  appointmentId?: string
+  dias: number
+  cid?: string
+  finalidade: 'trabalho' | 'escola' | 'outro'
+  observacoes?: string
+  dataAtestado?: string
+}
+
+export interface Atestado {
+  id: string
+  patientId: string
+  doctorId: string
+  appointmentId?: string
+  dias: number
+  cid?: string
+  finalidade: string
+  observacoes?: string
+  dataAtestado: string
+  signatureId?: string
+  signature?: DigitalSignatureSummary
+  patient?: { id: string; fullName: string; cpf?: string }
+  doctor?: { id: string; user: { name: string }; crm: string; crmState: string; specialty: string }
+  createdAt: string
+}
+
+export function createAtestado(data: AtestadoPayload): Promise<Atestado> {
+  return apiPost('/atestados', data)
+}
+
+export function getAtestados(params?: { patientId?: string; doctorId?: string }): Promise<Atestado[]> {
+  const qs = new URLSearchParams(params as Record<string, string>).toString()
+  return apiGet(`/atestados${qs ? '?' + qs : ''}`)
+}
+
+// ─── Assinatura Digital ───────────────────────────────────────────────────────
+
+export type SignatureProvider = 'MOCK' | 'VIDAAS' | 'BIRDID'
+export type SignatureStatus   = 'PENDING' | 'SIGNED' | 'FAILED'
+export type SignedDocumentType = 'ATESTADO' | 'RECEITA' | 'LAUDO'
+
+export interface DigitalSignatureSummary {
+  id: string
+  status: SignatureStatus
+  provider: SignatureProvider
+  signedAt?: string
+  signerName?: string
+  signedPdfPath?: string
+}
+
+export interface DigitalSignature extends DigitalSignatureSummary {
+  documentType: SignedDocumentType
+  referenceId: string
+  doctorId: string
+  patientId: string
+  patient?: { id: string; fullName: string }
+  doctor?: { id: string; user: { name: string } }
+  createdAt: string
+}
+
+export function initSignature(data: {
+  documentType: SignedDocumentType
+  referenceId: string
+  provider?: SignatureProvider
+}): Promise<{ signatureId: string; redirectUrl: string }> {
+  return apiPost('/digital-signature/init', data)
+}
+
+export function getSignatures(params?: {
+  patientId?: string
+  doctorId?: string
+  status?: SignatureStatus
+}): Promise<DigitalSignature[]> {
+  const qs = new URLSearchParams(params as Record<string, string>).toString()
+  return apiGet(`/digital-signature${qs ? '?' + qs : ''}`)
+}
+
+export function getSignature(id: string): Promise<DigitalSignature> {
+  return apiGet(`/digital-signature/${id}`)
+}
+
+export function downloadSignedPdf(signatureId: string): void {
+  const token = getToken()
+  const base  = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+  const url   = `${base}/digital-signature/${signatureId}/download`
+  const a     = document.createElement('a')
+  a.href      = url
+  a.setAttribute('download', `documento-assinado-${signatureId}.pdf`)
+  // Fetch com token e força download
+  fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    .then(r => r.blob())
+    .then(blob => {
+      a.href = URL.createObjectURL(blob)
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    })
+}

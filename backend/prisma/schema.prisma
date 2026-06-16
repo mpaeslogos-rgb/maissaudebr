@@ -12,8 +12,8 @@ datasource db {
 }
 
 model Config {
-  id   String @id @default(cuid())
-  key  String @unique @default("clinic")
+  id  String @id @default(cuid())
+  key String @unique @default("clinic")
 
   // Dados da clínica
   clinicName      String @default("maissaudebr")
@@ -172,30 +172,32 @@ enum RepasseType {
 }
 
 model Doctor {
-  id           String      @id @default(cuid())
-  userId       String      @unique
-  crm          String      @unique // Conselho Regional de Medicina
-  crmState     String      // UF do CRM (ex: "SP", "RJ")
-  cpf          String?     // CPF do médico — obrigatório para prescrição digital CFM
-  specialty    String
-  phone        String?
-  bio          String?
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  crm             String      @unique // Conselho Regional de Medicina
+  crmState        String // UF do CRM (ex: "SP", "RJ")
+  cpf             String? // CPF do médico — obrigatório para prescrição digital CFM
+  specialty       String
+  phone           String?
+  bio             String?
   consultationFee Float?
-  workStartHour Int        @default(8)
-  workEndHour   Int        @default(18)
+  workStartHour   Int         @default(8)
+  workEndHour     Int         @default(18)
   // Repasse ao médico por consulta paga
-  repasseType  RepasseType @default(PERCENTAGE)
-  repasseValue Float?      // % (0-100) ou valor fixo em R$
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  repasseType     RepasseType @default(PERCENTAGE)
+  repasseValue    Float? // % (0-100) ou valor fixo em R$
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  appointments    Appointment[]
-  medicalRecords  MedicalRecord[]
-  prescriptions   Prescription[]
-  transferredChats Chat[]
-  doctorPayments  DoctorPayment[]
-  examOrders      ExamOrder[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  medicalRecords    MedicalRecord[]
+  prescriptions     Prescription[]
+  transferredChats  Chat[]
+  doctorPayments    DoctorPayment[]
+  examOrders        ExamOrder[]
+  atestados         Atestado[]
+  digitalSignatures DigitalSignature[]
 
   @@index([crm])
   @@index([specialty])
@@ -207,24 +209,24 @@ model Doctor {
 // ============================================
 
 model Patient {
-  id          String    @id @default(cuid())
-  userId      String?   @unique // Opcional: paciente pode não ter login
-  fullName    String
-  cpf         String?   @unique  // Opcional para pacientes criados via WhatsApp
-  rg          String?
-  birthDate   DateTime?          // Opcional para pacientes criados via WhatsApp
-  gender      Gender?            // Opcional para pacientes criados via WhatsApp
-  email       String?
-  phone       String
-  
+  id        String    @id @default(cuid())
+  userId    String?   @unique // Opcional: paciente pode não ter login
+  fullName  String
+  cpf       String?   @unique // Opcional para pacientes criados via WhatsApp
+  rg        String?
+  birthDate DateTime? // Opcional para pacientes criados via WhatsApp
+  gender    Gender? // Opcional para pacientes criados via WhatsApp
+  email     String?
+  phone     String
+
   // Endereço
-  zipCode     String?
-  street      String?
-  number      String?
-  complement  String?
+  zipCode      String?
+  street       String?
+  number       String?
+  complement   String?
   neighborhood String?
-  city        String?
-  state       String?
+  city         String?
+  state        String?
 
   // Dados clínicos
   bloodType   String?
@@ -233,31 +235,33 @@ model Patient {
   riskProfile RiskProfile @default(NONE)
 
   // Convênio
-  healthInsurance     String?
+  healthInsurance       String?
   healthInsuranceNumber String?
 
   // Foto
-  photoUrl    String?
+  photoUrl String?
 
   // LGPD — anonimização
-  deletedAt   DateTime?
+  deletedAt DateTime?
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-  appointments    Appointment[]
-  medicalRecords  MedicalRecord[]
-  payments        Payment[]
-  chats           Chat[]
-  exams           Exam[]
-  prescriptions   Prescription[]
-  consents        Consent[]
-  examOrders      ExamOrder[]
-  enrollments     PatientEnrollment[]
-  metabolicMarkers MetabolicMarker[]
-  npsResponses    NpsResponse[]
-  checkIns        CheckIn[]
+  user              User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  appointments      Appointment[]
+  medicalRecords    MedicalRecord[]
+  payments          Payment[]
+  chats             Chat[]
+  exams             Exam[]
+  prescriptions     Prescription[]
+  consents          Consent[]
+  examOrders        ExamOrder[]
+  enrollments       PatientEnrollment[]
+  metabolicMarkers  MetabolicMarker[]
+  npsResponses      NpsResponse[]
+  checkIns          CheckIn[]
+  atestados         Atestado[]
+  digitalSignatures DigitalSignature[]
 
   @@index([cpf])
   @@index([fullName])
@@ -271,17 +275,17 @@ model Patient {
 // Finalidades típicas: "tratamento_clinico", "marketing", "compartilhamento_parceiros", etc.
 
 model Consent {
-  id          String   @id @default(cuid())
-  patientId   String
-  purpose     String   // Finalidade do tratamento (ex: "tratamento_clinico")
-  granted     Boolean  @default(true) // true = consentiu, false = revogou
-  grantedAt   DateTime @default(now())
-  revokedAt   DateTime?
-  ipAddress   String?
-  userAgent   String?
-  notes       String?
+  id        String    @id @default(cuid())
+  patientId String
+  purpose   String // Finalidade do tratamento (ex: "tratamento_clinico")
+  granted   Boolean   @default(true) // true = consentiu, false = revogou
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+  notes     String?
 
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@index([patientId])
   @@index([patientId, purpose])
@@ -293,16 +297,16 @@ model Consent {
 // ============================================
 
 model PreAppointment {
-  id          String   @id @default(cuid())
-  leadId      String
-  doctorId    String
-  date        String   // Formato YYYY-MM-DD
-  time        String   // Formato HH:MM
-  specialty   String
-  status      String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  id        String @id @default(cuid())
+  leadId    String
+  doctorId  String
+  date      String // Formato YYYY-MM-DD
+  time      String // Formato HH:MM
+  specialty String
+  status    String @default("PENDING") // PENDING, CONFIRMED, CANCELLED
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("pre_appointments")
 }
@@ -325,9 +329,9 @@ model Appointment {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  patient        Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctor         Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  insurancePlan  InsurancePlan?  @relation(fields: [insurancePlanId], references: [id], onDelete: SetNull)
+  patient        Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor         Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  insurancePlan  InsurancePlan?   @relation(fields: [insurancePlanId], references: [id], onDelete: SetNull)
   medicalRecord  MedicalRecord?
   prescription   Prescription?
   payment        Payment?
@@ -336,6 +340,7 @@ model Appointment {
   stockMovements StockMovement[]
   guia           GuiaFaturamento?
   npsResponse    NpsResponse?
+  atestados      Atestado[]
 
   @@index([patientId])
   @@index([doctorId])
@@ -349,25 +354,25 @@ model Appointment {
 // ============================================
 
 model MedicalRecord {
-  id              String   @id @default(cuid())
-  patientId       String
-  doctorId        String
-  appointmentId   String?  @unique // 1:1 opcional com Appointment
-  
+  id            String  @id @default(cuid())
+  patientId     String
+  doctorId      String
+  appointmentId String? @unique // 1:1 opcional com Appointment
+
   // Anamnese e diagnóstico
-  chiefComplaint   String?  // Queixa principal
-  historyOfIllness String?  // História da doença atual
+  chiefComplaint   String? // Queixa principal
+  historyOfIllness String? // História da doença atual
   diagnosis        String?
-  prescription     String?  // Prescrição
+  prescription     String? // Prescrição
   observations     String?
 
   // Sinais vitais
-  bloodPressure    String?  // ex: "120/80 mmHg"
-  heartRate        Int?     // bpm
-  temperature      Float?   // °C
-  weight           Float?   // kg
-  height           Float?   // cm
-  oxygenSaturation Float?   // %
+  bloodPressure    String? // ex: "120/80 mmHg"
+  heartRate        Int? // bpm
+  temperature      Float? // °C
+  weight           Float? // kg
+  height           Float? // cm
+  oxygenSaturation Float? // %
 
   // Histórico clínico estruturado
   currentMedications String? // Medicamentos em uso
@@ -376,28 +381,28 @@ model MedicalRecord {
   familyHistory      String? // Histórico familiar
 
   // Hábitos de vida
-  smokingStatus    String?  // NEVER | FORMER | CURRENT
-  alcoholStatus    String?  // NEVER | OCCASIONAL | REGULAR
-  physicalActivity String?  // SEDENTARY | LIGHT | MODERATE | INTENSE
+  smokingStatus    String? // NEVER | FORMER | CURRENT
+  alcoholStatus    String? // NEVER | OCCASIONAL | REGULAR
+  physicalActivity String? // SEDENTARY | LIGHT | MODERATE | INTENSE
 
   // Perguntas específicas da especialidade (JSON livre)
-  specialtyData    Json?
+  specialtyData Json?
 
   // OCR / Anexos (resultados de exames extraídos via OpenAI)
-  attachmentUrl   String?  // URL do arquivo original (se salvar storage)
-  ocrText         String?  // Texto extraído via OCR
-  ocrSummary      String?  // Resumo gerado pela OpenAI
+  attachmentUrl String? // URL do arquivo original (se salvar storage)
+  ocrText       String? // Texto extraído via OCR
+  ocrSummary    String? // Resumo gerado pela OpenAI
 
   // Transcrição da consulta
-  transcript      String?
+  transcript String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctor       Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-  exams        Exam[]
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  exams       Exam[]
 
   @@index([patientId])
   @@index([doctorId])
@@ -430,22 +435,22 @@ enum StockMovementType {
 }
 
 model Exam {
-  id              String    @id @default(cuid())
+  id              String  @id @default(cuid())
   patientId       String
   medicalRecordId String?
 
-  name            String
-  type            ExamType  @default(OTHER)
-  fileUrl         String?
-  fileName        String?
-  fileSize        Int?
-  mimeType        String?
-  ocrText         String?
-  notes           String?
-  examDate        DateTime?
+  name     String
+  type     ExamType  @default(OTHER)
+  fileUrl  String?
+  fileName String?
+  fileSize Int?
+  mimeType String?
+  ocrText  String?
+  notes    String?
+  examDate DateTime?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
   medicalRecord MedicalRecord? @relation(fields: [medicalRecordId], references: [id], onDelete: SetNull)
@@ -460,25 +465,25 @@ model Exam {
 // ============================================
 
 model Payment {
-  id              String         @id @default(cuid())
-  patientId       String
-  appointmentId   String?        @unique
-  enrollmentId    String?
-  amount          Float
-  status          PaymentStatus  @default(PENDING)
-  method          PaymentMethod?
-  dueDate         DateTime
-  paidAt          DateTime?
-  description     String?
-  invoiceUrl      String?        // Link da nota fiscal (se houver)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id            String         @id @default(cuid())
+  patientId     String
+  appointmentId String?        @unique
+  enrollmentId  String?
+  amount        Float
+  status        PaymentStatus  @default(PENDING)
+  method        PaymentMethod?
+  dueDate       DateTime
+  paidAt        DateTime?
+  description   String?
+  invoiceUrl    String? // Link da nota fiscal (se houver)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  patient        Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  appointment    Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-  enrollment     PatientEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
-  doctorPayment  DoctorPayment?
-  examOrder      ExamOrder?
+  patient       Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment   Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  enrollment    PatientEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  doctorPayment DoctorPayment?
+  examOrder     ExamOrder?
 
   @@index([patientId])
   @@index([status])
@@ -499,13 +504,13 @@ enum DoctorPaymentStatus {
 model DoctorPayment {
   id            String              @id @default(cuid())
   doctorId      String
-  appointmentId String?             @unique  // null para repasses de exame sem consulta vinculada
-  paymentId     String?             @unique  // pagamento do paciente que gerou o repasse
+  appointmentId String?             @unique // null para repasses de exame sem consulta vinculada
+  paymentId     String?             @unique // pagamento do paciente que gerou o repasse
   amount        Float
   status        DoctorPaymentStatus @default(PENDING)
   paidAt        DateTime?
-  nfNumber      String?             // Número da NF ou Recibo do médico
-  nfFileUrl     String?             // URL do arquivo da NF (opcional)
+  nfNumber      String? // Número da NF ou Recibo do médico
+  nfFileUrl     String? // URL do arquivo da NF (opcional)
   notes         String?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -526,10 +531,10 @@ model DoctorPayment {
 // ============================================
 
 model AccountPayable {
-  id          String               @id @default(cuid())
-  description String
-  category    String?              // Ex: "Aluguel", "Energia", "Material"
-  supplier    String?              // Fornecedor
+  id            String               @id @default(cuid())
+  description   String
+  category      String? // Ex: "Aluguel", "Energia", "Material"
+  supplier      String? // Fornecedor
   supplierCnpj  String?
   digitableLine String?
   barcode       String?
@@ -537,14 +542,14 @@ model AccountPayable {
   fileUrl       String?
   ocrRawText    String?
   ocrConfidence Float?
-  ocrStatus     String   @default("PENDING")
-  amount      Float
-  status      AccountPayableStatus @default(PENDING)
-  dueDate     DateTime
-  paidAt      DateTime?
-  notes       String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  ocrStatus     String               @default("PENDING")
+  amount        Float
+  status        AccountPayableStatus @default(PENDING)
+  dueDate       DateTime
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   @@index([status])
   @@index([dueDate])
@@ -557,15 +562,15 @@ model AccountPayable {
 // ============================================
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  action     String   // Ex: "CREATE", "UPDATE", "DELETE", "LOGIN"
-  entity     String   // Ex: "Patient", "Appointment"
-  entityId   String?
-  metadata   Json?    // Dados adicionais (antes/depois, IP, etc.)
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String // Ex: "CREATE", "UPDATE", "DELETE", "LOGIN"
+  entity    String // Ex: "Patient", "Appointment"
+  entityId  String?
+  metadata  Json? // Dados adicionais (antes/depois, IP, etc.)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -576,11 +581,11 @@ model AuditLog {
 }
 
 model Lead {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   name      String
   phone     String
   specialty String?
-  status    String   @default("NOVO")
+  status    String  @default("NOVO")
 
   // Campos opcionais capturados na importação Excel
   cpf                   String?
@@ -608,31 +613,31 @@ model Lead {
 }
 
 model ChatLog {
-  id        String   @id @default(cuid())
-  phone     String   @default("simulador")
-  intent    String?  // agendamento, pagamento, urgencia, humano, etc.
-  message   String
-  isUser    Boolean  @default(true)
-  
+  id      String  @id @default(cuid())
+  phone   String  @default("simulador")
+  intent  String? // agendamento, pagamento, urgencia, humano, etc.
+  message String
+  isUser  Boolean @default(true)
+
   createdAt DateTime @default(now())
 
   @@map("chat_logs")
 }
 
 model Chat {
-  id          String      @id @default(cuid())
-  phone       String      @unique
-  patientId   String?
-  status      ChatStatus  @default(ACTIVE)
-  aiPaused    Boolean     @default(false)
+  id                      String     @id @default(cuid())
+  phone                   String     @unique
+  patientId               String?
+  status                  ChatStatus @default(ACTIVE)
+  aiPaused                Boolean    @default(false)
   transferredToDoctorId   String?
   pendingTransferDoctorId String?
-  lastMessageAt DateTime  @default(now())
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  lastMessageAt           DateTime   @default(now())
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
 
-  patient     Patient?    @relation(fields: [patientId], references: [id])
-  doctor      Doctor?     @relation(fields: [transferredToDoctorId], references: [id])
+  patient Patient? @relation(fields: [patientId], references: [id])
+  doctor  Doctor?  @relation(fields: [transferredToDoctorId], references: [id])
 
   @@map("chats")
 }
@@ -655,11 +660,13 @@ model Prescription {
   emittedAt     DateTime  @default(now())
   validUntil    DateTime?
   notes         String?
+  signatureId   String?   @unique
 
-  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  patient     Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   items       PrescriptionItem[]
+  signature   DigitalSignature?  @relation(fields: [signatureId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
   @@index([doctorId])
@@ -687,16 +694,16 @@ model PrescriptionItem {
 // ============================================
 
 model InsurancePlan {
-  id          String   @id @default(cuid())
-  name        String
-  ansCode     String?  // Código ANS (registro da operadora na ANS)
-  phone       String?
-  email       String?
-  isActive    Boolean  @default(true)
+  id                         String   @id @default(cuid())
+  name                       String
+  ansCode                    String? // Código ANS (registro da operadora na ANS)
+  phone                      String?
+  email                      String?
+  isActive                   Boolean  @default(true)
   // Código do prestador (clínica) junto a esta operadora — obrigatório para XML TISS
   codigoPrestadorNaOperadora String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   contracts    InsuranceContract[]
   appointments Appointment[]
@@ -712,7 +719,7 @@ model InsuranceContract {
   planId          String
   startDate       DateTime
   endDate         DateTime?
-  consultationFee Float?    // Valor da consulta neste contrato (sobrescreve padrão do médico)
+  consultationFee Float? // Valor da consulta neste contrato (sobrescreve padrão do médico)
   notes           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -725,13 +732,13 @@ model InsuranceContract {
 }
 
 model InsuranceProcedure {
-  id           String   @id @default(cuid())
-  contractId   String
-  tussCode     String   // Código TUSS (Terminologia Unificada da Saúde Suplementar)
-  description  String
-  price        Float
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  contractId  String
+  tussCode    String // Código TUSS (Terminologia Unificada da Saúde Suplementar)
+  description String
+  price       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   contract InsuranceContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
@@ -749,9 +756,9 @@ model ExamCatalog {
   name         String
   description  String?
   price        Float
-  duration     Int?         // Duração estimada em minutos
+  duration     Int? // Duração estimada em minutos
   repasseType  RepasseType?
-  repasseValue Float?       // Sobrescreve repasse padrão do médico se preenchido
+  repasseValue Float? // Sobrescreve repasse padrão do médico se preenchido
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -763,26 +770,29 @@ model ExamCatalog {
 }
 
 model ExamOrder {
-  id            String          @id @default(cuid())
-  patientId     String
-  doctorId      String
-  catalogId     String
-  appointmentId String?
-  scheduledAt   DateTime?
-  completedAt   DateTime?
-  status        ExamOrderStatus @default(PENDING)
-  notes         String?
-  paymentId     String?         @unique
-  doctorPaymentId String?       @unique
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id              String          @id @default(cuid())
+  patientId       String
+  doctorId        String
+  catalogId       String
+  appointmentId   String?
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  status          ExamOrderStatus @default(PENDING)
+  notes           String?
+  laudoContent    String?
+  paymentId       String?         @unique
+  doctorPaymentId String?         @unique
+  signatureId     String?         @unique
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  patient       Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctor        Doctor         @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  catalog       ExamCatalog    @relation(fields: [catalogId], references: [id])
-  appointment   Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-  payment       Payment?       @relation(fields: [paymentId], references: [id], onDelete: SetNull)
-  doctorPayment DoctorPayment? @relation(fields: [doctorPaymentId], references: [id], onDelete: SetNull)
+  patient       Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  catalog       ExamCatalog       @relation(fields: [catalogId], references: [id])
+  appointment   Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  payment       Payment?          @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  doctorPayment DoctorPayment?    @relation(fields: [doctorPaymentId], references: [id], onDelete: SetNull)
+  signature     DigitalSignature? @relation(fields: [signatureId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
   @@index([doctorId])
@@ -795,15 +805,15 @@ model ExamOrder {
 // ============================================
 
 model Material {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  unit         String    // ex: "unidade", "caixa", "frasco"
-  minStock     Float     @default(0)
-  currentStock Float     @default(0)
-  costPrice    Float?    // Custo unitário de compra
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  unit         String // ex: "unidade", "caixa", "frasco"
+  minStock     Float    @default(0)
+  currentStock Float    @default(0)
+  costPrice    Float? // Custo unitário de compra
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   movements StockMovement[]
 
@@ -860,7 +870,7 @@ model LoteFaturamento {
   id              String     @id @default(cuid())
   insurancePlanId String
   numeroLote      Int
-  competencia     String     // "YYYY-MM"
+  competencia     String // "YYYY-MM"
   status          LoteStatus @default(ABERTO)
   valorTotal      Float      @default(0)
   dataEnvio       DateTime?
@@ -868,7 +878,7 @@ model LoteFaturamento {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  plan  InsurancePlan   @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
+  plan  InsurancePlan     @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
   guias GuiaFaturamento[]
 
   @@unique([insurancePlanId, numeroLote])
@@ -887,13 +897,13 @@ model GuiaFaturamento {
   numeroGuia      String
 
   // Autorização
-  numeroAutorizacao   String?
-  dataAutorizacao     DateTime?
+  numeroAutorizacao String?
+  dataAutorizacao   DateTime?
 
   // Beneficiário (desnormalizado para o XML)
   nomeBeneficiario    String
   numeroCarteirinha   String
-  validadeCarteirinha String?  // "MM/YYYY"
+  validadeCarteirinha String? // "MM/YYYY"
 
   // Executante
   codigoPrestadorNaOperadora String?
@@ -904,20 +914,20 @@ model GuiaFaturamento {
   motivoGlosa      String?
 
   // Dados clínicos (Guia Consulta)
-  tipoConsulta       Int?    // 1=1º atend, 2=retorno, 3=pré-natal
-  tussCode           String? // código TUSS principal
-  cbos               String? // CBOS do médico executante
-  crmExecutante      String?
-  crmEstado          String?
-  nomeExecutante     String?
-  indicacaoAcidente  Int     @default(9) // 9=outros, 1=trabalho, 2=trânsito
+  tipoConsulta      Int? // 1=1º atend, 2=retorno, 3=pré-natal
+  tussCode          String? // código TUSS principal
+  cbos              String? // CBOS do médico executante
+  crmExecutante     String?
+  crmEstado         String?
+  nomeExecutante    String?
+  indicacaoAcidente Int     @default(9) // 9=outros, 1=trabalho, 2=trânsito
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lote          LoteFaturamento?  @relation(fields: [loteId], references: [id], onDelete: SetNull)
-  plan          InsurancePlan     @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
-  appointment   Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  lote          LoteFaturamento?   @relation(fields: [loteId], references: [id], onDelete: SetNull)
+  plan          InsurancePlan      @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
+  appointment   Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   procedimentos GuiaProcedimento[]
 
   @@index([insurancePlanId])
@@ -927,11 +937,11 @@ model GuiaFaturamento {
 }
 
 model GuiaProcedimento {
-  id            String  @id @default(cuid())
+  id            String @id @default(cuid())
   guiaId        String
   tussCode      String
   descricao     String
-  quantidade    Float   @default(1)
+  quantidade    Float  @default(1)
   valorUnitario Float
   valorTotal    Float
 
@@ -949,10 +959,10 @@ model PreventivoProgram {
   id           String   @id @default(cuid())
   name         String
   description  String?
-  durationDays Int      // duração total do programa em dias
-  monthlyFee   Float    // mensalidade (R$)
+  durationDays Int // duração total do programa em dias
+  monthlyFee   Float // mensalidade (R$)
   entryFee     Float    @default(0) // taxa de entrada (R$)
-  clinicScope  String?  // escopo clínico (texto livre)
+  clinicScope  String? // escopo clínico (texto livre)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -971,7 +981,7 @@ model PatientEnrollment {
   endDate         DateTime?
   status          EnrollmentStatus @default(ACTIVE)
   journeyStage    JourneyStage     @default(ONBOARDING)
-  monthlyFee      Float            // pode sobrescrever o valor do programa
+  monthlyFee      Float // pode sobrescrever o valor do programa
   nextBillingDate DateTime
   cancelReason    String?
   cancelledAt     DateTime?
@@ -979,10 +989,10 @@ model PatientEnrollment {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  program   PreventivoProgram @relation(fields: [programId], references: [id])
-  payments  Payment[]
-  checkIns  CheckIn[]
+  patient      Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  program      PreventivoProgram @relation(fields: [programId], references: [id])
+  payments     Payment[]
+  checkIns     CheckIn[]
   npsResponses NpsResponse[]
 
   @@index([patientId])
@@ -1000,16 +1010,16 @@ model MetabolicMarker {
   id            String   @id @default(cuid())
   patientId     String
   date          DateTime
-  weight        Float?   // kg
-  bmi           Float?   // kg/m²
-  systolicBP    Float?   // mmHg
-  diastolicBP   Float?   // mmHg
-  glucose       Float?   // mg/dL (glicemia em jejum)
-  hba1c         Float?   // % (hemoglobina glicada)
-  totalChol     Float?   // mg/dL (colesterol total)
-  ldl           Float?   // mg/dL
-  hdl           Float?   // mg/dL
-  triglycerides Float?   // mg/dL
+  weight        Float? // kg
+  bmi           Float? // kg/m²
+  systolicBP    Float? // mmHg
+  diastolicBP   Float? // mmHg
+  glucose       Float? // mg/dL (glicemia em jejum)
+  hba1c         Float? // % (hemoglobina glicada)
+  totalChol     Float? // mg/dL (colesterol total)
+  ldl           Float? // mg/dL
+  hdl           Float? // mg/dL
+  triglycerides Float? // mg/dL
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1030,7 +1040,7 @@ model NpsResponse {
   patientId     String
   appointmentId String?   @unique
   enrollmentId  String?
-  score         Int       // 0–10 (NPS)
+  score         Int // 0–10 (NPS)
   comment       String?
   sentAt        DateTime? // quando a mensagem Z-API foi enviada
   respondedAt   DateTime?
@@ -1069,4 +1079,81 @@ model CheckIn {
   @@index([enrollmentId])
   @@index([scheduledAt])
   @@map("check_ins")
+}
+
+// ============================================
+// ASSINATURA DIGITAL (Vidaas / BirDI / Mock)
+// ============================================
+
+enum SignatureProvider {
+  MOCK
+  VIDAAS
+  BIRDID
+}
+
+enum SignatureStatus {
+  PENDING
+  SIGNED
+  FAILED
+}
+
+enum SignedDocumentType {
+  ATESTADO
+  RECEITA
+  LAUDO
+}
+
+model DigitalSignature {
+  id            String             @id @default(cuid())
+  documentType  SignedDocumentType
+  provider      SignatureProvider  @default(MOCK)
+  status        SignatureStatus    @default(PENDING)
+  doctorId      String
+  patientId     String
+  referenceId   String // ID do Atestado / Prescription / ExamOrder
+  oauthState    String?            @unique
+  pdfPath       String?
+  signedPdfPath String?
+  documentHash  String?
+  signerName    String?
+  signerCpf     String?
+  signedAt      DateTime?
+  metadata      Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  doctor    Doctor        @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient   Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  atestado  Atestado?
+  receita   Prescription?
+  examOrder ExamOrder?
+
+  @@index([status])
+  @@index([doctorId])
+  @@index([referenceId])
+  @@map("digital_signatures")
+}
+
+model Atestado {
+  id            String   @id @default(cuid())
+  patientId     String
+  doctorId      String
+  appointmentId String?
+  dias          Int
+  cid           String?
+  finalidade    String // "trabalho" | "escola" | "outro"
+  observacoes   String?
+  dataAtestado  DateTime @default(now())
+  signatureId   String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  signature   DigitalSignature? @relation(fields: [signatureId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("atestados")
 }

@@ -1,4 +1,4 @@
-# v35 — feat: Exames/Procedimentos, Convênios, Estoque, isReturn, Agenda integrada
+# v36 — feat: Assinatura Digital (Vidaas/BirDI/Mock), Atestados DB, PDF generator
 FROM node:22-slim
 
 WORKDIR /app
