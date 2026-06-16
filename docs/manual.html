@@ -274,10 +274,13 @@
   </div>
 
   <div class="toc-section">
-    <h3>Medicina Preventiva (Sprint A+B+C)</h3>
+    <h3>Medicina Preventiva (Sprint A+B+C + PREVIA-Digital)</h3>
     <div class="toc-item"><span class="num">20.</span> Programas Preventivos <span class="dots"></span></div>
     <div class="toc-item"><span class="num">20a.</span> &nbsp;&nbsp;↳ Marcadores Metabólicos <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">20b.</span> &nbsp;&nbsp;↳ Check-ins e Jornada do Paciente <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">20c.</span> &nbsp;&nbsp;↳ Perfil de Risco Preventivo <span class="dots"></span></div>
     <div class="toc-item"><span class="num">21.</span> Analytics e DRE <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">21a.</span> &nbsp;&nbsp;↳ KPIs do Piloto PREVIA-Digital <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -1351,6 +1354,28 @@
     <tr><td>Valor do Repasse</td><td>Valor para cálculo do repasse ao médico responsável</td></tr>
   </table>
 
+  <div class="tip">
+    💡 <strong>Catálogo pré-carregado:</strong> O sistema já inclui <strong>110 exames laboratoriais</strong> cadastrados (Hematologia, Bioquímica, Lipidograma, Hormônios, Sorologias, Oncologia e 6 pacotes preventivos). Edite preços e repasses conforme a tabela da sua clínica.
+  </div>
+
+  <h3>Exames Laboratoriais Pré-cadastrados</h3>
+  <table>
+    <tr><th>Categoria</th><th>Exemplos</th></tr>
+    <tr><td>Hematologia</td><td>Hemograma, Coagulograma, D-Dímero, Fibrinogênio</td></tr>
+    <tr><td>Metabólico</td><td>Glicemia, HbA1c, Insulina basal, HOMA-IR, Curva glicêmica</td></tr>
+    <tr><td>Lipidograma</td><td>Colesterol total+frações, Triglicérides, Lp(a), Apo A1/B</td></tr>
+    <tr><td>Hepatologia</td><td>TGO, TGP, GGT, Hepatograma completo</td></tr>
+    <tr><td>Nefrologia</td><td>Creatinina, Ureia, Ácido Úrico, Cistatina C, Microalbuminúria</td></tr>
+    <tr><td>Tireoide</td><td>TSH, T4/T3 livre, Anti-TPO, Painel tireoidiano completo</td></tr>
+    <tr><td>Cardiovascular</td><td>PCR-us, Homocisteína, Troponina, NT-proBNP, IL-6</td></tr>
+    <tr><td>Vitaminas e Minerais</td><td>Vitamina D, B12, Ácido Fólico, Zinco, Magnésio, Ferritina, Selênio</td></tr>
+    <tr><td>Hormônios</td><td>Cortisol, DHEA-S, Testosterona, Estradiol, FSH, LH, IGF-1, PTH</td></tr>
+    <tr><td>Oncologia</td><td>PSA total/livre, CEA, CA 125, CA 19-9, CA 15-3, AFP</td></tr>
+    <tr><td>Autoimunidade</td><td>FAN, Fator Reumatoide, Anti-CCP, Anti-DNA, Complemento</td></tr>
+    <tr><td>Sorologias</td><td>HIV, VDRL, Hepatites A/B/C, Toxoplasmose, CMV, Chagas</td></tr>
+    <tr><td>Pacotes Preventivos</td><td>Check-up básico, Cardiometabólico, Hormonal M/F, Longevidade</td></tr>
+  </table>
+
   <h3>Solicitando um Exame / Procedimento</h3>
   <p>A solicitação pode ser feita de três formas:</p>
   <ul>
@@ -1757,9 +1782,183 @@
   </div>
 </div>
 
+<!-- ════════════════════════ 20b. CHECK-INS E JORNADA ══════ -->
+<div class="module" id="checkins">
+  <div class="module-header">
+    <div class="module-icon">✅</div>
+    <div>
+      <h2>20b. Check-ins e Jornada do Paciente</h2>
+      <p>Adesão ao programa e estágios da jornada preventiva</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-blue">MÉDICO</span>
+    <span class="badge badge-yellow">RECEPCIONISTA</span>
+  </div>
+
+  <p>O módulo de <strong>Check-ins</strong> registra os pontos de contato periódicos entre a clínica e o paciente durante o programa preventivo. A <strong>Jornada do Paciente</strong> acompanha o estágio atual do paciente dentro do ciclo do programa.</p>
+
+  <h3>Aba Check-ins — Página Programas</h3>
+  <p>Na página <strong>Programas Preventivos</strong>, acesse a aba <strong>"Check-ins"</strong>. O badge numérico indica quantos check-ins estão pendentes.</p>
+
+  <h3>Tipos de Check-in</h3>
+  <table>
+    <tr><th>Tipo</th><th>Quando usar</th></tr>
+    <tr><td>Avaliação Inicial</td><td>Primeiro contato após matrícula — coleta dados base</td></tr>
+    <tr><td>Revisão Mensal</td><td>Acompanhamento periódico mensal</td></tr>
+    <tr><td>Revisão Metabólica</td><td>Análise de marcadores metabólicos</td></tr>
+    <tr><td>Resultados de Exames</td><td>Discussão de laudos laboratoriais</td></tr>
+    <tr><td>Seguimento</td><td>Contato avulso fora do ciclo regular</td></tr>
+  </table>
+
+  <h3>Agendar Novo Check-in</h3>
+  <ol class="steps">
+    <li><span>Na aba Check-ins, clique em <strong>"+ Agendar Check-in"</strong>.</span></li>
+    <li><span>Selecione a matrícula ativa (paciente + programa).</span></li>
+    <li><span>Escolha o tipo de check-in.</span></li>
+    <li><span>Informe data e hora.</span></li>
+    <li><span>Adicione notas clínicas relevantes (opcional).</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>.</span></li>
+  </ol>
+
+  <h3>Concluir um Check-in</h3>
+  <p>Na tabela de <em>Check-ins Pendentes</em>, clique em <strong>"Concluir"</strong> na linha correspondente. O sistema registra o horário de conclusão e move o item para a tabela de check-ins realizados.</p>
+
+  <h3>Taxa de Adesão</h3>
+  <p>O KPI <strong>"Adesão check-ins"</strong> no topo da página é calculado como:</p>
+  <p style="background:#f0f9f0; padding:10px 16px; border-radius:6px; font-family:monospace; color:#1B5E3F; margin:12px 0;">
+    Adesão (%) = Check-ins concluídos ÷ Total de check-ins do período × 100
+  </p>
+  <p>Meta PREVIA-Digital: ≥ 70% de adesão nos primeiros 90 dias.</p>
+
+  <h3>Jornada do Paciente (Journey Stage)</h3>
+  <p>Na aba <strong>Matrículas</strong>, o campo <em>Jornada</em> indica em qual estágio o paciente se encontra:</p>
+  <table>
+    <tr><th>Estágio</th><th>Significado</th></tr>
+    <tr><td><span class="badge badge-blue">Onboarding</span></td><td>Matrícula recente — primeiros 30 dias</td></tr>
+    <tr><td><span class="badge badge-green">Ativo</span></td><td>Paciente engajado e com adesão regular</td></tr>
+    <tr><td><span class="badge badge-yellow">Em Risco</span></td><td>Baixa adesão ou marcadores deteriorando</td></tr>
+    <tr><td><span class="badge badge-blue">Concluído</span></td><td>Ciclo encerrado com sucesso</td></tr>
+    <tr><td><span class="badge badge-red">Churned</span></td><td>Cancelou o programa</td></tr>
+  </table>
+  <p>Para matrículas <strong>Ativas</strong> ou <strong>Pausadas</strong>, o estágio pode ser editado diretamente no select da tabela. Estágios finais (Concluído / Churned) são somente leitura após cancelamento.</p>
+
+  <h3>Cancelamento com Motivo</h3>
+  <p>Ao clicar em <strong>"Cancelar"</strong> na linha de uma matrícula ativa, o sistema abre um modal solicitando o <strong>motivo do cancelamento</strong>. Informe o motivo e confirme. O motivo é registrado para análise de churn.</p>
+
+  <div class="tip">
+    💡 <strong>Dica:</strong> Registre o motivo do cancelamento com precisão — "custo", "mudança de cidade", "alta médica" geram insights distintos para redução de churn.
+  </div>
+</div>
+
+<!-- ════════════════════════ 20c. PERFIL DE RISCO ═════════ -->
+<div class="module" id="risco">
+  <div class="module-header">
+    <div class="module-icon">🎯</div>
+    <div>
+      <h2>20c. Perfil de Risco Preventivo</h2>
+      <p>Classificação de risco cardiometabólico do paciente</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+    <span class="badge badge-blue">MÉDICO</span>
+  </div>
+
+  <p>O <strong>Perfil de Risco Preventivo</strong> classifica o paciente conforme o risco cardiometabólico identificado. Essa classificação determina a elegibilidade para programas preventivos e alimenta os KPIs do piloto PREVIA-Digital.</p>
+
+  <h3>Acessar e Atualizar o Perfil de Risco</h3>
+  <ol class="steps">
+    <li><span>Acesse <strong>Pacientes</strong> e clique no paciente desejado.</span></li>
+    <li><span>Na aba <strong>Ficha</strong>, role até a seção <strong>"Perfil de Risco Preventivo"</strong>.</span></li>
+    <li><span>Selecione o perfil no dropdown. A alteração é salva automaticamente.</span></li>
+  </ol>
+
+  <h3>Perfis Disponíveis</h3>
+  <table>
+    <tr><th>Perfil</th><th>Descrição</th><th>Elegível para programa?</th></tr>
+    <tr><td><span class="badge" style="background:#e5e7eb;color:#374151">Sem risco</span></td><td>Sem fatores de risco identificados</td><td>Não</td></tr>
+    <tr><td><span class="badge badge-yellow">Metabólico</span></td><td>Obesidade, pré-diabetes ou dislipidemia isolada</td><td>Sim</td></tr>
+    <tr><td><span class="badge badge-red">Cardiometabólico</span></td><td>Combinação de fatores (DM + HAS + dislipidemia)</td><td>Sim</td></tr>
+    <tr><td><span class="badge badge-red" style="background:#7f1d1d">Alto risco</span></td><td>Evento cardiovascular prévio ou risco muito elevado</td><td>Sim</td></tr>
+  </table>
+
+  <div class="info">
+    ℹ️ Pacientes com perfil <strong>Metabólico</strong>, <strong>Cardiometabólico</strong> ou <strong>Alto risco</strong> são contados como <em>elegíveis</em> no KPI de Conversão de Elegíveis (Analytics → KPIs do Piloto).
+  </div>
+</div>
+
+<!-- ════════════════════════ 21a. KPIs DO PILOTO ════════ -->
+<div class="module" id="kpis-piloto">
+  <div class="module-header">
+    <div class="module-icon">🏆</div>
+    <div>
+      <h2>21a. KPIs do Piloto PREVIA-Digital</h2>
+      <p>12 indicadores do framework de medicina preventiva para o piloto de 90 dias</p>
+    </div>
+  </div>
+
+  <div class="roles">
+    <span class="badge badge-red">ADMIN</span>
+  </div>
+
+  <p>A aba <strong>"KPIs do Piloto"</strong> na página Analytics consolida os 12 indicadores-chave exigidos pelo framework PREVIA-Digital para avaliação do piloto de medicina preventiva nos primeiros 90 dias.</p>
+
+  <h3>Acesso</h3>
+  <ol class="steps">
+    <li><span>Acesse <strong>Analytics</strong> no menu lateral.</span></li>
+    <li><span>Selecione o período desejado (recomendado: últimos 90 dias para avaliação do piloto).</span></li>
+    <li><span>Clique na aba <strong>"KPIs do Piloto"</strong>.</span></li>
+  </ol>
+
+  <h3>Anéis de Retenção (30 / 60 / 90 dias)</h3>
+  <p>Os três anéis circulares mostram a taxa de retenção em cada janela temporal:</p>
+  <table>
+    <tr><th>Anel</th><th>Cálculo</th><th>Meta sugerida</th></tr>
+    <tr><td>Retenção 30d</td><td>Pacientes que completaram 30 dias ativos / matriculados há 30+ dias</td><td>≥ 80%</td></tr>
+    <tr><td>Retenção 60d</td><td>Pacientes que completaram 60 dias ativos / matriculados há 60+ dias</td><td>≥ 70%</td></tr>
+    <tr><td>Retenção 90d</td><td>Pacientes que completaram 90 dias ativos / matriculados há 90+ dias</td><td>≥ 60%</td></tr>
+  </table>
+
+  <h3>Scorecard dos 12 KPIs</h3>
+  <table>
+    <tr><th>#</th><th>Indicador</th><th>Fonte</th></tr>
+    <tr><td>1</td><td>Pacientes elegíveis (risco metabólico/alto)</td><td>Perfil de Risco dos pacientes</td></tr>
+    <tr><td>2</td><td>Taxa de conversão de elegíveis</td><td>Elegíveis com matrícula ativa ÷ total elegíveis</td></tr>
+    <tr><td>3</td><td>Adesão a check-ins (%)</td><td>Check-ins concluídos ÷ total agendados no período</td></tr>
+    <tr><td>4</td><td>Completude dos dados (%)</td><td>Pacientes com CPF + nasc. + telefone + perfil de risco preenchidos</td></tr>
+    <tr><td>5</td><td>Retenção 30 dias</td><td>Matrículas ativas após 30 dias</td></tr>
+    <tr><td>6</td><td>Retenção 60 dias</td><td>Matrículas ativas após 60 dias</td></tr>
+    <tr><td>7</td><td>Retenção 90 dias</td><td>Matrículas ativas após 90 dias</td></tr>
+    <tr><td>8</td><td>Churn mensal (%)</td><td>Cancelamentos no período ÷ ativos no início do período</td></tr>
+    <tr><td>9</td><td>Pacientes por profissional</td><td>Matrículas ativas ÷ médicos com pelo menos 1 paciente ativo</td></tr>
+    <tr><td>10</td><td>MRR (Receita Recorrente Mensal)</td><td>Soma das mensalidades dos programas ativos</td></tr>
+    <tr><td>11</td><td>NPS (Net Promoter Score)</td><td>% Promotores − % Detratores (veja Analytics → Unit Economics)</td></tr>
+    <tr><td>12</td><td>Total de pacientes cadastrados</td><td>Base total de pacientes no sistema</td></tr>
+  </table>
+
+  <h3>Interpretação do Scorecard</h3>
+  <p>Cada KPI exibe um indicador de status:</p>
+  <ul style="margin-left:24px; margin-bottom:12px; color:#333;">
+    <li><span class="badge badge-green">●</span> <strong>Verde</strong> — meta atingida (valor &gt; 0 ou acima do limiar)</li>
+    <li><span class="badge" style="background:#e5e7eb;color:#6b7280">●</span> <strong>Cinza</strong> — sem dados suficientes no período</li>
+  </ul>
+
+  <div class="tip">
+    💡 <strong>Relatório de piloto:</strong> Use o período "Personalizado" para cobrir exatamente os 90 dias do piloto (ex: 15/06/2026 a 13/09/2026) e exporte os KPIs para o relatório final do framework PREVIA-Digital.
+  </div>
+
+  <div class="info">
+    ℹ️ Os KPIs 5–7 (retenção) e 3 (adesão) dependem de check-ins e matrículas com datas de início registradas. Certifique-se de que cada matrícula tem data de início correta e os check-ins foram agendados e concluídos pelo sistema.
+  </div>
+</div>
+
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.2 · Junho 2026<br>
+  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.3 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
