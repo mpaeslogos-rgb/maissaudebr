@@ -11,20 +11,10 @@ export class MockSignatureProvider implements ISignatureProvider {
   }
 
   async sign(pdfBuffer: Buffer, _params: SignatureCallbackParams) {
-    // Simula assinatura: appenda um bloco de texto de "assinatura" ao buffer
-    const mockSig = Buffer.from(
-      `\n%% MOCK DIGITAL SIGNATURE %%\n` +
-        `Provider: Mock (Sandbox)\n` +
-        `Hash: ${crypto.createHash("sha256").update(pdfBuffer).digest("hex")}\n` +
-        `Signed at: ${new Date().toISOString()}\n` +
-        `%% END MOCK SIGNATURE %%\n`
-    );
-    const signedBuffer = Buffer.concat([pdfBuffer, mockSig]);
-
     return {
-      signedBuffer,
+      signedBuffer: pdfBuffer,
       result: {
-        signerName: "Médico Sandbox",
+        signerName: "Médico Sandbox (Mock)",
         signerCpf: "000.000.000-00",
         signedAt: new Date(),
       },

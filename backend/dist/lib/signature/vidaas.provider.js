@@ -69,7 +69,7 @@ class VidaasProvider {
                         alias: "Documento Médico",
                         hash: hashBase64,
                         hash_algorithm: "2.16.840.1.101.3.4.2.1",
-                        signature_format: "CAdES_AD_RB",
+                        signature_format: "PAdES_AD_RB",
                         base64_content: pdfBuffer.toString("base64"),
                     },
                 ],
