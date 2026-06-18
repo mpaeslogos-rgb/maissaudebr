@@ -50,30 +50,29 @@ class VidaasProvider {
             redirect_uri: callbackUrl,
             code_verifier: codeVerifier,
         }), { headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-        const sessionToken = tokenResp.data.signature_session;
-        // Calcula hash SHA-256 do PDF
-        const documentHash = crypto_1.default.createHash("sha256").update(pdfBuffer).digest("hex");
-        // Solicita assinatura PAdES (PDF com assinatura embutida)
-        const signResp = await axios_1.default.post(`${VIDAAS_BASE}/v1/signatures`, {
+        const accessToken = tokenResp.data.access_token;
+        const signerCpf = tokenResp.data.authorized_identification ?? "";
+        const hashBase64 = crypto_1.default.createHash("sha256").update(pdfBuffer).digest("base64");
+        const signResp = await axios_1.default.post(`${VIDAAS_BASE}/v0/oauth/signature`, {
             hashes: [
                 {
                     id: "doc-1",
                     alias: "Documento Médico",
-                    hash: documentHash,
-                    hash_algorithm: "SHA256",
-                    signature_format: "PAdES_AD_RB",
+                    hash: hashBase64,
+                    hash_algorithm: "2.16.840.1.101.3.4.2.1",
+                    signature_format: "CAdES_AD_RB",
+                    base64_content: pdfBuffer.toString("base64"),
                 },
             ],
-        }, { headers: { Authorization: `Bearer ${sessionToken}` } });
-        const signedBase64 = signResp.data.signatures?.[0]?.file_base64_encoded;
-        if (!signedBase64)
+        }, { headers: { Authorization: `Bearer ${accessToken}` } });
+        const rawSignature = signResp.data.signatures?.[0]?.raw_signature;
+        if (!rawSignature)
             throw new Error("Vidaas: resposta de assinatura inválida");
-        const signedBuffer = Buffer.from(signedBase64, "base64");
-        const signerName = signResp.data.signatures?.[0]?.signer_name ?? "Desconhecido";
-        const signerCpf = signResp.data.signatures?.[0]?.signer_cpf ?? "";
+        const signedBuffer = Buffer.from(rawSignature.replace(/\r?\n/g, ""), "base64");
+        const certAlias = signResp.data.certificate_alias ?? "";
         return {
             signedBuffer,
-            result: { signerName, signerCpf, signedAt: new Date() },
+            result: { signerName: certAlias || "Certificado ICP-Brasil", signerCpf, signedAt: new Date() },
         };
     }
 }
