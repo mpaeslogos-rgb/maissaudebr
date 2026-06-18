@@ -1,4 +1,4 @@
-# v38 — build: dist/ pré-compilado localmente; sem tsc em Railway
+# v39 — fix: DOCTOR role em /insurance-plans + Vidaas debug detalhado
 FROM node:22-slim
 
 WORKDIR /app
