@@ -5,31 +5,39 @@ import { FlaskConical, Search, X, Check, Loader2, PenLine } from "lucide-react";
 import {
   createExamOrdersBatch,
   getExamCatalog,
+  getPatients,
+  getDoctors,
   initSignature,
   type ExamCatalog,
   type ExamOrder,
   type SignatureProvider,
 } from "@/lib/api";
+import type { Doctor, Patient } from "@/lib/types";
 
 interface Props {
-  patientId: string;
-  doctorId: string;
-  patientName: string;
+  patientId?: string;
+  doctorId?: string;
+  patientName?: string;
   appointmentId?: string;
   onClose: () => void;
   onCreated?: (orders: ExamOrder[]) => void;
 }
 
 export function ExamSelectorModal({
-  patientId,
-  doctorId,
-  patientName,
+  patientId: initialPatientId,
+  doctorId: initialDoctorId,
+  patientName: initialPatientName,
   appointmentId,
   onClose,
   onCreated,
 }: Props) {
   const [catalog, setCatalog] = useState<ExamCatalog[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [selPatientId, setSelPatientId] = useState(initialPatientId ?? "");
+  const [selDoctorId, setSelDoctorId] = useState(initialDoctorId ?? "");
+  const needsContext = !initialPatientId || !initialDoctorId;
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [scheduledAt, setScheduledAt] = useState("");
@@ -41,11 +49,19 @@ export function ExamSelectorModal({
   const [signError, setSignError] = useState("");
 
   useEffect(() => {
-    getExamCatalog()
-      .then((data) => setCatalog(data))
-      .catch(() => setError("Erro ao carregar catálogo de exames."))
-      .finally(() => setLoadingCatalog(false));
-  }, []);
+    const promises: Promise<void>[] = [
+      getExamCatalog()
+        .then((data) => setCatalog(data))
+        .catch(() => setError("Erro ao carregar catálogo de exames.")),
+    ];
+    if (needsContext) {
+      promises.push(
+        getPatients({ limit: 500 }).then((r) => setPatients(r.data)).catch(() => {}),
+        getDoctors({ limit: 100 }).then((r) => setDoctors(r.data.filter((d: any) => d.user?.isActive))).catch(() => {}),
+      );
+    }
+    Promise.allSettled(promises).finally(() => setLoadingCatalog(false));
+  }, [needsContext]);
 
   const filtered = catalog.filter(
     (c) => c.isActive && c.name.toLowerCase().includes(search.toLowerCase())
@@ -65,12 +81,16 @@ export function ExamSelectorModal({
 
   async function handleSubmit() {
     if (selectedIds.size === 0) return;
+    const pid = selPatientId;
+    const did = selDoctorId;
+    if (!pid) return setError("Selecione um paciente.");
+    if (!did) return setError("Selecione um médico.");
     setSaving(true);
     setError("");
     try {
       const orders = await createExamOrdersBatch({
-        patientId,
-        doctorId,
+        patientId: pid,
+        doctorId: did,
         catalogIds: Array.from(selectedIds),
         appointmentId,
         scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
@@ -119,7 +139,7 @@ export function ExamSelectorModal({
           </div>
 
           <div className="p-5 space-y-2">
-            <p className="text-sm text-slate-500 mb-3">Paciente: {patientName}</p>
+            <p className="text-sm text-slate-500 mb-3">Paciente: {initialPatientName || patients.find(p => p.id === selPatientId)?.fullName || ''}</p>
             {createdOrders.map((order) => (
               <div
                 key={order.id}
@@ -173,10 +193,31 @@ export function ExamSelectorModal({
           </button>
         </div>
 
-        {/* Patient info */}
-        <div className="px-5 pt-4 pb-2 text-sm text-slate-500 shrink-0">
-          Paciente: <span className="font-medium text-slate-700">{patientName}</span>
-        </div>
+        {/* Patient / Doctor context */}
+        {needsContext ? (
+          <div className="px-5 pt-4 pb-2 space-y-3 shrink-0">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Paciente *</label>
+              <select value={selPatientId} onChange={(e) => setSelPatientId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+                <option value="">Selecione um paciente...</option>
+                {patients.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Médico *</label>
+              <select value={selDoctorId} onChange={(e) => setSelDoctorId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+                <option value="">Selecione um médico...</option>
+                {doctors.map((d) => <option key={d.id} value={d.id}>Dr(a). {d.user?.name} — {d.specialty}</option>)}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="px-5 pt-4 pb-2 text-sm text-slate-500 shrink-0">
+            Paciente: <span className="font-medium text-slate-700">{initialPatientName}</span>
+          </div>
+        )}
 
         {/* Search */}
         <div className="px-5 pb-3 shrink-0">
