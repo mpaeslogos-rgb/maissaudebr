@@ -54,14 +54,20 @@ async function digitalSignatureRoutes(app) {
             where: { id: doctorId },
             include: { user: true },
         });
-        const { redirectUrl } = await provider.init({
+        const initResult = await provider.init({
             signatureId: sigRec.id,
             documentHash,
             doctorName: doctor.user.name,
             doctorCpf: doctor.cpf,
             frontendUrl,
         });
-        return reply.status(201).send({ signatureId: sigRec.id, redirectUrl });
+        if (initResult.codeVerifier) {
+            await prisma2_1.prisma.digitalSignature.update({
+                where: { id: sigRec.id },
+                data: { metadata: { ...metadata, codeVerifier: initResult.codeVerifier } },
+            });
+        }
+        return reply.status(201).send({ signatureId: sigRec.id, redirectUrl: initResult.redirectUrl });
     });
     // ─── Callback OAuth (Vidaas / BirDI) ──────────────────────────────────────
     app.get("/digital-signature/callback", async (req, reply) => {
@@ -279,7 +285,12 @@ async function processSignature(signatureId, callbackParams, reply, frontendUrl)
             throw new Error("PDF original não encontrado");
         const pdfBuffer = fs_1.default.readFileSync(sig.pdfPath);
         const provider = (0, factory_1.getSignatureProvider)(sig.provider);
-        const { signedBuffer, result } = await provider.sign(pdfBuffer, { oauthState: signatureId, ...callbackParams });
+        const meta = sig.metadata ?? {};
+        const { signedBuffer, result } = await provider.sign(pdfBuffer, {
+            oauthState: signatureId,
+            ...callbackParams,
+            codeVerifier: meta.codeVerifier,
+        });
         const signedPdfPath = path_1.default.join(UPLOADS_DIR, `${signatureId}_signed.pdf`);
         fs_1.default.writeFileSync(signedPdfPath, signedBuffer);
         await prisma2_1.prisma.digitalSignature.update({

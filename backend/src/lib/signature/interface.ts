@@ -8,11 +8,13 @@ export interface SignatureInitParams {
 
 export interface SignatureInitResult {
   redirectUrl: string;
+  codeVerifier?: string;
 }
 
 export interface SignatureCallbackParams {
   oauthState: string;
   code?: string;
+  codeVerifier?: string;
   [key: string]: string | undefined;
 }
 

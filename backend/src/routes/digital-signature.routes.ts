@@ -57,7 +57,7 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
       where: { id: doctorId },
       include: { user: true },
     });
-    const { redirectUrl } = await provider.init({
+    const initResult = await provider.init({
       signatureId: sigRec.id,
       documentHash,
       doctorName: doctor.user.name,
@@ -65,7 +65,14 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
       frontendUrl,
     });
 
-    return reply.status(201).send({ signatureId: sigRec.id, redirectUrl });
+    if (initResult.codeVerifier) {
+      await prisma.digitalSignature.update({
+        where: { id: sigRec.id },
+        data: { metadata: { ...(metadata as object), codeVerifier: initResult.codeVerifier } },
+      });
+    }
+
+    return reply.status(201).send({ signatureId: sigRec.id, redirectUrl: initResult.redirectUrl });
   });
 
   // ─── Callback OAuth (Vidaas / BirDI) ──────────────────────────────────────
@@ -301,7 +308,12 @@ async function processSignature(
 
     const pdfBuffer = fs.readFileSync(sig.pdfPath);
     const provider = getSignatureProvider(sig.provider as ProviderName);
-    const { signedBuffer, result } = await provider.sign(pdfBuffer, { oauthState: signatureId, ...callbackParams });
+    const meta = (sig.metadata as Record<string, string>) ?? {};
+    const { signedBuffer, result } = await provider.sign(pdfBuffer, {
+      oauthState: signatureId,
+      ...callbackParams,
+      codeVerifier: meta.codeVerifier,
+    });
 
     const signedPdfPath = path.join(UPLOADS_DIR, `${signatureId}_signed.pdf`);
     fs.writeFileSync(signedPdfPath, signedBuffer);
