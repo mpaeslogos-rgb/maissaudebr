@@ -116,6 +116,66 @@ async function examOrdersRoutes(app) {
             computedStatus: computeStatus(order),
         });
     });
+    // ── Criar pedidos em lote ──────────────────────────────────────────────────
+    const batchSchema = zod_1.z.object({
+        patientId: zod_1.z.string(),
+        doctorId: zod_1.z.string(),
+        catalogIds: zod_1.z.array(zod_1.z.string()).min(1).max(50),
+        appointmentId: zod_1.z.string().optional(),
+        scheduledAt: zod_1.z.string().datetime().optional(),
+        notes: zod_1.z.string().optional(),
+    });
+    app.post("/exam-orders/batch", { preHandler: [requireAuth] }, async (req, reply) => {
+        const data = batchSchema.parse(req.body);
+        const catalogs = await prisma2_1.prisma.examCatalog.findMany({
+            where: { id: { in: data.catalogIds }, isActive: true },
+        });
+        if (catalogs.length !== data.catalogIds.length) {
+            return reply.status(400).send({ error: "Um ou mais exames não encontrados ou inativos." });
+        }
+        const initialStatus = data.scheduledAt ? "SCHEDULED" : "PENDING";
+        const orders = await prisma2_1.prisma.$transaction(async (tx) => {
+            const results = [];
+            for (const catalog of catalogs) {
+                const repasseAmount = await calcRepasse(catalog.id, data.doctorId, catalog.price);
+                const payment = await tx.payment.create({
+                    data: {
+                        patientId: data.patientId,
+                        amount: catalog.price,
+                        description: `Exame/Procedimento: ${catalog.name}`,
+                        dueDate: data.scheduledAt ? new Date(data.scheduledAt) : new Date(),
+                    },
+                });
+                const doctorPayment = repasseAmount > 0
+                    ? await tx.doctorPayment.create({
+                        data: {
+                            doctorId: data.doctorId,
+                            paymentId: payment.id,
+                            amount: repasseAmount,
+                            ...(data.appointmentId && { appointmentId: data.appointmentId }),
+                        },
+                    })
+                    : null;
+                const order = await tx.examOrder.create({
+                    data: {
+                        patientId: data.patientId,
+                        doctorId: data.doctorId,
+                        catalogId: catalog.id,
+                        appointmentId: data.appointmentId,
+                        scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
+                        notes: data.notes,
+                        status: initialStatus,
+                        paymentId: payment.id,
+                        doctorPaymentId: doctorPayment?.id,
+                    },
+                    include: includeRelations,
+                });
+                results.push({ ...order, computedStatus: computeStatus(order) });
+            }
+            return results;
+        });
+        return reply.status(201).send(orders);
+    });
     // ── Atualizar status ───────────────────────────────────────────────────────
     app.patch("/exam-orders/:id", { preHandler: [requireAuth] }, async (req, reply) => {
         const { id } = req.params;

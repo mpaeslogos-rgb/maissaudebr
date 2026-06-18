@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, getExamCatalog, createExamOrder, ClinicConfig, ExamCatalog, createAtestado, initSignature } from "@/lib/api";
+import { ExamSelectorModal } from "@/components/ExamSelectorModal";
 import { MedicalRecord, Exam, ExamType, EXAM_TYPE_LABEL } from "@/lib/types";
 
 interface PageProps {
@@ -676,132 +677,12 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
 
       {/* Modal Solicitar Exame / Procedimento */}
       {showExameModal && record && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-surface-border">
-              <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                <FlaskConical size={18} className="text-teal-600" /> Solicitar Exame / Procedimento
-              </h2>
-              <button onClick={() => setShowExameModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
-            </div>
-            <div className="p-5 space-y-4">
-              {/* Contexto do prontuário */}
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-sm space-y-1">
-                <p><span className="text-teal-700 font-medium">Paciente:</span> <span className="text-slate-700">{record.patient?.fullName}</span></p>
-                <p><span className="text-teal-700 font-medium">Médico:</span> <span className="text-slate-700">Dr(a). {record.doctor?.user?.name} — {record.doctor?.specialty}</span></p>
-              </div>
-
-              {exameError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{exameError}</div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Exame / Procedimento <span className="text-red-500">*</span></label>
-                {examCatalog.length === 0 ? (
-                  <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    Nenhum exame cadastrado no catálogo.{' '}
-                    <a href="/exames" className="underline font-medium">Cadastrar em Exames e Procedimentos</a>
-                  </p>
-                ) : (
-                  <select
-                    value={exameForm.catalogId}
-                    onChange={e => setExameForm(f => ({ ...f, catalogId: e.target.value }))}
-                    className="input"
-                  >
-                    <option value="">Selecione…</option>
-                    {examCatalog.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} — R$ {c.price.toFixed(2)}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Data/Hora do exame <span className="text-slate-400 text-xs">(deixe em branco para Pendente)</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={exameForm.scheduledAt}
-                  onChange={e => setExameForm(f => ({ ...f, scheduledAt: e.target.value }))}
-                  className="input"
-                />
-                {exameForm.scheduledAt
-                  ? <p className="text-xs text-teal-600 mt-1">Entrará na Agenda como <strong>Agendado</strong></p>
-                  : <p className="text-xs text-amber-600 mt-1">Ficará como <strong>Pendente</strong> até ser agendado</p>
-                }
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Observações</label>
-                <textarea
-                  value={exameForm.notes}
-                  onChange={e => setExameForm(f => ({ ...f, notes: e.target.value }))}
-                  rows={2}
-                  placeholder="Indicação clínica, preparo necessário…"
-                  className="input resize-none"
-                />
-              </div>
-
-              {lastExameOrderId ? (
-                <div className="space-y-2 pt-2">
-                  <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">Exame solicitado com sucesso!</p>
-                  {exameSignErr && <p className="text-xs text-red-600">{exameSignErr}</p>}
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => { setShowExameModal(false); setLastExameOrderId(null) }} className="btn-outline flex-1 text-sm">Fechar</button>
-                    <button
-                      type="button"
-                      disabled={signingExame}
-                      onClick={async () => {
-                        setSigningExame(true); setExameSignErr('');
-                        try {
-                          const provider = (typeof localStorage !== 'undefined' ? localStorage.getItem('maissaudebr_sig_provider') : null) as import('@/lib/api').SignatureProvider | null;
-                          const { redirectUrl } = await initSignature({ documentType: 'SOLICITACAO', referenceId: lastExameOrderId, ...(provider ? { provider } : {}) });
-                          window.location.href = redirectUrl;
-                        } catch (e: any) { setExameSignErr(e?.message ?? 'Erro ao assinar'); }
-                        finally { setSigningExame(false); }
-                      }}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {signingExame ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                      Assinar Solicitação
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowExameModal(false)} className="btn-outline flex-1">Cancelar</button>
-                  <button
-                    type="button"
-                    disabled={savingExame || !exameForm.catalogId}
-                    onClick={async () => {
-                      if (!exameForm.catalogId) return setExameError('Selecione um exame.')
-                      setSavingExame(true)
-                      setExameError('')
-                      try {
-                        const order = await createExamOrder({
-                          patientId:    record.patientId,
-                          doctorId:     record.doctorId,
-                          catalogId:    exameForm.catalogId,
-                          scheduledAt:  exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
-                          notes:        exameForm.notes || undefined,
-                        })
-                        setLastExameOrderId(order.id)
-                      } catch (err: any) {
-                        setExameError(err.message || 'Erro ao solicitar exame.')
-                      } finally {
-                        setSavingExame(false)
-                      }
-                    }}
-                    className="btn-primary flex-1"
-                  >
-                    {savingExame ? 'Solicitando…' : 'Solicitar Exame'}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ExamSelectorModal
+          patientId={record.patientId}
+          doctorId={record.doctorId}
+          patientName={record.patient?.fullName ?? ''}
+          onClose={() => setShowExameModal(false)}
+        />
       )}
 
       {/* Modal Atestado Médico */}
