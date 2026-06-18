@@ -6,6 +6,7 @@ import {
   Stethoscope, ChevronRight, Loader2, X,
 } from "lucide-react";
 import Link from "next/link";
+import { SkeletonList } from "@/components/Skeleton";
 import { getMedicalRecords, getPatients, getDoctors, createMedicalRecord } from "@/lib/api";
 import { MedicalRecord, Patient, Doctor } from "@/lib/types";
 
@@ -63,10 +64,7 @@ export default function ProntuariosPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-          <Loader2 className="animate-spin mb-2" size={32} />
-          <p>Carregando histórico clínico...</p>
-        </div>
+        <SkeletonList rows={5} />
       ) : filteredRecords.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {filteredRecords.map(record => (

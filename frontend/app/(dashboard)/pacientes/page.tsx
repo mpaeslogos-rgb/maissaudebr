@@ -10,6 +10,7 @@ import {
 } from '@/lib/api'
 import { Patient, Gender } from '@/lib/types'
 import { useConfirm } from '@/components/ConfirmModal'
+import { SkeletonTable } from '@/components/Skeleton'
 
 // ─── Utilitários ────────────────────────────────────────────────────────────
 
@@ -422,9 +423,7 @@ export default function PacientesPage() {
         </div>
 
         {/* Estado de carregamento */}
-        {loading && (
-          <div className="text-center py-12 text-slate-500">Carregando pacientes…</div>
-        )}
+        {loading && <SkeletonTable rows={8} cols={7} />}
 
         {/* Estado de erro */}
         {!loading && error && (
