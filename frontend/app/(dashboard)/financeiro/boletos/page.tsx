@@ -106,7 +106,7 @@ export default function BoletoOcrPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <Upload size={48} className="text-slate-400" />
+              <Upload size={48} className="text-slate-500" />
               <p className="text-slate-700 font-medium">
                 {isDragActive
                   ? "Solte o arquivo aqui..."

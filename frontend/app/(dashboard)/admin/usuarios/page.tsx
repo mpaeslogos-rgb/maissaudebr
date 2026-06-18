@@ -150,7 +150,7 @@ function UserModal({ user, onClose, onSaved }: UserModalProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -312,7 +312,7 @@ export default function AdminUsuariosPage() {
         {/* Filtros */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="relative flex-1 min-w-48">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Buscar por nome ou e-mail…"
@@ -348,7 +348,7 @@ export default function AdminUsuariosPage() {
             className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50"
             title="Atualizar"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin text-slate-400' : 'text-slate-500'} />
+            <RefreshCw size={16} className={loading ? 'animate-spin text-slate-500' : 'text-slate-500'} />
           </button>
         </div>
 
@@ -367,11 +367,11 @@ export default function AdminUsuariosPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">Carregando…</td>
+                  <td colSpan={5} className="px-4 py-12 text-center text-slate-500 text-sm">Carregando…</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">Nenhum usuário encontrado.</td>
+                  <td colSpan={5} className="px-4 py-12 text-center text-slate-500 text-sm">Nenhum usuário encontrado.</td>
                 </tr>
               ) : users.map(u => (
                 <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
@@ -384,7 +384,7 @@ export default function AdminUsuariosPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-800">{u.name}</p>
-                        <p className="text-xs text-slate-400">{u.email}</p>
+                        <p className="text-xs text-slate-500">{u.email}</p>
                       </div>
                     </div>
                   </td>
@@ -400,7 +400,7 @@ export default function AdminUsuariosPage() {
                       {u.isActive ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">
+                  <td className="px-4 py-3 text-xs text-slate-500">
                     {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-4 py-3">

@@ -45,7 +45,7 @@ function PlanModal({ plan, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">{plan ? 'Editar Convênio' : 'Novo Convênio'}</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -119,7 +119,7 @@ function ContractModal({ planId, contract, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">{contract ? 'Editar Contrato' : 'Novo Contrato'}</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -186,7 +186,7 @@ function ProcedureModal({ contractId, procedure, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">{procedure ? 'Editar Procedimento' : 'Novo Procedimento TUSS'}</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -289,10 +289,10 @@ export default function ConveniosPage() {
               {/* Cabeçalho do plano */}
               <div className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-cream-50 transition-colors" onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}>
                 <div className="flex items-center gap-3">
-                  {expandedPlan === plan.id ? <ChevronDown size={18} className="text-primary-600" /> : <ChevronRight size={18} className="text-slate-400" />}
+                  {expandedPlan === plan.id ? <ChevronDown size={18} className="text-primary-600" /> : <ChevronRight size={18} className="text-slate-500" />}
                   <div>
                     <p className="font-semibold text-slate-800">{plan.name}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {plan.ansCode && `ANS: ${plan.ansCode}`}
                       {plan.phone && ` • Tel: ${plan.phone}`}
                     </p>
@@ -300,10 +300,10 @@ export default function ConveniosPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-500">{plan.contracts.length} contrato(s)</span>
-                  <button onClick={e => { e.stopPropagation(); setEditingPlan(plan); setShowPlanModal(true) }} className="p-1.5 text-slate-400 hover:text-primary-600 rounded">
+                  <button onClick={e => { e.stopPropagation(); setEditingPlan(plan); setShowPlanModal(true) }} className="p-1.5 text-slate-500 hover:text-primary-600 rounded">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); handleDeletePlan(plan.id) }} className="p-1.5 text-slate-400 hover:text-red-500 rounded">
+                  <button onClick={e => { e.stopPropagation(); handleDeletePlan(plan.id) }} className="p-1.5 text-slate-500 hover:text-red-500 rounded">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -320,29 +320,29 @@ export default function ConveniosPage() {
                   </div>
 
                   {plan.contracts.length === 0 ? (
-                    <p className="text-sm text-slate-400">Nenhum contrato cadastrado.</p>
+                    <p className="text-sm text-slate-500">Nenhum contrato cadastrado.</p>
                   ) : (
                     plan.contracts.map(contract => (
                       <div key={contract.id} className="bg-white rounded-lg border border-surface-border">
                         <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={() => setExpandedContract(expandedContract === contract.id ? null : contract.id)}>
                           <div className="flex items-center gap-2">
-                            {expandedContract === contract.id ? <ChevronDown size={15} className="text-primary-600" /> : <ChevronRight size={15} className="text-slate-400" />}
+                            {expandedContract === contract.id ? <ChevronDown size={15} className="text-primary-600" /> : <ChevronRight size={15} className="text-slate-500" />}
                             <div>
                               <p className="text-sm font-medium text-slate-700">
                                 Contrato: {new Date(contract.startDate).toLocaleDateString('pt-BR')}
                                 {contract.endDate ? ` → ${new Date(contract.endDate).toLocaleDateString('pt-BR')}` : ' (em vigor)'}
                               </p>
                               {contract.consultationFee != null && (
-                                <p className="text-xs text-slate-400">Consulta: R$ {contract.consultationFee.toFixed(2)}</p>
+                                <p className="text-xs text-slate-500">Consulta: R$ {contract.consultationFee.toFixed(2)}</p>
                               )}
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <span className="text-xs text-slate-400">{contract.procedures.length} proc.</span>
-                            <button onClick={e => { e.stopPropagation(); setContractModal({ planId: plan.id, contract }) }} className="p-1 text-slate-400 hover:text-primary-600 rounded">
+                            <span className="text-xs text-slate-500">{contract.procedures.length} proc.</span>
+                            <button onClick={e => { e.stopPropagation(); setContractModal({ planId: plan.id, contract }) }} className="p-1 text-slate-500 hover:text-primary-600 rounded">
                               <Pencil size={13} />
                             </button>
-                            <button onClick={e => { e.stopPropagation(); handleDeleteContract(contract.id) }} className="p-1 text-slate-400 hover:text-red-500 rounded">
+                            <button onClick={e => { e.stopPropagation(); handleDeleteContract(contract.id) }} className="p-1 text-slate-500 hover:text-red-500 rounded">
                               <Trash2 size={13} />
                             </button>
                           </div>
@@ -358,11 +358,11 @@ export default function ConveniosPage() {
                               </button>
                             </div>
                             {contract.procedures.length === 0 ? (
-                              <p className="text-xs text-slate-400">Nenhum procedimento cadastrado.</p>
+                              <p className="text-xs text-slate-500">Nenhum procedimento cadastrado.</p>
                             ) : (
                               <table className="w-full text-xs">
                                 <thead>
-                                  <tr className="text-slate-400">
+                                  <tr className="text-slate-500">
                                     <th className="text-left py-1 font-medium">Código TUSS</th>
                                     <th className="text-left py-1 font-medium">Descrição</th>
                                     <th className="text-right py-1 font-medium">Valor</th>

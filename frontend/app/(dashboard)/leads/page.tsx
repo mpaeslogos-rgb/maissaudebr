@@ -134,7 +134,7 @@ function ConvertModal({ lead, onClose, onConverted }: ConvertModalProps) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Converter em Paciente</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -403,11 +403,11 @@ export default function LeadsPage() {
         </form>
 
         {loading ? (
-          <p className="text-slate-400 text-sm py-8 text-center">Carregando…</p>
+          <p className="text-slate-500 text-sm py-8 text-center">Carregando…</p>
         ) : error ? (
           <p className="text-red-500 text-sm py-8 text-center">{error}</p>
         ) : leads.length === 0 ? (
-          <p className="text-slate-400 text-sm py-8 text-center">Nenhum lead encontrado.</p>
+          <p className="text-slate-500 text-sm py-8 text-center">Nenhum lead encontrado.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

@@ -11,7 +11,10 @@
       "Bash(Sort-Object)",
       "PowerShell($result = Test-NetConnection -ComputerName \"aws-1-us-west-2.pooler.supabase.com\" -Port 5432 -WarningAction SilentlyContinue; Write-Output \"TcpTestSucceeded: $\\($result.TcpTestSucceeded\\)\")",
       "Bash(ls \"C:\\\\Users\\\\Marcos Paes\\\\OneDrive\\\\Desktop\\\\quantitech-backend\\\\prisma\\\\migrations\" 2>/dev/null || echo \"no migrations dir\")",
-      "Read(//c/Users/Marcos Paes/OneDrive/Desktop/quantitech-backend/prisma/migrations/**)"
+      "Read(//c/Users/Marcos Paes/OneDrive/Desktop/quantitech-backend/prisma/migrations/**)",
+      "Read(//c/Users/Marcos Paes/OneDrive/Desktop/quantitech-backend/**)",
+      "Bash(railway up *)",
+      "Bash(curl -s -X POST https://backboard.railway.app/graphql/v2 -H 'Authorization: Bearer 4Nhm7bIeNgLosXVr5QYvzrBqjJBdQnifd-bqIA94mja' -H 'Content-Type: application/json' -d '{ *)"
     ]
   }
 }

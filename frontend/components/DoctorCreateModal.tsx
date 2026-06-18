@@ -65,7 +65,7 @@ export function DoctorCreateModal({ onClose, onSaved }: DoctorCreateModalProps) 
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <h2 className="text-base font-semibold text-slate-800">Cadastrar novo médico</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
@@ -93,7 +93,7 @@ export function DoctorCreateModal({ onClose, onSaved }: DoctorCreateModalProps) 
               </label>
               <div className="relative">
                 <input type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} placeholder="Mín. 6 caracteres" className="input pr-10" />
-                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600">
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>

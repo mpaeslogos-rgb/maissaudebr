@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <Logo size="md" />
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-cream-100 rounded-lg transition-colors"
+            className="lg:hidden p-1.5 text-slate-500 hover:text-slate-600 hover:bg-cream-100 rounded-lg transition-colors"
           >
             <X size={18} />
           </button>
@@ -159,7 +159,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     onClick={() => toggleGroup(group.label)}
                     className="w-full flex items-center justify-between px-3 py-1.5 mb-1 group"
                   >
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-600 transition-colors">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 group-hover:text-slate-600 transition-colors">
                       {group.label}
                     </span>
                     <ChevronDown
@@ -186,7 +186,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                             : "text-slate-600 hover:bg-cream-100 hover:text-slate-800"
                         }`}
                       >
-                        <Icon size={17} className={active ? "text-primary-600" : "text-slate-400"} />
+                        <Icon size={17} className={active ? "text-primary-600" : "text-slate-500"} />
                         {item.label}
                       </Link>
                     );
@@ -200,7 +200,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           {user && (
             <div className="mb-2 px-3">
               <p className="text-xs font-medium text-slate-700 truncate">{user.name}</p>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wide">{user.role}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wide">{user.role}</p>
             </div>
           )}
           <button
@@ -210,7 +210,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <LogOut size={15} />
             Sair do sistema
           </button>
-          <p className="text-[10px] text-slate-400 text-center mt-2">
+          <p className="text-[10px] text-slate-500 text-center mt-2">
             {process.env.NEXT_PUBLIC_CLINIC_NAME || "+SaudeBR"} v1.0.0
           </p>
         </div>

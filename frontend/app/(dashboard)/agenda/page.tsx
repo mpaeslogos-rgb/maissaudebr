@@ -160,7 +160,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Nova Consulta</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -277,7 +277,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
               {/* Convênio */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Convênio <span className="text-slate-400 text-xs">(deixe em branco para Particular)</span>
+                  Convênio <span className="text-slate-500 text-xs">(deixe em branco para Particular)</span>
                 </label>
                 <select value={insurancePlanId} onChange={e => setInsurancePlanId(e.target.value)} className="input">
                   <option value="">Particular</option>
@@ -298,7 +298,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
                 />
                 <label htmlFor="isReturn" className="text-sm text-slate-700 cursor-pointer select-none">
                   <span className="font-medium">Consulta de retorno</span>
-                  <span className="text-slate-400 ml-2">
+                  <span className="text-slate-500 ml-2">
                     {isReturn && !insurancePlanId
                       ? '— sem cobrança (particular)'
                       : isReturn && insurancePlanId
@@ -312,7 +312,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
               {(!isReturn || insurancePlanId) && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valor da consulta <span className="text-slate-400 text-xs">(edite para negociar)</span>
+                    Valor da consulta <span className="text-slate-500 text-xs">(edite para negociar)</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">R$</span>
@@ -331,7 +331,7 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
               {/* Motivo */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Motivo <span className="text-slate-400 text-xs">(opcional)</span>
+                  Motivo <span className="text-slate-500 text-xs">(opcional)</span>
                 </label>
                 <textarea
                   value={reason}
@@ -795,7 +795,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
         <div className="p-5 border-b border-surface-border flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-800">{apt.patient.fullName}</h2>
-            <p className="text-xs text-slate-400">{apt.doctor.specialty} · {start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
+            <p className="text-xs text-slate-500">{apt.doctor.specialty} · {start.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</p>
           </div>
           <button onClick={requestClose} className="p-2 hover:bg-cream-100 rounded-lg text-slate-500"><X size={20} /></button>
         </div>
@@ -882,7 +882,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
           {tab === 'prontuario' && (
             <div className="p-5 space-y-4">
               {loadingRec ? (
-                <p className="text-center text-slate-400 py-8">Carregando prontuário…</p>
+                <p className="text-center text-slate-500 py-8">Carregando prontuário…</p>
               ) : (
                 <>
                   {saveOk && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2 text-sm">Prontuário salvo com sucesso.</div>}
@@ -1010,7 +1010,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                   </button>
                   {showTranscript && (
                     <div className="pb-1">
-                      <p className="text-xs text-slate-400 mb-1.5">
+                      <p className="text-xs text-slate-500 mb-1.5">
                         Cole aqui a transcrição gerada pela plataforma de telemedicina ou digite manualmente.
                       </p>
                       <textarea
@@ -1090,7 +1090,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                                 {new Date(h.createdAt).toLocaleDateString('pt-BR')}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-slate-400">{h.doctor?.specialty}</span>
+                                <span className="text-xs text-slate-500">{h.doctor?.specialty}</span>
                                 <ChevronRight size={13} className="text-slate-300 group-hover:text-primary-500 transition-colors" />
                               </div>
                             </div>
@@ -1121,7 +1121,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-800 truncate">{apt.patient.fullName}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {new Date(selectedHistory.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                   {selectedHistory.doctor?.specialty ? ` · ${selectedHistory.doctor.specialty}` : ''}
                   {selectedHistory.doctor?.user?.name ? ` · Dr(a). ${selectedHistory.doctor.user.name}` : ''}
@@ -1161,8 +1161,8 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                       { label: 'Altura',value: selectedHistory.height?.toString(),          unit: 'cm'   },
                     ].filter(v => v.value).map(v => (
                       <div key={v.label} className="bg-cream-50 rounded-lg p-2 border border-surface-border text-center">
-                        <p className="text-[10px] text-slate-400 mb-0.5">{v.label}</p>
-                        <p className="text-sm font-semibold text-slate-700">{v.value} <span className="text-[10px] font-normal text-slate-400">{v.unit}</span></p>
+                        <p className="text-[10px] text-slate-500 mb-0.5">{v.label}</p>
+                        <p className="text-sm font-semibold text-slate-700">{v.value} <span className="text-[10px] font-normal text-slate-500">{v.unit}</span></p>
                       </div>
                     ))}
                   </div>
@@ -1180,7 +1180,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     { label: 'Histórico familiar',    value: selectedHistory.familyHistory },
                   ].filter(f => f.value).map(f => (
                     <div key={f.label} className="mb-2">
-                      <p className="text-[10px] text-slate-400 mb-0.5">{f.label}</p>
+                      <p className="text-[10px] text-slate-500 mb-0.5">{f.label}</p>
                       <p className="text-xs text-slate-700 whitespace-pre-wrap bg-cream-50 rounded px-2 py-1.5 border border-surface-border">{f.value}</p>
                     </div>
                   ))}
@@ -1335,7 +1335,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
               <h2 className="font-bold text-slate-800 flex items-center gap-2">
                 <ClipboardCheck size={18} className="text-emerald-600" /> Emitir Atestado Médico
               </h2>
-              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-500 hover:text-slate-600 text-xl leading-none">×</button>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -1356,7 +1356,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">CID-10 <span className="text-slate-400 text-xs">(opcional)</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">CID-10 <span className="text-slate-500 text-xs">(opcional)</span></label>
                 <input value={atestadoForm.cid} onChange={e => setAtestadoForm(f => ({ ...f, cid: e.target.value }))}
                   className="input" placeholder="Ex: J11" />
               </div>
@@ -1560,7 +1560,7 @@ function MonthView({ currentDate, appointments, onSelectAppointment, onNewAppoin
                   </div>
                 ))}
                 {dayApts.length > 3 && (
-                  <div className="text-[10px] text-slate-400 pl-1">+{dayApts.length - 3} mais</div>
+                  <div className="text-[10px] text-slate-500 pl-1">+{dayApts.length - 3} mais</div>
                 )}
               </div>
             </div>
@@ -1783,7 +1783,7 @@ export default function AgendaPage() {
             : formatWeekTitle(days)
           }
         </h2>
-        {loading && <span className="text-xs text-slate-400 animate-pulse">Carregando…</span>}
+        {loading && <span className="text-xs text-slate-500 animate-pulse">Carregando…</span>}
 
         {/* Toggle semana / mês */}
         <div className="ml-auto flex items-center gap-1 bg-cream-50 border border-surface-border rounded-lg p-1">
@@ -1851,7 +1851,7 @@ export default function AgendaPage() {
               {/* Linhas de horário */}
               {HOURS.map(hour => (
                 <div key={`row-${hour}`} className="contents">
-                  <div className={`border-r border-b border-surface-border p-2 text-xs font-mono text-right pr-2 ${isOutsideWorkHours(hour) ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-500'}`}>
+                  <div className={`border-r border-b border-surface-border p-2 text-xs font-mono text-right pr-2 ${isOutsideWorkHours(hour) ? 'bg-slate-100 text-slate-500' : 'bg-white text-slate-500'}`}>
                     {String(hour).padStart(2, '0')}:00
                   </div>
                   {days.map((day, di) => {

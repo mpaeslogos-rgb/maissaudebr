@@ -44,7 +44,7 @@ export default function PacientesExcluidosPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/pacientes" className="text-slate-400 hover:text-slate-600 text-sm">
+            <Link href="/pacientes" className="text-slate-500 hover:text-slate-600 text-sm">
               ← Pacientes
             </Link>
           </div>
@@ -72,7 +72,7 @@ export default function PacientesExcluidosPage() {
         )}
 
         {!loading && !error && patients.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
+          <div className="text-center py-12 text-slate-500">
             Nenhum paciente foi excluído ainda.
           </div>
         )}

@@ -62,7 +62,7 @@ export function SignatureOnboardingModal({ onClose }: Props) {
               Configure sua Assinatura Digital
             </h2>
           </div>
-          <button onClick={handleSkip} className="text-slate-400 hover:text-slate-600">
+          <button onClick={handleSkip} className="text-slate-500 hover:text-slate-600">
             <X size={18} />
           </button>
         </div>

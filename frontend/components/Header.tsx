@@ -71,7 +71,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       {/* Busca — desktop sempre visível, mobile expandível */}
       <div className="hidden md:flex flex-1 max-w-md relative">
         <div className="relative w-full">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={search}
@@ -97,7 +97,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800 truncate">{p.fullName}</div>
-                    <div className="text-xs text-slate-400">{p.cpf}{p.phone ? ` · ${p.phone}` : ""}</div>
+                    <div className="text-xs text-slate-500">{p.cpf}{p.phone ? ` · ${p.phone}` : ""}</div>
                   </div>
                 </button>
               ))}
@@ -143,7 +143,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               <div className="font-semibold text-slate-800">{user?.name ?? "Usuário"}</div>
               <div className="text-xs text-slate-500">{user ? (roleLabels[user.role] ?? user.role) : ""}</div>
             </div>
-            <ChevronDown size={16} className="hidden md:block text-slate-400" />
+            <ChevronDown size={16} className="hidden md:block text-slate-500" />
           </button>
 
           {showMenu && (
@@ -167,7 +167,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       {showMobileSearch && (
         <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b border-surface-border px-4 py-3 z-30 shadow-md">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               value={search}
@@ -192,7 +192,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800 truncate">{p.fullName}</div>
-                    <div className="text-xs text-slate-400">{p.cpf}</div>
+                    <div className="text-xs text-slate-500">{p.cpf}</div>
                   </div>
                 </button>
               ))}

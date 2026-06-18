@@ -58,17 +58,17 @@ export function Cid10Search({ onSelect, placeholder = 'Buscar CID-10 por código
   return (
     <div ref={wrapRef} className="relative">
       <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white focus-within:border-primary-400 focus-within:ring-1 focus-within:ring-primary-200">
-        <Search size={14} className="text-slate-400 shrink-0" />
+        <Search size={14} className="text-slate-500 shrink-0" />
         <input
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 text-sm outline-none bg-transparent placeholder:text-slate-400"
+          className="flex-1 text-sm outline-none bg-transparent placeholder:text-slate-500"
         />
-        {loading && <span className="text-xs text-slate-400">…</span>}
+        {loading && <span className="text-xs text-slate-500">…</span>}
         {query && !loading && (
-          <button onClick={() => { setQuery(''); setOpen(false) }} className="text-slate-400 hover:text-slate-600">
+          <button onClick={() => { setQuery(''); setOpen(false) }} className="text-slate-500 hover:text-slate-600">
             <X size={13} />
           </button>
         )}
@@ -91,7 +91,7 @@ export function Cid10Search({ onSelect, placeholder = 'Buscar CID-10 por código
       )}
 
       {open && query.trim().length >= 2 && results.length === 0 && !loading && (
-        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg px-4 py-3 text-sm text-slate-400">
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg px-4 py-3 text-sm text-slate-500">
           Nenhum resultado para &quot;{query}&quot;
         </div>
       )}

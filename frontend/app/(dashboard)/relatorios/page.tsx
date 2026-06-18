@@ -183,7 +183,7 @@ export default function RelatoriosPage() {
 
       {/* Seção de Tabela Resumo */}
       <div className="card">
-        <h3 className="font-bold text-slate-800 mb-4 uppercase text-xs tracking-widest text-slate-400">
+        <h3 className="font-bold text-slate-800 mb-4 uppercase text-xs tracking-widest text-slate-500">
           Resumo de Atividade Recente
         </h3>
         <div className="overflow-x-auto">
@@ -229,7 +229,7 @@ function KpiCard({ title, value, icon, color }: any) {
         {icon}
       </div>
       <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{title}</p>
         <p className="text-xl font-bold text-slate-800">{value}</p>
       </div>
     </div>

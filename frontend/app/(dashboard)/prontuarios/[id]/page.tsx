@@ -407,7 +407,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                   <Printer size={16} /> Imprimir Receituário
                 </button>
               )}
-              <div className="bg-white border border-surface-border px-3 py-2 rounded text-xs font-mono text-slate-400">
+              <div className="bg-white border border-surface-border px-3 py-2 rounded text-xs font-mono text-slate-500">
                 ID: {record.id}
               </div>
             </div>
@@ -418,11 +418,11 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
           {/* Info Médico */}
           <div className="space-y-6 border-r border-slate-100 pr-4">
             <section>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase mb-3 tracking-widest">Profissional</h3>
+              <h3 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-widest">Profissional</h3>
               <div className="p-3 bg-cream-50 rounded-lg border border-cream-100">
                 <p className="text-slate-800 font-bold">{record.doctor?.user?.name || "Médico Responsável"}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{record.doctor?.specialty || "Especialidade"}</p>
-                <p className="text-[10px] text-slate-400 mt-1 uppercase">CRM: {record.doctor?.crm || "—"}</p>
+                <p className="text-[10px] text-slate-500 mt-1 uppercase">CRM: {record.doctor?.crm || "—"}</p>
               </div>
             </section>
 
@@ -476,9 +476,9 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                     { label: 'Altura', value: record.height, unit: 'cm' },
                   ].filter(v => v.value != null).map(v => (
                     <div key={v.label} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">{v.label}</p>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-0.5">{v.label}</p>
                       <p className="text-lg font-bold text-slate-800">{v.value}</p>
-                      <p className="text-[10px] text-slate-400">{v.unit}</p>
+                      <p className="text-[10px] text-slate-500">{v.unit}</p>
                     </div>
                   ))}
                 </div>
@@ -517,7 +517,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                     { label: 'Histórico familiar', value: record.familyHistory },
                   ].filter(i => i.value).map(i => (
                     <div key={i.label}>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{i.label}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">{i.label}</p>
                       <p className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">{i.value}</p>
                     </div>
                   ))}
@@ -549,7 +549,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
           </div>
 
           {exams.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">Nenhum exame anexado a esta consulta.</p>
+            <p className="text-sm text-slate-500 italic">Nenhum exame anexado a esta consulta.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {exams.map(exam => (
@@ -558,7 +558,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">{exam.name}</p>
                     <p className="text-xs text-slate-500">{EXAM_TYPE_LABEL[exam.type]}{exam.examDate ? ` · ${new Date(exam.examDate).toLocaleDateString('pt-BR')}` : ''}</p>
-                    {exam.notes && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{exam.notes}</p>}
+                    {exam.notes && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{exam.notes}</p>}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {exam.fileUrl && (
@@ -566,7 +566,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                         href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${exam.fileUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors"
+                        className="p-1.5 text-slate-500 hover:text-primary-600 transition-colors"
                         title="Abrir arquivo"
                       >
                         <ExternalLink size={15} />
@@ -574,7 +574,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                     )}
                     <button
                       onClick={() => handleDeleteExam(exam.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                      className="p-1.5 text-slate-500 hover:text-red-500 transition-colors"
                       title="Remover exame"
                     >
                       <Trash2 size={15} />
@@ -593,7 +593,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-5 border-b">
               <h2 className="font-bold text-slate-800">Anexar Exame</h2>
-              <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowUploadModal(false)} className="text-slate-500 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
@@ -650,7 +650,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                   {uploadFile ? (
                     <p className="text-sm text-primary-600 font-medium">{uploadFile.name}</p>
                   ) : (
-                    <p className="text-sm text-slate-400">Clique para selecionar (PDF, JPEG, PNG)</p>
+                    <p className="text-sm text-slate-500">Clique para selecionar (PDF, JPEG, PNG)</p>
                   )}
                 </div>
                 <input
@@ -695,7 +695,7 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
               <h2 className="font-bold text-slate-800 flex items-center gap-2">
                 <ClipboardCheck size={18} className="text-emerald-600" /> Emitir Atestado Médico
               </h2>
-              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowAtestadoModal(false)} className="text-slate-500 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
