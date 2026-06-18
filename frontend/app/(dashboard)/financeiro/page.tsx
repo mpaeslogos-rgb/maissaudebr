@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import type { Payment, AccountPayable } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmModal";
+import { SkeletonKPIRow, SkeletonTable } from "@/components/Skeleton";
 
 // ─── Formatadores ─────────────────────────────────────────────────────────────
 
@@ -109,9 +110,9 @@ export default function FinanceiroPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-500">
-        <Loader2 className="animate-spin mr-2" size={20} />
-        Carregando dados financeiros…
+      <div className="space-y-6">
+        <SkeletonKPIRow count={4} />
+        <SkeletonTable rows={6} cols={5} />
       </div>
     );
   }

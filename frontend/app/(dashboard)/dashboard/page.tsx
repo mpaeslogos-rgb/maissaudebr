@@ -6,6 +6,7 @@ import {
   Users, Calendar, Wallet, AlertCircle,
   ArrowRight, Plus, Clock, TrendingUp, Loader2, X,
 } from "lucide-react";
+import { SkeletonKPIRow, SkeletonChart, SkeletonList } from "@/components/Skeleton";
 import Link from "next/link";
 import {
   getPatients,
@@ -104,8 +105,16 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin text-primary-600" size={40} />
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <div className="animate-pulse h-7 w-48 bg-slate-200 rounded-lg" />
+          <div className="animate-pulse h-4 w-72 bg-slate-200 rounded-lg" />
+        </div>
+        <SkeletonKPIRow count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2"><SkeletonChart /></div>
+          <SkeletonList rows={4} />
+        </div>
       </div>
     );
   }
