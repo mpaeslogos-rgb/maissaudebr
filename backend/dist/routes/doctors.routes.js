@@ -102,6 +102,36 @@ async function doctorsRoutes(app) {
             return reply.code(500).send({ error: 'Erro interno ao criar médico' });
         }
     });
+    // GET /doctors/me — perfil do médico logado
+    app.get('/doctors/me', async (request, reply) => {
+        const payload = (0, auth_1.getPayload)(request);
+        if (payload.role !== 'DOCTOR')
+            return reply.code(403).send({ error: 'Apenas médicos podem acessar este recurso' });
+        const doctor = await prisma2_1.prisma.doctor.findUnique({
+            where: { userId: payload.sub },
+            include: { user: { select: { id: true, name: true, email: true, isActive: true } } },
+        });
+        if (!doctor)
+            return reply.code(404).send({ error: 'Perfil de médico não encontrado' });
+        return reply.send(doctor);
+    });
+    // PATCH /doctors/me/signature-provider — médico configura seu provedor preferido
+    app.patch('/doctors/me/signature-provider', async (request, reply) => {
+        const payload = (0, auth_1.getPayload)(request);
+        if (payload.role !== 'DOCTOR')
+            return reply.code(403).send({ error: 'Apenas médicos podem acessar este recurso' });
+        const parsed = zod_1.z.object({ signatureProvider: zod_1.z.enum(['MOCK', 'VIDAAS', 'BIRDID']) }).safeParse(request.body);
+        if (!parsed.success)
+            return reply.code(400).send({ error: parsed.error.flatten() });
+        const doctor = await prisma2_1.prisma.doctor.findUnique({ where: { userId: payload.sub } });
+        if (!doctor)
+            return reply.code(404).send({ error: 'Médico não encontrado' });
+        const updated = await prisma2_1.prisma.doctor.update({
+            where: { id: doctor.id },
+            data: { signatureProvider: parsed.data.signatureProvider },
+        });
+        return reply.send({ signatureProvider: updated.signatureProvider });
+    });
     // GET /doctors — listagem com paginação e busca
     app.get('/doctors', async (request, reply) => {
         const parsed = listQuerySchema.safeParse(request.query);

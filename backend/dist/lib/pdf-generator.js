@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateAtestadoPdf = generateAtestadoPdf;
 exports.generateReceitaPdf = generateReceitaPdf;
 exports.generateLaudoPdf = generateLaudoPdf;
+exports.generateReceitaTextoPdf = generateReceitaTextoPdf;
+exports.generateSolicitacaoExamePdf = generateSolicitacaoExamePdf;
 const pdfkit_1 = __importDefault(require("pdfkit"));
 function drawHeader(doc, clinic) {
     doc.fontSize(16).font("Helvetica-Bold").text(clinic.name, { align: "center" });
@@ -125,6 +127,63 @@ function generateLaudoPdf(data) {
         doc.moveDown(1);
         doc.fontSize(11).font("Helvetica").text(data.content, { lineGap: 4 });
         doc.moveDown(3);
+        doc.moveTo(175, doc.y).lineTo(420, doc.y).stroke();
+        doc.moveDown(0.3);
+        drawDoctor(doc, data.doctor);
+        doc.end();
+    });
+}
+function generateReceitaTextoPdf(data) {
+    return new Promise((resolve, reject) => {
+        const doc = new pdfkit_1.default({ size: "A4", margins: { top: 50, bottom: 50, left: 50, right: 50 } });
+        const chunks = [];
+        doc.on("data", (c) => chunks.push(c));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+        doc.on("error", reject);
+        drawHeader(doc, data.clinic);
+        doc.fontSize(14).font("Helvetica-Bold").text("RECEITUÁRIO MÉDICO", { align: "center" });
+        doc.moveDown(1);
+        doc.fontSize(10).font("Helvetica").text(`Paciente: ${data.patient.fullName}`);
+        if (data.patient.cpf)
+            doc.text(`CPF: ${data.patient.cpf}`);
+        doc.text(`Data: ${formatDate(data.emittedAt)}`);
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).dash(3, { space: 3 }).stroke().undash();
+        doc.moveDown(1);
+        doc.fontSize(11).font("Helvetica").text(data.prescriptionText || "(Prescrição não informada)", { lineGap: 4 });
+        doc.moveDown(3);
+        doc.moveTo(175, doc.y).lineTo(420, doc.y).stroke();
+        doc.moveDown(0.3);
+        drawDoctor(doc, data.doctor);
+        doc.end();
+    });
+}
+function generateSolicitacaoExamePdf(data) {
+    return new Promise((resolve, reject) => {
+        const doc = new pdfkit_1.default({ size: "A4", margins: { top: 50, bottom: 50, left: 50, right: 50 } });
+        const chunks = [];
+        doc.on("data", (c) => chunks.push(c));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+        doc.on("error", reject);
+        drawHeader(doc, data.clinic);
+        doc.fontSize(14).font("Helvetica-Bold").text("SOLICITAÇÃO DE EXAME", { align: "center" });
+        doc.moveDown(1);
+        doc.fontSize(10).font("Helvetica").text(`Paciente: ${data.patient.fullName}`);
+        if (data.patient.cpf)
+            doc.text(`CPF: ${data.patient.cpf}`);
+        doc.text(`Data: ${formatDate(data.emittedAt)}`);
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+        doc.moveDown(1);
+        doc.fontSize(12).font("Helvetica-Bold").text("Exame Solicitado:");
+        doc.fontSize(11).font("Helvetica").text(data.examName);
+        doc.moveDown(1);
+        if (data.notes) {
+            doc.fontSize(10).font("Helvetica-Bold").text("Indicação / Observações:");
+            doc.font("Helvetica").text(data.notes, { lineGap: 4 });
+            doc.moveDown(1);
+        }
+        doc.moveDown(2);
         doc.moveTo(175, doc.y).lineTo(420, doc.y).stroke();
         doc.moveDown(0.3);
         drawDoctor(doc, data.doctor);

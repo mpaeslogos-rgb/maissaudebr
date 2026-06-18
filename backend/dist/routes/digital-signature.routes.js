@@ -18,7 +18,7 @@ function ensureUploadsDir() {
         fs_1.default.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 const initSchema = zod_1.z.object({
-    documentType: zod_1.z.enum(["ATESTADO", "RECEITA", "LAUDO"]),
+    documentType: zod_1.z.enum(["ATESTADO", "RECEITA", "LAUDO", "RECEITA_TEXTO", "SOLICITACAO"]),
     referenceId: zod_1.z.string(),
     provider: zod_1.z.enum(["MOCK", "VIDAAS", "BIRDID"]).optional(),
 });
@@ -213,6 +213,54 @@ async function buildDocument(documentType, referenceId) {
             examName: order.catalog.name,
             content: order.laudoContent,
             completedAt: order.completedAt ?? new Date(),
+        });
+        return { doctorId: order.doctorId, patientId: order.patientId, pdfBuffer, metadata: { exam: order.catalog.name } };
+    }
+    if (documentType === "RECEITA_TEXTO") {
+        const mr = await prisma2_1.prisma.medicalRecord.findUniqueOrThrow({
+            where: { id: referenceId },
+            include: {
+                patient: true,
+                doctor: { include: { user: true } },
+            },
+        });
+        const pdfBuffer = await (0, pdf_generator_1.generateReceitaTextoPdf)({
+            clinic,
+            doctor: {
+                name: mr.doctor.user.name,
+                crm: mr.doctor.crm,
+                crmState: mr.doctor.crmState,
+                specialty: mr.doctor.specialty,
+                cpf: mr.doctor.cpf,
+            },
+            patient: { fullName: mr.patient.fullName, cpf: mr.patient.cpf },
+            prescriptionText: mr.prescription ?? "",
+            emittedAt: mr.createdAt,
+        });
+        return { doctorId: mr.doctorId, patientId: mr.patientId, pdfBuffer, metadata: {} };
+    }
+    if (documentType === "SOLICITACAO") {
+        const order = await prisma2_1.prisma.examOrder.findUniqueOrThrow({
+            where: { id: referenceId },
+            include: {
+                patient: true,
+                doctor: { include: { user: true } },
+                catalog: true,
+            },
+        });
+        const pdfBuffer = await (0, pdf_generator_1.generateSolicitacaoExamePdf)({
+            clinic,
+            doctor: {
+                name: order.doctor.user.name,
+                crm: order.doctor.crm,
+                crmState: order.doctor.crmState,
+                specialty: order.doctor.specialty,
+                cpf: order.doctor.cpf,
+            },
+            patient: { fullName: order.patient.fullName, cpf: order.patient.cpf },
+            examName: order.catalog.name,
+            notes: order.notes,
+            emittedAt: order.createdAt,
         });
         return { doctorId: order.doctorId, patientId: order.patientId, pdfBuffer, metadata: { exam: order.catalog.name } };
     }
