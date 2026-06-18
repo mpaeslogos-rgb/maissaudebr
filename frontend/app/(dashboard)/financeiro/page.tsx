@@ -19,6 +19,7 @@ import {
 import type { Payment, AccountPayable } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmModal";
 import { SkeletonKPIRow, SkeletonTable } from "@/components/Skeleton";
+import { useSortable, Th } from "@/components/SortableHeader";
 
 // ─── Formatadores ─────────────────────────────────────────────────────────────
 
@@ -343,6 +344,7 @@ function ContasReceber({ payments, onRefresh }: { payments: Payment[]; onRefresh
   const [paying, setPaying]   = useState<string | null>(null);
 
   const filtered = filter === "all" ? payments : payments.filter(p => p.status === filter);
+  const { sorted: sortedPayments, sort: paySort, toggle: payToggle } = useSortable(filtered, 'dueDate', 'asc');
 
   async function handlePay(id: string) {
     setPaying(id);
@@ -383,22 +385,22 @@ function ContasReceber({ payments, onRefresh }: { payments: Payment[]; onRefresh
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Paciente</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Vencimento</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Método</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Valor</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
+              <Th label="Paciente" sortKey="patient.fullName" sort={paySort} onToggle={payToggle} />
+              <Th label="Vencimento" sortKey="dueDate" sort={paySort} onToggle={payToggle} />
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Metodo</th>
+              <Th label="Valor" sortKey="amount" sort={paySort} onToggle={payToggle} className="text-right" />
+              <Th label="Status" sortKey="status" sort={paySort} onToggle={payToggle} className="text-center" />
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {sortedPayments.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-slate-500 text-sm">
                   Nenhum registro encontrado.
                 </td>
               </tr>
-            ) : filtered.map(p => {
+            ) : sortedPayments.map(p => {
               const isOverdue = p.status === "PENDING" && new Date(p.dueDate) < new Date();
               const s = STATUS_PAYMENT[p.status as keyof typeof STATUS_PAYMENT];
               return (
