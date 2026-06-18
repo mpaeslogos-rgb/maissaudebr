@@ -140,7 +140,7 @@ export default function DashboardPage() {
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <TrendingUp size={18} className="text-primary-600" /> Fluxo de Atendimentos
               </h3>
-              <span className="text-xs text-slate-400">Últimos 7 dias</span>
+              <span className="text-xs text-slate-500">Últimos 7 dias</span>
             </div>
             <div className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -196,7 +196,7 @@ export default function DashboardPage() {
                   <span className="block font-bold text-primary-700">
                     {new Date(apt.startTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
-                  <span className="text-slate-400">
+                  <span className="text-slate-500">
                     {new Date(apt.startTime).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                   </span>
                 </div>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                 </button>
               </div>
             )) : (
-              <p className="text-sm text-slate-400 text-center py-10">Nenhuma consulta agendada.</p>
+              <p className="text-sm text-slate-500 text-center py-10">Nenhuma consulta agendada.</p>
             )}
           </div>
           <Link href="/agenda" className="block text-center text-xs text-primary-600 font-bold mt-6 hover:underline">
@@ -243,7 +243,7 @@ function AptDetailModal({ apt, onClose }: { apt: Appointment; onClose: () => voi
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <h2 className="font-semibold text-slate-800">Detalhes da Consulta</h2>
           <button onClick={onClose} className="p-1 hover:bg-cream-100 rounded-lg">
-            <X size={18} className="text-slate-400" />
+            <X size={18} className="text-slate-500" />
           </button>
         </div>
 
@@ -258,7 +258,7 @@ function AptDetailModal({ apt, onClose }: { apt: Appointment; onClose: () => voi
             </div>
             <div>
               <div className="font-semibold text-slate-800">{apt.patient.fullName}</div>
-              {apt.patient.phone && <div className="text-xs text-slate-400">{apt.patient.phone}</div>}
+              {apt.patient.phone && <div className="text-xs text-slate-500">{apt.patient.phone}</div>}
             </div>
           </div>
 
@@ -298,7 +298,7 @@ function StatCard({ title, value, icon, trend, color }: any) {
     <div className="card border-l-4 border-primary-600">
       <div className="flex justify-between items-start mb-2">
         <div className={`p-2 rounded-lg ${color}`}>{icon}</div>
-        <span className="text-[10px] font-bold text-slate-400 uppercase">{trend}</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase">{trend}</span>
       </div>
       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{title}</p>
       <p className="text-2xl font-black text-slate-800 mt-1">{value}</p>
@@ -309,7 +309,7 @@ function StatCard({ title, value, icon, trend, color }: any) {
 function QuickLink({ href, title, desc, icon }: any) {
   return (
     <Link href={href} className="card hover:border-primary-300 transition-all group flex items-start gap-4">
-      <div className="p-3 bg-slate-50 rounded-xl text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+      <div className="p-3 bg-slate-50 rounded-xl text-slate-500 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
         {icon}
       </div>
       <div>

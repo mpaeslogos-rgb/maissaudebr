@@ -218,7 +218,7 @@ export default function FaturamentoPage() {
       )}
 
       {!planId ? (
-        <div className="card text-center py-16 text-slate-400">
+        <div className="card text-center py-16 text-slate-500">
           <Package size={48} className="mx-auto mb-3 opacity-30" />
           <p>Selecione um convênio para gerenciar o faturamento</p>
         </div>
@@ -351,7 +351,7 @@ function TabGuias({
           Guias pendentes de lote ({guias.length})
         </h3>
         {guias.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-8">
+          <p className="text-slate-500 text-sm text-center py-8">
             Nenhuma guia avulsa. Gere guias a partir das consultas acima.
           </p>
         ) : (
@@ -479,7 +479,7 @@ function TabLotes({
 
       {/* Lista de lotes */}
       {lotes.length === 0 ? (
-        <div className="card text-center py-16 text-slate-400">
+        <div className="card text-center py-16 text-slate-500">
           <Package size={48} className="mx-auto mb-3 opacity-30" />
           <p>Nenhum lote criado para este convênio.</p>
         </div>
@@ -500,7 +500,7 @@ function TabLotes({
 
               <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
                 <span>{lote.guias.length} guia{lote.guias.length !== 1 ? "s" : ""}</span>
-                <span className="text-slate-400">·</span>
+                <span className="text-slate-500">·</span>
                 <span className="text-green-700 font-semibold">{moeda(lote.valorTotal)}</span>
               </div>
 
@@ -545,7 +545,7 @@ function TabLotes({
                   Selecione guias avulsas para adicionar ao lote:
                 </p>
                 {guiasSemLote.length === 0 ? (
-                  <p className="text-sm text-slate-400">Não há guias avulsas disponíveis.</p>
+                  <p className="text-sm text-slate-500">Não há guias avulsas disponíveis.</p>
                 ) : (
                   <>
                     <div className="space-y-1 max-h-48 overflow-y-auto">

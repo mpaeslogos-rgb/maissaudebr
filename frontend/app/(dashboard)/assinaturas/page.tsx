@@ -38,7 +38,7 @@ function SignatureCallbackView() {
                 Assinado por <strong>{sig?.signerName ?? "—"}</strong> em{" "}
                 {sig?.signedAt ? new Date(sig.signedAt).toLocaleString("pt-BR") : "—"}
               </p>
-              <p className="text-xs text-slate-400 mt-1">Provider: {sig?.provider ?? "—"}</p>
+              <p className="text-xs text-slate-500 mt-1">Provider: {sig?.provider ?? "—"}</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -110,7 +110,7 @@ function SignatureListView() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary-500" size={36} /></div>
       ) : sigs.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">Nenhuma assinatura digital registrada ainda.</div>
+        <div className="text-center py-16 text-slate-500">Nenhuma assinatura digital registrada ainda.</div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <table className="w-full text-sm">
@@ -137,7 +137,7 @@ function SignatureListView() {
                     <td className="p-3">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
                     </td>
-                    <td className="p-3 text-slate-400 text-xs">
+                    <td className="p-3 text-slate-500 text-xs">
                       {s.signedAt ? new Date(s.signedAt).toLocaleString("pt-BR") : new Date(s.createdAt).toLocaleString("pt-BR")}
                     </td>
                     <td className="p-3">

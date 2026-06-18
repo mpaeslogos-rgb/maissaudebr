@@ -109,7 +109,7 @@ export default function FinanceiroPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400">
+      <div className="flex items-center justify-center h-64 text-slate-500">
         <Loader2 className="animate-spin mr-2" size={20} />
         Carregando dados financeiros…
       </div>
@@ -393,7 +393,7 @@ function ContasReceber({ payments, onRefresh }: { payments: Payment[]; onRefresh
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-slate-400 text-sm">
+                <td colSpan={6} className="px-4 py-10 text-center text-slate-500 text-sm">
                   Nenhum registro encontrado.
                 </td>
               </tr>
@@ -606,7 +606,7 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-400 text-sm">Nenhuma despesa encontrada.</td>
+                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500 text-sm">Nenhuma despesa encontrada.</td>
                 </tr>
               ) : filtered.map(item => {
                 const isOverdue = item.status === "PENDING" && new Date(item.dueDate) < new Date();
@@ -616,7 +616,7 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
                   <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{item.description}</p>
-                      {item.supplier && <p className="text-xs text-slate-400">{item.supplier}</p>}
+                      {item.supplier && <p className="text-xs text-slate-500">{item.supplier}</p>}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
@@ -651,7 +651,7 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
                             onClick={() => handleDelete(item.id)}
                             disabled={deleting === item.id || paying === item.id}
                             title="Cancelar conta"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
                           >
                             {deleting === item.id
                               ? <Loader2 size={14} className="animate-spin" />

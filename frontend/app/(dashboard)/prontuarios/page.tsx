@@ -51,7 +51,7 @@ export default function ProntuariosPage() {
 
       <div className="card p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <input
             type="text"
             placeholder="Buscar por paciente ou diagnóstico..."
@@ -94,7 +94,7 @@ export default function ProntuariosPage() {
                 </div>
 
                 <div className="flex-1 md:max-w-xs">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Diagnóstico</div>
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Diagnóstico</div>
                   <p className="text-sm text-slate-600 truncate">{record.diagnosis || "Não informado"}</p>
                 </div>
 
@@ -121,7 +121,7 @@ export default function ProntuariosPage() {
             <FileText size={32} />
           </div>
           <h3 className="text-lg font-medium text-slate-600">Nenhum prontuário encontrado</h3>
-          <p className="text-slate-400 text-sm">Tente mudar os termos da busca.</p>
+          <p className="text-slate-500 text-sm">Tente mudar os termos da busca.</p>
         </div>
       )}
 
@@ -189,7 +189,7 @@ function NewProntuarioModal({ onClose, onSaved }: { onClose: () => void; onSaved
         <div className="flex items-center justify-between p-6 border-b border-surface-border sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-slate-800">Novo Atendimento / Prontuário</h2>
           <button onClick={onClose} className="p-1 hover:bg-cream-100 rounded-lg">
-            <X size={18} className="text-slate-400" />
+            <X size={18} className="text-slate-500" />
           </button>
         </div>
 
@@ -211,19 +211,19 @@ function NewProntuarioModal({ onClose, onSaved }: { onClose: () => void; onSaved
                   </div>
                   <div>
                     <span className="text-sm font-semibold">{selectedPat.fullName}</span>
-                    <span className="text-xs text-slate-400 ml-2">{selectedPat.cpf}</span>
+                    <span className="text-xs text-slate-500 ml-2">{selectedPat.cpf}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => { setSelectedPat(null); setPatSearch(""); }}
-                  className="text-xs text-slate-400 hover:text-red-500"
+                  className="text-xs text-slate-500 hover:text-red-500"
                 >
                   Trocar
                 </button>
               </div>
             ) : (
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="text"
                   placeholder="Buscar por nome ou CPF..."
@@ -248,7 +248,7 @@ function NewProntuarioModal({ onClose, onSaved }: { onClose: () => void; onSaved
                           </div>
                           <div>
                             <div className="text-sm font-semibold text-slate-800">{p.fullName}</div>
-                            <div className="text-xs text-slate-400">{p.cpf}</div>
+                            <div className="text-xs text-slate-500">{p.cpf}</div>
                           </div>
                         </button>
                       ))}

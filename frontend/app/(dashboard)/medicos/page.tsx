@@ -125,7 +125,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Novo Médico</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -153,7 +153,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
               </label>
               <div className="relative">
                 <input type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" className="input pr-10" />
-                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600">
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -196,13 +196,13 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Telefone <span className="text-slate-400 text-xs">(opcional)</span>
+                Telefone <span className="text-slate-500 text-xs">(opcional)</span>
               </label>
               <input name="phone" value={form.phone} onChange={handleChange} placeholder="(11) 99999-0000" className="input" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Valor da consulta <span className="text-slate-400 text-xs">(opcional)</span>
+                Valor da consulta <span className="text-slate-500 text-xs">(opcional)</span>
               </label>
               <input type="number" min="0" step="0.01" name="consultationFee" value={form.consultationFee} onChange={handleChange} placeholder="0,00" className="input" />
             </div>
@@ -210,7 +210,7 @@ function CreateDoctorModal({ onClose, onSaved }: CreateModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Bio / Apresentação <span className="text-slate-400 text-xs">(opcional)</span>
+              Bio / Apresentação <span className="text-slate-500 text-xs">(opcional)</span>
             </label>
             <textarea name="bio" value={form.bio} onChange={handleChange} rows={2} placeholder="Breve apresentação do médico…" className="input resize-none" />
           </div>
@@ -293,7 +293,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Editar Médico</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -306,15 +306,15 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
             <p className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-2">Dados imutáveis</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-slate-400 block text-xs">Nome</span>
+                <span className="text-slate-500 block text-xs">Nome</span>
                 <span className="text-slate-700 font-medium">{doctor.user?.name ?? '—'}</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-xs">E-mail</span>
+                <span className="text-slate-500 block text-xs">E-mail</span>
                 <span className="text-slate-700">{doctor.user?.email ?? '—'}</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-xs">CRM</span>
+                <span className="text-slate-500 block text-xs">CRM</span>
                 <span className="text-slate-700">{doctor.crm}</span>
               </div>
             </div>
@@ -391,7 +391,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
               </div>
             </div>
             {form.repasseValue && form.repasseType === 'PERCENTAGE' && (
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Em uma consulta de R$300: repasse = R${(300 * Number(form.repasseValue) / 100).toFixed(2)}
               </p>
             )}
@@ -505,7 +505,7 @@ export default function MedicosPage() {
           />
           {searchInput && (
             <button
-              className="text-slate-400 hover:text-slate-600 text-sm"
+              className="text-slate-500 hover:text-slate-600 text-sm"
               onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }}
             >
               Limpar
@@ -525,7 +525,7 @@ export default function MedicosPage() {
         {!loading && !error && (
           <>
             {doctors.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
+              <div className="text-center py-12 text-slate-500">
                 {search ? `Nenhum médico encontrado para "${search}".` : 'Nenhum médico cadastrado ainda.'}
               </div>
             ) : (
@@ -548,8 +548,8 @@ export default function MedicosPage() {
                       <tr key={d.id} className="hover:bg-cream-100 transition-colors">
                         <td className="py-3">
                           <p className="font-medium text-slate-800">{d.user?.name ?? '—'}</p>
-                          <p className="text-xs text-slate-400">{d.user?.email}</p>
-                          {d.cpf && <p className="text-xs text-slate-400 font-mono">CPF: {d.cpf}</p>}
+                          <p className="text-xs text-slate-500">{d.user?.email}</p>
+                          {d.cpf && <p className="text-xs text-slate-500 font-mono">CPF: {d.cpf}</p>}
                         </td>
                         <td className="py-3 text-slate-600">{d.crm}-{d.crmState}</td>
                         <td className="py-3 text-slate-600">{d.specialty}</td>

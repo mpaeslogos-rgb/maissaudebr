@@ -78,7 +78,7 @@ const RISK_COLOR: Record<string, string> = {
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">{label}</p>
+      <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">{label}</p>
       <p className="text-sm text-slate-800 mt-0.5">{value || '—'}</p>
     </div>
   )
@@ -139,7 +139,7 @@ function FichaTab({ patient, onPhotoUploaded, onPatientUpdated }: { patient: Pat
           {photoSrc ? (
             <img src={photoSrc} alt={patient.fullName} className="w-24 h-24 rounded-full object-cover border-2 border-surface-border" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-3xl text-slate-400 border-2 border-surface-border">
+            <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-3xl text-slate-500 border-2 border-surface-border">
               {patient.fullName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -182,7 +182,7 @@ function FichaTab({ patient, onPhotoUploaded, onPatientUpdated }: { patient: Pat
           <InfoRow label="Cidade / UF" value={patient.city && patient.state ? `${patient.city} — ${patient.state}` : patient.city} />
           <InfoRow label="CEP" value={patient.zipCode} />
         </div>
-        {!addressParts && <p className="text-sm text-slate-400">Endereço não cadastrado.</p>}
+        {!addressParts && <p className="text-sm text-slate-500">Endereço não cadastrado.</p>}
       </div>
 
       {/* Clínico */}
@@ -214,14 +214,14 @@ function FichaTab({ patient, onPhotoUploaded, onPatientUpdated }: { patient: Pat
             <option value="CARDIOMETABOLIC">Risco Cardiometabólico</option>
             <option value="HIGH">Alto Risco</option>
           </select>
-          {savingRisk && <span className="text-xs text-slate-400">Salvando…</span>}
+          {savingRisk && <span className="text-xs text-slate-500">Salvando…</span>}
         </div>
-        <p className="text-xs text-slate-400 mt-2">
+        <p className="text-xs text-slate-500 mt-2">
           Pacientes com risco Metabólico, Cardiometabólico ou Alto Risco são elegíveis para programas preventivos.
         </p>
       </div>
 
-      <p className="text-xs text-slate-400">Cadastrado em {fmtDate(patient.createdAt)} · Atualizado em {fmtDate(patient.updatedAt)}</p>
+      <p className="text-xs text-slate-500">Cadastrado em {fmtDate(patient.createdAt)} · Atualizado em {fmtDate(patient.updatedAt)}</p>
     </div>
   )
 }
@@ -232,12 +232,12 @@ function AnamneseTab({ records }: { records: PatientMedicalRecordSummary[] }) {
   const latest = records[0]
 
   if (!latest) {
-    return <p className="text-slate-400 text-sm py-8 text-center">Nenhum prontuário registrado ainda.</p>
+    return <p className="text-slate-500 text-sm py-8 text-center">Nenhum prontuário registrado ainda.</p>
   }
 
   return (
     <div className="space-y-6">
-      <p className="text-xs text-slate-400">Última consulta em {fmtDate(latest.createdAt)}</p>
+      <p className="text-xs text-slate-500">Última consulta em {fmtDate(latest.createdAt)}</p>
 
       <div>
         <h3 className="text-sm font-semibold text-slate-700 mb-3 pb-1 border-b border-surface-border">Queixa e diagnóstico</h3>
@@ -366,13 +366,13 @@ function PrescriptionForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Válida até <span className="text-slate-400 text-xs">(opcional)</span></label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Válida até <span className="text-slate-500 text-xs">(opcional)</span></label>
           <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="input" />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Observações <span className="text-slate-400 text-xs">(opcional)</span></label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Observações <span className="text-slate-500 text-xs">(opcional)</span></label>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="input resize-none" placeholder="Instruções gerais, orientações…" />
       </div>
 
@@ -474,7 +474,7 @@ function PrescricoesTab({ patientId }: { patientId: string }) {
     }
   }
 
-  if (loading) return <p className="text-slate-400 text-sm py-8 text-center">Carregando…</p>
+  if (loading) return <p className="text-slate-500 text-sm py-8 text-center">Carregando…</p>
 
   return (
     <div className="space-y-4">
@@ -496,7 +496,7 @@ function PrescricoesTab({ patientId }: { patientId: string }) {
       )}
 
       {prescriptions.length === 0 && !showForm && (
-        <p className="text-slate-400 text-sm py-8 text-center">Nenhuma prescrição emitida ainda.</p>
+        <p className="text-slate-500 text-sm py-8 text-center">Nenhuma prescrição emitida ainda.</p>
       )}
 
       {prescriptions.map(p => (
@@ -506,7 +506,7 @@ function PrescricoesTab({ patientId }: { patientId: string }) {
               <p className="text-sm font-semibold text-slate-800">
                 Dr(a). {p.doctor.user.name} · {p.doctor.specialty}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Emitida em {fmtDatetime(p.emittedAt)}
                 {p.validUntil ? ` · Válida até ${fmtDate(p.validUntil)}` : ''}
               </p>
@@ -526,7 +526,7 @@ function PrescricoesTab({ patientId }: { patientId: string }) {
             {p.items.map((item, idx) => (
               <div key={item.id} className="bg-slate-50 rounded-lg px-3 py-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs text-slate-400 w-4 shrink-0">{idx + 1}.</span>
+                  <span className="text-xs text-slate-500 w-4 shrink-0">{idx + 1}.</span>
                   <span className="text-sm font-medium text-slate-800">{item.medication}</span>
                   <span className="text-sm text-slate-600">— {item.dosage}</span>
                 </div>
@@ -554,7 +554,7 @@ function HistoricoTab({
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   if (appointments.length === 0) {
-    return <p className="text-slate-400 text-sm py-8 text-center">Nenhuma consulta registrada ainda.</p>
+    return <p className="text-slate-500 text-sm py-8 text-center">Nenhuma consulta registrada ainda.</p>
   }
 
   const recordByAppointment = Object.fromEntries(
@@ -579,13 +579,13 @@ function HistoricoTab({
                 </span>
                 <div>
                   <p className="text-sm font-medium text-slate-800">{fmtDatetime(apt.startTime)}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Dr(a). {apt.doctor.user.name} · {apt.doctor.specialty}
                     {apt.reason ? ` · ${apt.reason}` : ''}
                   </p>
                 </div>
               </div>
-              <span className="text-slate-400 text-sm">{expanded ? '▲' : '▼'}</span>
+              <span className="text-slate-500 text-sm">{expanded ? '▲' : '▼'}</span>
             </div>
 
             {expanded && record && (
@@ -599,7 +599,7 @@ function HistoricoTab({
 
                 {(record.bloodPressure || record.heartRate || record.temperature || record.weight) && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-2">Sinais vitais</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Sinais vitais</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <InfoRow label="PA" value={record.bloodPressure} />
                       <InfoRow label="FC" value={record.heartRate ? `${record.heartRate} bpm` : undefined} />
@@ -613,7 +613,7 @@ function HistoricoTab({
 
                 {record.transcript && (
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-1">Transcrição</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Transcrição</p>
                     <pre className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-3 border border-surface-border leading-relaxed max-h-48 overflow-y-auto">
                       {record.transcript}
                     </pre>
@@ -623,7 +623,7 @@ function HistoricoTab({
             )}
 
             {expanded && !record && (
-              <p className="mt-4 pt-4 border-t border-surface-border text-sm text-slate-400">
+              <p className="mt-4 pt-4 border-t border-surface-border text-sm text-slate-500">
                 Nenhum prontuário vinculado a esta consulta.
               </p>
             )}
@@ -691,7 +691,7 @@ function MarcadoresTab({ patientId }: { patientId: string }) {
     { key: 'triglycerides',label:'Triglicérides',unit: 'mg/dL' },
   ]
 
-  if (loading) return <p className="text-slate-400 text-sm py-8 text-center">Carregando…</p>
+  if (loading) return <p className="text-slate-500 text-sm py-8 text-center">Carregando…</p>
 
   return (
     <div className="space-y-4">
@@ -701,7 +701,7 @@ function MarcadoresTab({ patientId }: { patientId: string }) {
       </div>
 
       {markers.length === 0 && !showForm && (
-        <p className="text-slate-400 text-sm py-8 text-center">Nenhum marcador registrado ainda.</p>
+        <p className="text-slate-500 text-sm py-8 text-center">Nenhum marcador registrado ainda.</p>
       )}
 
       {markers.length > 0 && (
@@ -795,7 +795,7 @@ export default function PatientDetailPage() {
   }, [id])
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-400">Carregando…</div>
+    return <div className="text-center py-20 text-slate-500">Carregando…</div>
   }
 
   if (error || !patient) {
@@ -821,7 +821,7 @@ export default function PatientDetailPage() {
       <div>
         <div>
           <h1 className="text-2xl font-bold text-slate-800">{patient.fullName}</h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             {patient.birthDate ? `${calcAge(patient.birthDate)} · ` : ''}
             {patient.phone}
             {patient.healthInsurance ? ` · ${patient.healthInsurance}` : ''}

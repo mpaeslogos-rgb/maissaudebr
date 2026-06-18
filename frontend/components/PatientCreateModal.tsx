@@ -72,7 +72,7 @@ export function PatientCreateModal({ onClose, onSaved }: Props) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <h2 className="text-base font-semibold text-slate-800">Cadastrar novo paciente</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-3">

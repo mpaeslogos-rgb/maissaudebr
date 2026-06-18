@@ -127,7 +127,7 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-5 border-b border-surface-border shrink-0">
           <h2 className="text-base font-semibold text-slate-800">Nova Mensagem WhatsApp</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -136,14 +136,14 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
               <input value={search} onChange={handleSearchChange} placeholder="Buscar contato…" className="input text-sm" />
             </div>
             <div className="flex-1 overflow-y-auto">
-              {loadingContacts && <p className="text-center text-slate-400 text-sm py-6">Buscando…</p>}
-              {!loadingContacts && contacts.length === 0 && <p className="text-center text-slate-400 text-sm py-6">Nenhum contato encontrado.</p>}
+              {loadingContacts && <p className="text-center text-slate-500 text-sm py-6">Buscando…</p>}
+              {!loadingContacts && contacts.length === 0 && <p className="text-center text-slate-500 text-sm py-6">Nenhum contato encontrado.</p>}
               {!loadingContacts && (['patient', 'doctor', 'supplier'] as Contact['type'][]).map(type => {
                 const list = grouped[type]
                 if (list.length === 0) return null
                 return (
                   <div key={type}>
-                    <p className="px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-cream-50 border-b border-surface-border">
+                    <p className="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider bg-cream-50 border-b border-surface-border">
                       {TYPE_ICON[type]} {TYPE_LABEL[type]}s
                     </p>
                     {list.map(c => (
@@ -153,7 +153,7 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
                         className={`w-full text-left px-3 py-2.5 border-b border-surface-border hover:bg-cream-100 transition-colors ${selected?.id === c.id ? 'bg-primary-50 border-l-4 border-l-primary-500' : ''}`}
                       >
                         <p className="text-sm font-medium text-slate-800 truncate">{c.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{c.phone ?? 'Sem telefone'} · {c.detail}</p>
+                        <p className="text-xs text-slate-500 truncate">{c.phone ?? 'Sem telefone'} · {c.detail}</p>
                       </button>
                     ))}
                   </div>
@@ -174,7 +174,7 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
                 <button onClick={() => { setSelected(null); setPhone('') }} className="ml-auto text-primary-400 hover:text-primary-600">×</button>
               </div>
             ) : (
-              <p className="text-sm text-slate-400 italic">← Selecione um contato ou informe o número abaixo.</p>
+              <p className="text-sm text-slate-500 italic">← Selecione um contato ou informe o número abaixo.</p>
             )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -182,7 +182,7 @@ function NewMessageModal({ onClose }: { onClose: () => void }) {
                 {selected && !selected.phone && <span className="ml-2 text-xs text-amber-600 font-normal">Este contato não tem telefone cadastrado</span>}
               </label>
               <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(11) 99999-0000" className="input" />
-              <p className="text-xs text-slate-400 mt-1">DDD + número. O código +55 é adicionado automaticamente.</p>
+              <p className="text-xs text-slate-500 mt-1">DDD + número. O código +55 é adicionado automaticamente.</p>
             </div>
             <div className="flex-1 flex flex-col">
               <label className="block text-sm font-medium text-slate-700 mb-1">Mensagem <span className="text-red-500">*</span></label>
@@ -229,10 +229,10 @@ function BulkMessageModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <div>
             <h2 className="text-base font-semibold text-slate-800">📢 Mensagem em Massa</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Envia para todos os pacientes com WhatsApp cadastrado</p>
+            <p className="text-xs text-slate-500 mt-0.5">Envia para todos os pacientes com WhatsApp cadastrado</p>
           </div>
           {step !== 'sending' && (
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-2xl leading-none">×</button>
           )}
         </div>
 
@@ -247,11 +247,11 @@ function BulkMessageModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className={`border rounded-lg p-3 ${result.failed > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
                   <p className={`text-2xl font-bold ${result.failed > 0 ? 'text-red-700' : 'text-slate-500'}`}>{result.failed}</p>
-                  <p className={`text-xs mt-0.5 ${result.failed > 0 ? 'text-red-600' : 'text-slate-400'}`}>Falhas</p>
+                  <p className={`text-xs mt-0.5 ${result.failed > 0 ? 'text-red-600' : 'text-slate-500'}`}>Falhas</p>
                 </div>
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                   <p className="text-2xl font-bold text-slate-700">{result.total}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Total</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Total</p>
                 </div>
               </div>
               {result.errors.length > 0 && (
@@ -275,7 +275,7 @@ function BulkMessageModal({ onClose }: { onClose: () => void }) {
             <div className="text-center py-8 space-y-3">
               <div className="text-4xl animate-pulse">📱</div>
               <p className="text-slate-700 font-medium">Enviando mensagens…</p>
-              <p className="text-xs text-slate-400">Aguarde. O envio pode demorar alguns minutos<br/>dependendo da quantidade de pacientes.</p>
+              <p className="text-xs text-slate-500">Aguarde. O envio pode demorar alguns minutos<br/>dependendo da quantidade de pacientes.</p>
             </div>
           )}
 
@@ -313,7 +313,7 @@ function BulkMessageModal({ onClose }: { onClose: () => void }) {
                   className="input resize-none min-h-[140px]"
                   maxLength={4096}
                 />
-                <p className="text-xs text-slate-400 mt-1 text-right">{message.length}/4096</p>
+                <p className="text-xs text-slate-500 mt-1 text-right">{message.length}/4096</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={onClose} className="btn-outline flex-1">Cancelar</button>
@@ -431,7 +431,7 @@ function TakenChatModal({
                   : 'bg-white text-slate-800 border border-surface-border rounded-bl-none'
               }`}>
                 <p>{msg.content}</p>
-                <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-primary-200' : 'text-slate-400'}`}>
+                <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-primary-200' : 'text-slate-500'}`}>
                   {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -664,7 +664,7 @@ export default function ChatsPage() {
         <div className="p-4 border-b border-surface-border flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-800">Chats</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Duplo clique = pegar chat</p>
+            <p className="text-xs text-slate-500 mt-0.5">Duplo clique = pegar chat</p>
           </div>
           <div className="flex gap-1.5">
             <button
@@ -682,7 +682,7 @@ export default function ChatsPage() {
 
         <div className="flex-1 overflow-y-auto divide-y divide-surface-border">
           {chats.length === 0 && (
-            <p className="text-center text-slate-400 text-sm py-10">Nenhum chat ativo.</p>
+            <p className="text-center text-slate-500 text-sm py-10">Nenhum chat ativo.</p>
           )}
           {chats.map(chat => {
             const displayName = resolveChatName(chat)
@@ -810,7 +810,7 @@ export default function ChatsPage() {
                       : 'bg-white text-slate-800 border border-surface-border rounded-bl-none'
                   }`}>
                     <p>{msg.content}</p>
-                    <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-primary-200' : 'text-slate-400'}`}>
+                    <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-primary-200' : 'text-slate-500'}`}>
                       {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -842,7 +842,7 @@ export default function ChatsPage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-400">
+          <div className="flex-1 flex items-center justify-center text-slate-500">
             <div className="text-center space-y-2">
               <p className="text-4xl">💬</p>
               <p className="text-sm">Selecione um chat para começar</p>

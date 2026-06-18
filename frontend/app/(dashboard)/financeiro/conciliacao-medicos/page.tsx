@@ -168,7 +168,7 @@ export default function ConciliacaoMedicosPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/financeiro" className="text-slate-400 hover:text-slate-600 text-sm">← Financeiro</Link>
+            <Link href="/financeiro" className="text-slate-500 hover:text-slate-600 text-sm">← Financeiro</Link>
           </div>
           <h1 className="text-2xl font-bold text-slate-800">Conciliação de Médicos</h1>
           <p className="text-slate-500 text-sm mt-1">Repasses gerados automaticamente ao confirmar pagamento do paciente.</p>
@@ -182,18 +182,18 @@ export default function ConciliacaoMedicosPage() {
             <div key={i} className="card p-4 space-y-2">
               <div>
                 <p className="font-semibold text-slate-800 text-sm">{item.doctor?.user?.name ?? '—'}</p>
-                <p className="text-xs text-slate-400">{item.doctor?.specialty} · {repasseLabel(item)}</p>
+                <p className="text-xs text-slate-500">{item.doctor?.specialty} · {repasseLabel(item)}</p>
               </div>
               <div className="flex gap-4 text-sm">
                 <div>
-                  <p className="text-xs text-slate-400">Pendente</p>
+                  <p className="text-xs text-slate-500">Pendente</p>
                   <p className="font-semibold text-yellow-700">{formatBRL(item.pending.amount)}</p>
-                  <p className="text-xs text-slate-400">{item.pending.count} consulta(s)</p>
+                  <p className="text-xs text-slate-500">{item.pending.count} consulta(s)</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">Pago</p>
+                  <p className="text-xs text-slate-500">Pago</p>
                   <p className="font-semibold text-green-700">{formatBRL(item.paid.amount)}</p>
-                  <p className="text-xs text-slate-400">{item.paid.count} consulta(s)</p>
+                  <p className="text-xs text-slate-500">{item.paid.count} consulta(s)</p>
                 </div>
               </div>
               <button
@@ -274,7 +274,7 @@ export default function ConciliacaoMedicosPage() {
         {loading ? (
           <div className="text-center py-12 text-slate-500">Carregando repasses…</div>
         ) : payments.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">Nenhum repasse encontrado para os filtros selecionados.</div>
+          <div className="text-center py-12 text-slate-500">Nenhum repasse encontrado para os filtros selecionados.</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -315,7 +315,7 @@ export default function ConciliacaoMedicosPage() {
                       </td>
                       <td className="py-3">
                         <p className="font-medium text-slate-800">{dp.doctor?.user?.name ?? '—'}</p>
-                        <p className="text-xs text-slate-400">{dp.doctor?.specialty}</p>
+                        <p className="text-xs text-slate-500">{dp.doctor?.specialty}</p>
                       </td>
                       <td className="py-3 text-slate-700">{dp.appointment?.patient?.fullName ?? '—'}</td>
                       <td className="py-3 text-slate-600">

@@ -94,7 +94,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Mail
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                 />
                 <input
                   type="email"
@@ -116,7 +116,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Lock
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                 />
                 <input
                   type={showPwd ? "text" : "password"}
@@ -130,7 +130,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
                 >
                   {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>

@@ -17,7 +17,7 @@ export function Breadcrumb({ items }: Props) {
     <nav className="flex items-center gap-1.5 text-sm mb-5">
       <Link
         href="/dashboard"
-        className="text-slate-400 hover:text-primary-600 transition-colors"
+        className="text-slate-500 hover:text-primary-600 transition-colors"
       >
         <Home size={15} />
       </Link>
@@ -33,7 +33,7 @@ export function Breadcrumb({ items }: Props) {
             ) : (
               <Link
                 href={item.href}
-                className="text-slate-400 hover:text-primary-600 transition-colors"
+                className="text-slate-500 hover:text-primary-600 transition-colors"
               >
                 {item.label}
               </Link>

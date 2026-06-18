@@ -56,13 +56,7 @@ function genderLabel(g: Gender) {
   return 'Outro'
 }
 
-function formatCpf(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 11)
-  if (d.length <= 3) return d
-  if (d.length <= 6) return `${d.slice(0,3)}.${d.slice(3)}`
-  if (d.length <= 9) return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`
-  return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9,11)}`
-}
+import { formatCpf, validateCpf } from '@/lib/cpf'
 
 // ─── Tipos do formulário ─────────────────────────────────────────────────────
 
@@ -109,6 +103,9 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const cpfDigits = form.cpf.replace(/\D/g, '')
+  const cpfComplete = cpfDigits.length === 11
+  const cpfValid = cpfComplete && validateCpf(form.cpf)
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -124,6 +121,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
     // Validações client-side
     if (!form.fullName.trim()) return setError('Nome completo é obrigatório.')
     if (!form.cpf.trim())      return setError('CPF é obrigatório.')
+    if (!validateCpf(form.cpf)) return setError('CPF inválido. Verifique os dígitos.')
     if (!form.birthDate)       return setError('Data de nascimento é obrigatória.')
     if (!form.phone.trim())    return setError('Telefone é obrigatório.')
     if (!form.email.trim())    return setError('E-mail é obrigatório.')
@@ -166,7 +164,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+            className="text-slate-500 hover:text-slate-600 text-2xl leading-none"
           >
             ×
           </button>
@@ -205,8 +203,14 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
                 value={form.cpf}
                 onChange={handleChange}
                 placeholder="000.000.000-00"
-                className="input"
+                className={`input ${cpfComplete ? (cpfValid ? 'border-green-400 focus:ring-green-500' : 'border-red-400 focus:ring-red-500') : ''}`}
               />
+              {cpfComplete && !cpfValid && (
+                <p className="text-xs text-red-600 mt-1">CPF invalido</p>
+              )}
+              {cpfValid && (
+                <p className="text-xs text-green-600 mt-1">CPF valido</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -266,7 +270,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
           {/* Observações */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Observações <span className="text-slate-400 text-xs">(opcional)</span>
+              Observações <span className="text-slate-500 text-xs">(opcional)</span>
             </label>
             <textarea
               name="notes"
@@ -409,7 +413,7 @@ export default function PacientesPage() {
           />
           {searchInput && (
             <button
-              className="text-slate-400 hover:text-slate-600 text-sm"
+              className="text-slate-500 hover:text-slate-600 text-sm"
               onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }}
             >
               Limpar
@@ -434,7 +438,7 @@ export default function PacientesPage() {
         {!loading && !error && (
           <>
             {patients.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
+              <div className="text-center py-12 text-slate-500">
                 {search ? `Nenhum paciente encontrado para "${search}".` : 'Nenhum paciente cadastrado ainda.'}
               </div>
             ) : (

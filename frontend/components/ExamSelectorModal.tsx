@@ -171,7 +171,7 @@ export function ExamSelectorModal({
                 {createdOrders.length} exame{createdOrders.length > 1 ? "s" : ""} solicitado{createdOrders.length > 1 ? "s" : ""}
               </h2>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-600">
               <X size={18} />
             </button>
           </div>
@@ -226,7 +226,7 @@ export function ExamSelectorModal({
               Solicitar Exames / Procedimentos
             </h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600">
             <X size={18} />
           </button>
         </div>
@@ -281,7 +281,7 @@ export function ExamSelectorModal({
         {/* Search */}
         <div className="px-5 pb-3 shrink-0">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               placeholder="Buscar exame ou procedimento..."
@@ -292,7 +292,7 @@ export function ExamSelectorModal({
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600"
               >
                 <X size={14} />
               </button>
@@ -308,7 +308,7 @@ export function ExamSelectorModal({
               <span className="ml-2 text-sm text-slate-500">Carregando catálogo...</span>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-8">
+            <p className="text-sm text-slate-500 text-center py-8">
               {catalog.length === 0
                 ? "Nenhum exame cadastrado. Cadastre em Exames e Proced."
                 : "Nenhum exame encontrado."}
@@ -399,7 +399,7 @@ export function ExamSelectorModal({
                 >
                   {savingPkg ? <Loader2 size={12} className="animate-spin" /> : "Salvar"}
                 </button>
-                <button onClick={() => { setShowSavePkg(false); setPkgName(""); }} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => { setShowSavePkg(false); setPkgName(""); }} className="text-slate-500 hover:text-slate-600">
                   <X size={14} />
                 </button>
               </div>

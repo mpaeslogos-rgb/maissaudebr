@@ -51,7 +51,7 @@ function MaterialModal({ item, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">{item ? 'Editar Material' : 'Novo Material'}</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -125,7 +125,7 @@ function MovementModal({ material, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Movimentar Estoque</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -276,7 +276,7 @@ export default function EstoquePage() {
                       <td className="px-4 py-3">
                         <div className="flex gap-2 justify-end">
                           <button onClick={() => setMovingMaterial(m)} className="text-xs text-primary-600 hover:text-primary-800 font-medium">Movimentar</button>
-                          <button onClick={() => { setEditingMaterial(m); setShowMaterialModal(true) }} className="p-1 text-slate-400 hover:text-primary-600 rounded">
+                          <button onClick={() => { setEditingMaterial(m); setShowMaterialModal(true) }} className="p-1 text-slate-500 hover:text-primary-600 rounded">
                             <Pencil size={14} />
                           </button>
                         </div>
@@ -322,7 +322,7 @@ export default function EstoquePage() {
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-slate-700">{mv.quantity} {mv.material.unit}</td>
                     <td className="px-4 py-3 text-slate-500">{mv.reason ?? '—'}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{new Date(mv.createdAt).toLocaleString('pt-BR')}</td>
+                    <td className="px-4 py-3 text-slate-500 text-xs">{new Date(mv.createdAt).toLocaleString('pt-BR')}</td>
                   </tr>
                 ))}
               </tbody>

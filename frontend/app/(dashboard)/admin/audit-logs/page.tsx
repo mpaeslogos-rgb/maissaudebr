@@ -43,7 +43,7 @@ function LogRow({ log }: { log: AuditLog }) {
         className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${hasMetadata ? 'cursor-pointer' : ''}`}
         onClick={() => hasMetadata && setExpanded(e => !e)}
       >
-        <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
+        <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
           {new Date(log.createdAt).toLocaleString('pt-BR', {
             day: '2-digit', month: '2-digit', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -53,10 +53,10 @@ function LogRow({ log }: { log: AuditLog }) {
           {log.user ? (
             <div>
               <p className="text-sm font-medium text-slate-700">{log.user.name}</p>
-              <p className="text-xs text-slate-400">{log.user.email}</p>
+              <p className="text-xs text-slate-500">{log.user.email}</p>
             </div>
           ) : (
-            <span className="text-xs text-slate-400 italic">Sistema</span>
+            <span className="text-xs text-slate-500 italic">Sistema</span>
           )}
         </td>
         <td className="px-4 py-3">
@@ -66,16 +66,16 @@ function LogRow({ log }: { log: AuditLog }) {
         </td>
         <td className="px-4 py-3">
           <p className="text-sm text-slate-700 font-medium">{log.entity}</p>
-          {log.entityId && <p className="text-xs text-slate-400 font-mono">{log.entityId.slice(0, 8)}…</p>}
+          {log.entityId && <p className="text-xs text-slate-500 font-mono">{log.entityId.slice(0, 8)}…</p>}
         </td>
-        <td className="px-4 py-3 text-xs text-slate-400 font-mono">
+        <td className="px-4 py-3 text-xs text-slate-500 font-mono">
           {log.ipAddress ?? '—'}
         </td>
         <td className="px-4 py-3 text-xs">
           {hasMetadata
             ? expanded
-              ? <ChevronDown size={14} className="text-slate-400" />
-              : <ChevronRight size={14} className="text-slate-400" />
+              ? <ChevronDown size={14} className="text-slate-500" />
+              : <ChevronRight size={14} className="text-slate-500" />
             : null
           }
         </td>
@@ -151,7 +151,7 @@ function SummaryCards({ summary }: { summary: SummaryData }) {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-slate-700 truncate">{u.name ?? '—'}</p>
-                <p className="text-xs text-slate-400">{u.lastAction} · {u.lastEntity}</p>
+                <p className="text-xs text-slate-500">{u.lastAction} · {u.lastEntity}</p>
               </div>
             </div>
           ))}
@@ -214,7 +214,7 @@ export default function AuditLogsPage() {
             className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50"
             title="Atualizar"
           >
-            <RefreshCw size={16} className={loading ? 'animate-spin text-slate-400' : 'text-slate-500'} />
+            <RefreshCw size={16} className={loading ? 'animate-spin text-slate-500' : 'text-slate-500'} />
           </button>
         </div>
 
@@ -224,7 +224,7 @@ export default function AuditLogsPage() {
         {/* Filtros */}
         <div className="flex flex-wrap gap-3 mb-4">
           <div className="relative flex-1 min-w-48">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Buscar entidade, ação, ID…"
@@ -292,11 +292,11 @@ export default function AuditLogsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">Carregando…</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Carregando…</td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500 text-sm">Nenhum registro encontrado.</td>
                 </tr>
               ) : logs.map(log => <LogRow key={log.id} log={log} />)}
             </tbody>

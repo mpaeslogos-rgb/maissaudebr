@@ -45,8 +45,8 @@ const PAYMENT_STYLES: Record<string, string> = {
   PENDING:  'text-amber-600',
   PAID:     'text-green-600',
   OVERDUE:  'text-red-600',
-  CANCELLED:'text-slate-400',
-  REFUNDED: 'text-slate-400',
+  CANCELLED:'text-slate-500',
+  REFUNDED: 'text-slate-500',
 }
 
 // ─── Modal: Catálogo ──────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function CatalogModal({ item, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">{item ? 'Editar' : 'Novo'} Exame / Procedimento</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -170,7 +170,7 @@ function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-surface-border">
           <h2 className="text-lg font-semibold text-slate-800">Solicitar Exame / Procedimento</h2>
-          <button onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={20} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -184,7 +184,7 @@ function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
               ))}
             </select>
             {selectedCatalog?.duration && (
-              <p className="text-xs text-slate-400 mt-1"><Clock size={11} className="inline mr-1" />{selectedCatalog.duration} min</p>
+              <p className="text-xs text-slate-500 mt-1"><Clock size={11} className="inline mr-1" />{selectedCatalog.duration} min</p>
             )}
           </div>
 
@@ -206,7 +206,7 @@ function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Data/Hora do exame <span className="text-slate-400 text-xs">(deixe em branco para deixar como Pendente)</span>
+              Data/Hora do exame <span className="text-slate-500 text-xs">(deixe em branco para deixar como Pendente)</span>
             </label>
             <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} className="input" />
             {scheduledAt
@@ -279,7 +279,7 @@ function StatusModal({ order, onClose, onSaved }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <h2 className="text-base font-semibold text-slate-800">Gerenciar Exame</h2>
-          <button onClick={onClose}><X size={18} className="text-slate-400 hover:text-slate-600" /></button>
+          <button onClick={onClose}><X size={18} className="text-slate-500 hover:text-slate-600" /></button>
         </div>
         <div className="p-5 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>}
@@ -539,8 +539,8 @@ export default function ExamesPage() {
                         {c.description && <p className="text-sm text-slate-500 mt-0.5">{c.description}</p>}
                       </div>
                       <div className="flex gap-1">
-                        <button onClick={() => { setEditingCatalog(c); setShowCatalogModal(true) }} className="p-1.5 text-slate-400 hover:text-primary-600 rounded"><Pencil size={14} /></button>
-                        <button onClick={() => handleDeleteCatalog(c.id)} className="p-1.5 text-slate-400 hover:text-red-500 rounded"><Trash2 size={14} /></button>
+                        <button onClick={() => { setEditingCatalog(c); setShowCatalogModal(true) }} className="p-1.5 text-slate-500 hover:text-primary-600 rounded"><Pencil size={14} /></button>
+                        <button onClick={() => handleDeleteCatalog(c.id)} className="p-1.5 text-slate-500 hover:text-red-500 rounded"><Trash2 size={14} /></button>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -554,7 +554,7 @@ export default function ExamesPage() {
                       )}
                     </div>
                     {c.repasseType && (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-500">
                         Repasse: {c.repasseType === 'PERCENTAGE' ? `${c.repasseValue}%` : `R$ ${c.repasseValue?.toFixed(2)}`}
                       </p>
                     )}

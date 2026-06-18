@@ -76,7 +76,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                   onClick={() => handleClose(false)}
-                  className="text-slate-400 hover:text-slate-600 shrink-0"
+                  className="text-slate-500 hover:text-slate-600 shrink-0"
                 >
                   <X size={16} />
                 </button>
