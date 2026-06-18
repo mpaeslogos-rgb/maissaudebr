@@ -1102,6 +1102,8 @@ enum SignedDocumentType {
   ATESTADO
   RECEITA
   LAUDO
+  RECEITA_TEXTO
+  SOLICITACAO
 }
 
 model DigitalSignature {
