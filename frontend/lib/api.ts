@@ -115,6 +115,15 @@ async function apiFetch<T>(
     responseData = {}
   }
 
+  if (response.status === 401) {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('maissaudebr_user')
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
+    throw new ApiException(401, responseData as ApiError)
+  }
+
   if (!response.ok) {
     throw new ApiException(response.status, responseData as ApiError)
   }
