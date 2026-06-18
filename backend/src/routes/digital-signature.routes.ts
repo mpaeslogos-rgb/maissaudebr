@@ -335,9 +335,11 @@ async function processSignature(
     const fe = frontendUrl ?? process.env.FRONTEND_URL ?? "http://localhost:3000";
     return reply.redirect(`${fe}/assinaturas?id=${signatureId}&status=signed`);
   } catch (err: any) {
+    const errDetail = err?.response?.data ? JSON.stringify(err.response.data) : err.message;
+    console.error(`[SIGNATURE ERROR] ${signatureId}:`, errDetail, err?.response?.status);
     await prisma.digitalSignature.update({ where: { id: signatureId }, data: { status: "FAILED" } });
     const fe = frontendUrl ?? process.env.FRONTEND_URL ?? "http://localhost:3000";
-    return reply.redirect(`${fe}/assinaturas?id=${signatureId}&status=failed&error=${encodeURIComponent(err.message)}`);
+    return reply.redirect(`${fe}/assinaturas?id=${signatureId}&status=failed&error=${encodeURIComponent(errDetail)}`);
   }
 }
 
