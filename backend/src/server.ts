@@ -37,6 +37,7 @@ import { prescriptionsRoutes } from './routes/prescriptions.routes'
 import { doctorPaymentsRoutes } from './routes/doctor-payments.routes'
 import { examCatalogRoutes } from './routes/exam-catalog.routes'
 import { examOrdersRoutes } from './routes/exam-orders.routes'
+import { examPackagesRoutes } from './routes/exam-packages.routes'
 import { insurancePlansRoutes } from './routes/insurance-plans.routes'
 import { stockRoutes } from './routes/stock.routes'
 import { tissRoutes } from './routes/tiss.routes'
@@ -151,6 +152,7 @@ async function bootstrap() {
   await app.register(doctorPaymentsRoutes)
   await app.register(examCatalogRoutes)
   await app.register(examOrdersRoutes)
+  await app.register(examPackagesRoutes)
   await app.register(insurancePlansRoutes)
   await app.register(stockRoutes)
   await app.register(tissRoutes, { prefix: '/api' })

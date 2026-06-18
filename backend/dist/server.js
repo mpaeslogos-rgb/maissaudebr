@@ -41,6 +41,7 @@ const prescriptions_routes_1 = require("./routes/prescriptions.routes");
 const doctor_payments_routes_1 = require("./routes/doctor-payments.routes");
 const exam_catalog_routes_1 = require("./routes/exam-catalog.routes");
 const exam_orders_routes_1 = require("./routes/exam-orders.routes");
+const exam_packages_routes_1 = require("./routes/exam-packages.routes");
 const insurance_plans_routes_1 = require("./routes/insurance-plans.routes");
 const stock_routes_1 = require("./routes/stock.routes");
 const tiss_routes_1 = require("./routes/tiss.routes");
@@ -143,6 +144,7 @@ async function bootstrap() {
     await app.register(doctor_payments_routes_1.doctorPaymentsRoutes);
     await app.register(exam_catalog_routes_1.examCatalogRoutes);
     await app.register(exam_orders_routes_1.examOrdersRoutes);
+    await app.register(exam_packages_routes_1.examPackagesRoutes);
     await app.register(insurance_plans_routes_1.insurancePlansRoutes);
     await app.register(stock_routes_1.stockRoutes);
     await app.register(tiss_routes_1.tissRoutes, { prefix: '/api' });

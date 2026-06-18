@@ -805,6 +805,34 @@ export function createExamOrder(data: {
   return apiPost('/exam-orders', data)
 }
 
+// ─── Pacotes de Exames ────────────────────────────────────────────────────────
+
+export interface ExamPackage {
+  id: string
+  name: string
+  description: string | null
+  doctorId: string | null
+  items: { catalogId: string; catalog: ExamCatalog }[]
+  createdAt: string
+}
+
+export function getExamPackages(): Promise<ExamPackage[]> {
+  return apiGet('/exam-packages')
+}
+
+export function createExamPackage(data: {
+  name: string
+  description?: string
+  catalogIds: string[]
+  global?: boolean
+}): Promise<ExamPackage> {
+  return apiPost('/exam-packages', data)
+}
+
+export function deleteExamPackage(id: string): Promise<void> {
+  return apiDelete(`/exam-packages/${id}`)
+}
+
 export function createExamOrdersBatch(data: {
   patientId: string
   doctorId:  string

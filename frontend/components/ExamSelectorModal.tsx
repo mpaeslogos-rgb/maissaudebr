@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { FlaskConical, Search, X, Check, Loader2, PenLine } from "lucide-react";
+import { Package, Save } from "lucide-react";
 import {
   createExamOrdersBatch,
   getExamCatalog,
+  getExamPackages,
+  createExamPackage,
   getPatients,
   getDoctors,
   initSignature,
   type ExamCatalog,
   type ExamOrder,
+  type ExamPackage,
   type SignatureProvider,
 } from "@/lib/api";
 import type { Doctor, Patient } from "@/lib/types";
@@ -45,6 +49,11 @@ export function ExamSelectorModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const [packages, setPackages] = useState<ExamPackage[]>([]);
+  const [savingPkg, setSavingPkg] = useState(false);
+  const [pkgName, setPkgName] = useState("");
+  const [showSavePkg, setShowSavePkg] = useState(false);
+
   const [createdOrders, setCreatedOrders] = useState<ExamOrder[] | null>(null);
   const [signError, setSignError] = useState("");
 
@@ -53,6 +62,9 @@ export function ExamSelectorModal({
       getExamCatalog()
         .then((data) => setCatalog(data))
         .catch(() => setError("Erro ao carregar catálogo de exames.")),
+      getExamPackages()
+        .then((data) => setPackages(data))
+        .catch(() => {}),
     ];
     if (needsContext) {
       promises.push(
@@ -77,6 +89,32 @@ export function ExamSelectorModal({
       else next.add(id);
       return next;
     });
+  }
+
+  function loadPackage(pkg: ExamPackage) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      pkg.items.forEach((item) => next.add(item.catalogId));
+      return next;
+    });
+  }
+
+  async function handleSavePackage() {
+    if (!pkgName.trim()) return;
+    setSavingPkg(true);
+    try {
+      const pkg = await createExamPackage({
+        name: pkgName.trim(),
+        catalogIds: Array.from(selectedIds),
+      });
+      setPackages((prev) => [...prev, pkg]);
+      setShowSavePkg(false);
+      setPkgName("");
+    } catch (e: any) {
+      setError(e?.message ?? "Erro ao salvar pacote.");
+    } finally {
+      setSavingPkg(false);
+    }
   }
 
   async function handleSubmit() {
@@ -219,6 +257,27 @@ export function ExamSelectorModal({
           </div>
         )}
 
+        {/* Packages */}
+        {packages.length > 0 && (
+          <div className="px-5 pb-2 shrink-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                <Package size={12} /> Pacotes:
+              </span>
+              {packages.map((pkg) => (
+                <button
+                  key={pkg.id}
+                  onClick={() => loadPackage(pkg)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
+                >
+                  {pkg.name}
+                  <span className="text-indigo-400">({pkg.items.length})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Search */}
         <div className="px-5 pb-3 shrink-0">
           <div className="relative">
@@ -321,6 +380,37 @@ export function ExamSelectorModal({
                 </span>
               ))}
             </div>
+            {/* Save as package */}
+            {showSavePkg ? (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="text"
+                  placeholder="Nome do pacote..."
+                  value={pkgName}
+                  onChange={(e) => setPkgName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSavePackage()}
+                  className="flex-1 px-3 py-1.5 text-xs border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSavePackage}
+                  disabled={savingPkg || !pkgName.trim()}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50"
+                >
+                  {savingPkg ? <Loader2 size={12} className="animate-spin" /> : "Salvar"}
+                </button>
+                <button onClick={() => { setShowSavePkg(false); setPkgName(""); }} className="text-slate-400 hover:text-slate-600">
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSavePkg(true)}
+                className="flex items-center gap-1 mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                <Save size={12} /> Salvar como pacote
+              </button>
+            )}
           </div>
         )}
 
