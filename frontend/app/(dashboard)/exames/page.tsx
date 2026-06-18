@@ -9,6 +9,7 @@ import {
   type ExamCatalog, type ExamOrder,
 } from '@/lib/api'
 import type { Doctor, Patient } from '@/lib/types'
+import { ExamSelectorModal } from '@/components/ExamSelectorModal'
 
 // ─── Status com lógica automática por horário ─────────────────────────────────
 
@@ -574,9 +575,9 @@ export default function ExamesPage() {
         />
       )}
       {showOrderModal && (
-        <OrderModal catalog={catalog} doctors={doctors} patients={patients}
+        <ExamSelectorModal
           onClose={() => setShowOrderModal(false)}
-          onSaved={() => { setShowOrderModal(false); load() }}
+          onCreated={() => { setShowOrderModal(false); load() }}
         />
       )}
       {statusModal && (
