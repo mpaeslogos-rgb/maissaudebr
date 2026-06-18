@@ -8,7 +8,7 @@ export default function ManualPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-800">Manual do Sistema</h1>
         <a
-          href="/Manual_MaisSaude_BR.pdf"
+          href="/manual.html"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary-700 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors"
@@ -20,10 +20,10 @@ export default function ManualPage() {
 
       <div className="flex-1 rounded-xl border border-surface-border overflow-hidden min-h-0">
         <iframe
-          src="/Manual_MaisSaude_BR.pdf"
-          className="w-full h-full"
+          src="/manual.html"
+          className="w-full h-full bg-white"
           style={{ minHeight: "calc(100vh - 140px)" }}
-          title="Manual MaisSaúdeBR"
+          title="Manual MaisSaudeBR"
         />
       </div>
     </div>
