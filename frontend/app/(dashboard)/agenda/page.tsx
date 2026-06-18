@@ -591,6 +591,13 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   const [signingAtestado, setSigningAtestado]     = useState(false)
   const [atestadoSignErr, setAtestadoSignErr]     = useState('')
 
+  // Assinatura: Receituário e Solicitação de Exame
+  const [signingReceita, setSigningReceita]       = useState(false)
+  const [receitaSignErr, setReceitaSignErr]       = useState('')
+  const [lastExameOrderId, setLastExameOrderId]   = useState<string | null>(null)
+  const [signingExame, setSigningExame]           = useState(false)
+  const [exameSignErr, setExameSignErr]           = useState('')
+
   const start  = new Date(apt.startTime)
   const end    = new Date(apt.endTime)
   const durMin = Math.round((end.getTime() - start.getTime()) / 60_000)
@@ -1005,16 +1012,33 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                   </button>
 
                   {/* Imprimir Receituário | Solicitar Exame | Emitir Atestado */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={printReceituario}
                       disabled={!form.prescription.trim()}
                       className="flex items-center justify-center gap-1.5 py-2 btn-outline text-xs disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <Printer size={13} /> Receituário
+                      <Printer size={13} /> Imprimir Receituário
                     </button>
                     <button
-                      onClick={() => { setExameForm({ catalogId: '', scheduledAt: '', notes: '' }); setExameError(''); setShowExameModal(true) }}
+                      disabled={!record || !form.prescription.trim() || signingReceita}
+                      onClick={async () => {
+                        if (!record) return
+                        setSigningReceita(true); setReceitaSignErr('')
+                        try {
+                          const provider = (localStorage.getItem('maissaudebr_sig_provider') as import('@/lib/api').SignatureProvider | null) ?? undefined
+                          const { redirectUrl } = await initSignature({ documentType: 'RECEITA_TEXTO', referenceId: record.id, ...(provider ? { provider } : {}) })
+                          window.location.href = redirectUrl
+                        } catch (e: any) { setReceitaSignErr(e?.message ?? 'Erro ao assinar') }
+                        finally { setSigningReceita(false) }
+                      }}
+                      className="flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {signingReceita ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} />}
+                      Assinar Receituário
+                    </button>
+                    <button
+                      onClick={() => { setExameForm({ catalogId: '', scheduledAt: '', notes: '' }); setExameError(''); setLastExameOrderId(null); setExameSignErr(''); setShowExameModal(true) }}
                       className="flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition-colors"
                     >
                       <FlaskIcon size={13} /> Solicitar Exame
@@ -1026,6 +1050,10 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                       <ClipboardCheck size={13} /> Emitir Atestado
                     </button>
                   </div>
+                  {receitaSignErr && <p className="text-xs text-red-600 mt-1">{receitaSignErr}</p>}
+                  {!record && form.prescription.trim() && (
+                    <p className="text-xs text-amber-600">Salve o prontuário antes de assinar o receituário.</p>
+                  )}
 
                   {/* Histórico do paciente */}
                   {history.length > 0 && (
@@ -1326,30 +1354,56 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                   rows={2} className="input resize-none" placeholder="Indicação clínica, preparo…" />
               </div>
 
-              <div className="flex gap-3">
-                <button onClick={() => setShowExameModal(false)} className="btn-outline flex-1">Cancelar</button>
-                <button
-                  disabled={savingExame || !exameForm.catalogId}
-                  onClick={async () => {
-                    if (!exameForm.catalogId) return setExameError('Selecione um exame.')
-                    setSavingExame(true); setExameError('')
-                    try {
-                      await createExamOrder({
-                        patientId: apt.patientId,
-                        doctorId:  apt.doctorId,
-                        catalogId: exameForm.catalogId,
-                        scheduledAt: exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
-                        notes: exameForm.notes || undefined,
-                      })
-                      setShowExameModal(false)
-                    } catch (err: any) { setExameError(err.message || 'Erro ao solicitar.') }
-                    finally { setSavingExame(false) }
-                  }}
-                  className="btn-primary flex-1"
-                >
-                  {savingExame ? 'Solicitando…' : 'Solicitar'}
-                </button>
-              </div>
+              {lastExameOrderId ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">Exame solicitado com sucesso!</p>
+                  {exameSignErr && <p className="text-xs text-red-600">{exameSignErr}</p>}
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowExameModal(false)} className="btn-outline flex-1 text-sm">Fechar</button>
+                    <button
+                      disabled={signingExame}
+                      onClick={async () => {
+                        setSigningExame(true); setExameSignErr('')
+                        try {
+                          const provider = (localStorage.getItem('maissaudebr_sig_provider') as import('@/lib/api').SignatureProvider | null) ?? undefined
+                          const { redirectUrl } = await initSignature({ documentType: 'SOLICITACAO', referenceId: lastExameOrderId, ...(provider ? { provider } : {}) })
+                          window.location.href = redirectUrl
+                        } catch (e: any) { setExameSignErr(e?.message ?? 'Erro ao assinar') }
+                        finally { setSigningExame(false) }
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {signingExame ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                      Assinar Solicitação
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <button onClick={() => setShowExameModal(false)} className="btn-outline flex-1">Cancelar</button>
+                  <button
+                    disabled={savingExame || !exameForm.catalogId}
+                    onClick={async () => {
+                      if (!exameForm.catalogId) return setExameError('Selecione um exame.')
+                      setSavingExame(true); setExameError('')
+                      try {
+                        const order = await createExamOrder({
+                          patientId: apt.patientId,
+                          doctorId:  apt.doctorId,
+                          catalogId: exameForm.catalogId,
+                          scheduledAt: exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
+                          notes: exameForm.notes || undefined,
+                        })
+                        setLastExameOrderId(order.id)
+                      } catch (err: any) { setExameError(err.message || 'Erro ao solicitar.') }
+                      finally { setSavingExame(false) }
+                    }}
+                    className="btn-primary flex-1"
+                  >
+                    {savingExame ? 'Solicitando…' : 'Solicitar'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

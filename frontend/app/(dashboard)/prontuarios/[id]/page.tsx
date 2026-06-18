@@ -37,6 +37,9 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
   const [exameError, setExameError]               = useState('');
   const [signingAtestado, setSigningAtestado]     = useState(false);
   const [atestadoError, setAtestadoError]         = useState('');
+  const [lastExameOrderId, setLastExameOrderId]   = useState<string | null>(null);
+  const [signingExame, setSigningExame]           = useState(false);
+  const [exameSignErr, setExameSignErr]           = useState('');
 
   useEffect(() => {
     getClinicConfig().then(setClinicConfig).catch(() => {})
@@ -740,41 +743,62 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
                 />
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowExameModal(false)}
-                  className="btn-outline flex-1"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  disabled={savingExame || !exameForm.catalogId}
-                  onClick={async () => {
-                    if (!exameForm.catalogId) return setExameError('Selecione um exame.')
-                    setSavingExame(true)
-                    setExameError('')
-                    try {
-                      await createExamOrder({
-                        patientId:    record.patientId,
-                        doctorId:     record.doctorId,
-                        catalogId:    exameForm.catalogId,
-                        scheduledAt:  exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
-                        notes:        exameForm.notes || undefined,
-                      })
-                      setShowExameModal(false)
-                    } catch (err: any) {
-                      setExameError(err.message || 'Erro ao solicitar exame.')
-                    } finally {
-                      setSavingExame(false)
-                    }
-                  }}
-                  className="btn-primary flex-1"
-                >
-                  {savingExame ? 'Solicitando…' : 'Solicitar Exame'}
-                </button>
-              </div>
+              {lastExameOrderId ? (
+                <div className="space-y-2 pt-2">
+                  <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">Exame solicitado com sucesso!</p>
+                  {exameSignErr && <p className="text-xs text-red-600">{exameSignErr}</p>}
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => { setShowExameModal(false); setLastExameOrderId(null) }} className="btn-outline flex-1 text-sm">Fechar</button>
+                    <button
+                      type="button"
+                      disabled={signingExame}
+                      onClick={async () => {
+                        setSigningExame(true); setExameSignErr('');
+                        try {
+                          const provider = (typeof localStorage !== 'undefined' ? localStorage.getItem('maissaudebr_sig_provider') : null) as import('@/lib/api').SignatureProvider | null;
+                          const { redirectUrl } = await initSignature({ documentType: 'SOLICITACAO', referenceId: lastExameOrderId, ...(provider ? { provider } : {}) });
+                          window.location.href = redirectUrl;
+                        } catch (e: any) { setExameSignErr(e?.message ?? 'Erro ao assinar'); }
+                        finally { setSigningExame(false); }
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {signingExame ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                      Assinar Solicitação
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowExameModal(false)} className="btn-outline flex-1">Cancelar</button>
+                  <button
+                    type="button"
+                    disabled={savingExame || !exameForm.catalogId}
+                    onClick={async () => {
+                      if (!exameForm.catalogId) return setExameError('Selecione um exame.')
+                      setSavingExame(true)
+                      setExameError('')
+                      try {
+                        const order = await createExamOrder({
+                          patientId:    record.patientId,
+                          doctorId:     record.doctorId,
+                          catalogId:    exameForm.catalogId,
+                          scheduledAt:  exameForm.scheduledAt ? new Date(exameForm.scheduledAt).toISOString() : undefined,
+                          notes:        exameForm.notes || undefined,
+                        })
+                        setLastExameOrderId(order.id)
+                      } catch (err: any) {
+                        setExameError(err.message || 'Erro ao solicitar exame.')
+                      } finally {
+                        setSavingExame(false)
+                      }
+                    }}
+                    className="btn-primary flex-1"
+                  >
+                    {savingExame ? 'Solicitando…' : 'Solicitar Exame'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

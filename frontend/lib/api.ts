@@ -1139,7 +1139,7 @@ export function updateMySignatureProvider(
 
 export type SignatureProvider = 'MOCK' | 'VIDAAS' | 'BIRDID'
 export type SignatureStatus   = 'PENDING' | 'SIGNED' | 'FAILED'
-export type SignedDocumentType = 'ATESTADO' | 'RECEITA' | 'LAUDO'
+export type SignedDocumentType = 'ATESTADO' | 'RECEITA' | 'LAUDO' | 'RECEITA_TEXTO' | 'SOLICITACAO'
 
 export interface DigitalSignatureSummary {
   id: string
