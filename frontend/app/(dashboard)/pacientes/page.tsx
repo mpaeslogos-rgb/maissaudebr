@@ -11,6 +11,7 @@ import {
 import { Patient, Gender } from '@/lib/types'
 import { useConfirm } from '@/components/ConfirmModal'
 import { SkeletonTable } from '@/components/Skeleton'
+import { useSortable, Th } from '@/components/SortableHeader'
 
 // ─── Utilitários ────────────────────────────────────────────────────────────
 
@@ -305,6 +306,7 @@ const PAGE_SIZE = 10
 export default function PacientesPage() {
   const confirm = useConfirm()
   const [patients, setPatients]     = useState<Patient[]>([])
+  const { sorted: sortedPatients, sort, toggle } = useSortable(patients, 'fullName', 'asc')
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
   const [search, setSearch]         = useState('')
@@ -444,19 +446,19 @@ export default function PacientesPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left border-b border-surface-border">
-                      <th className="pb-3 font-semibold text-slate-600">Nome</th>
-                      <th className="pb-3 font-semibold text-slate-600">CPF</th>
-                      <th className="pb-3 font-semibold text-slate-600">Nascimento</th>
-                      <th className="pb-3 font-semibold text-slate-600">Idade</th>
-                      <th className="pb-3 font-semibold text-slate-600">Gênero</th>
-                      <th className="pb-3 font-semibold text-slate-600">Telefone</th>
-                      <th className="pb-3 font-semibold text-slate-600">E-mail</th>
-                      <th className="pb-3"></th>
+                    <tr className="border-b border-surface-border text-slate-600">
+                      <Th label="Nome" sortKey="fullName" sort={sort} onToggle={toggle} />
+                      <Th label="CPF" sortKey="cpf" sort={sort} onToggle={toggle} />
+                      <Th label="Nascimento" sortKey="birthDate" sort={sort} onToggle={toggle} />
+                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Idade</th>
+                      <Th label="Genero" sortKey="gender" sort={sort} onToggle={toggle} />
+                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Telefone</th>
+                      <Th label="E-mail" sortKey="email" sort={sort} onToggle={toggle} />
+                      <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-border">
-                    {patients.map(p => (
+                    {sortedPatients.map(p => (
                       <tr key={p.id} className="hover:bg-cream-100 transition-colors">
                         <td className="py-3">
                           <Link
