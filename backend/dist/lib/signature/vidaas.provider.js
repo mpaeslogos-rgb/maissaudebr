@@ -42,14 +42,14 @@ class VidaasProvider {
         if (!codeVerifier)
             throw new Error("Vidaas: code_verifier ausente — PKCE comprometido");
         const callbackUrl = `${process.env.BACKEND_URL ?? "http://localhost:3001"}/digital-signature/callback`;
-        const tokenResp = await axios_1.default.post(`${VIDAAS_BASE}/v0/oauth/token`, {
+        const tokenResp = await axios_1.default.post(`${VIDAAS_BASE}/v0/oauth/token`, new URLSearchParams({
             grant_type: "authorization_code",
             code,
             client_id: this.clientId,
             client_secret: this.clientSecret,
             redirect_uri: callbackUrl,
             code_verifier: codeVerifier,
-        });
+        }), { headers: { "Content-Type": "application/x-www-form-urlencoded" } });
         const sessionToken = tokenResp.data.signature_session;
         // Calcula hash SHA-256 do PDF
         const documentHash = crypto_1.default.createHash("sha256").update(pdfBuffer).digest("hex");
