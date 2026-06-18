@@ -103,9 +103,11 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
       return reply.status(404).send({ error: "Arquivo não encontrado no servidor" });
 
     const filename = `documento-assinado-${id}.pdf`;
+    const fileBuffer = fs.readFileSync(sig.signedPdfPath);
     reply.header("Content-Disposition", `attachment; filename="${filename}"`);
     reply.header("Content-Type", "application/pdf");
-    return reply.send(fs.createReadStream(sig.signedPdfPath));
+    reply.header("Content-Length", fileBuffer.length);
+    return reply.send(fileBuffer);
   });
 
   // ─── Listar assinaturas ────────────────────────────────────────────────────
