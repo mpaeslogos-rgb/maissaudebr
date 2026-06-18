@@ -43,6 +43,7 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [aptDetail, setAptDetail] = useState<Appointment | null>(null);
+  const role = user?.role ?? 'ADMIN';
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -72,19 +73,38 @@ export default function DashboardPage() {
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekStr = weekAgo.toISOString().split("T")[0];
+    const myName = user?.name ?? '';
+
+    const todayApts = data.appointments.filter(a => a.startTime.startsWith(today));
+    const myTodayApts = todayApts.filter(a => a.doctor?.user?.name === myName);
+    const myWeekApts = data.appointments.filter(a => a.startTime >= weekStr && a.doctor?.user?.name === myName);
+    const myPendingRecords = myTodayApts.filter(a =>
+      (a.status === 'COMPLETED' || a.status === 'IN_PROGRESS')
+    ).length;
+
     return {
       totalPatients: data.patients.length,
-      appointmentsToday: data.appointments.filter(a => a.startTime.startsWith(today)).length,
+      appointmentsToday: todayApts.length,
       revenueMonth: data.payments
         .filter((p: any) => p.status === "PAID")
         .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0),
       pendingPayables: data.payables.filter((p: any) => p.status === "PENDING").length,
+      pendingReceivables: data.payments.filter((p: any) => p.status === "PENDING" || p.status === "OVERDUE").length,
+      myAppointmentsToday: myTodayApts.length,
+      myPatientsWeek: new Set(myWeekApts.map(a => a.patientId)).size,
+      pendingRecords: myPendingRecords,
       upcomingApts: data.appointments
-        .filter(a => a.status === "SCHEDULED" || a.status === "CONFIRMED")
+        .filter(a => {
+          const isUpcoming = a.status === "SCHEDULED" || a.status === "CONFIRMED";
+          if (role === 'DOCTOR') return isUpcoming && a.doctor?.user?.name === myName;
+          return isUpcoming;
+        })
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
         .slice(0, 5),
     };
-  }, [data]);
+  }, [data, user?.name, role]);
 
   // ── Dados do gráfico: atendimentos dos últimos 7 dias ─────────────────────
   const chartData = useMemo(() => {
@@ -125,19 +145,38 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Olá, {user?.name}!</h1>
-          <p className="text-slate-500 text-sm">Aqui está o que está acontecendo na clínica hoje.</p>
+          <p className="text-slate-500 text-sm">
+            {role === 'DOCTOR' ? 'Seus atendimentos de hoje.' : role === 'RECEPTIONIST' ? 'Resumo da agenda e pendencias.' : 'Visao geral da clinica.'}
+          </p>
         </div>
         <Link href="/agenda" className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Novo Agendamento
         </Link>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total de Pacientes" value={stats.totalPatients} icon={<Users size={20} />} trend="+2 este mês" color="bg-blue-50 text-blue-600" />
-        <StatCard title="Consultas Hoje" value={stats.appointmentsToday} icon={<Calendar size={20} />} trend="Ver agenda" color="bg-primary-50 text-primary-600" />
-        <StatCard title="Receita (Mês)" value={`R$ ${stats.revenueMonth.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={<Wallet size={20} />} trend="Realizado" color="bg-green-50 text-green-600" />
-        <StatCard title="Contas a Pagar" value={stats.pendingPayables} icon={<AlertCircle size={20} />} trend="Pendentes" color="bg-red-50 text-red-600" />
+      {/* KPIs por role */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${role === 'DOCTOR' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
+        {role === 'DOCTOR' ? (
+          <>
+            <StatCard title="Minhas Consultas Hoje" value={stats.myAppointmentsToday} icon={<Calendar size={20} />} trend="Hoje" color="bg-primary-50 text-primary-600" />
+            <StatCard title="Pacientes Esta Semana" value={stats.myPatientsWeek} icon={<Users size={20} />} trend="Semana" color="bg-blue-50 text-blue-600" />
+            <StatCard title="Prontuarios Pendentes" value={stats.pendingRecords} icon={<Clock size={20} />} trend="Sem evolucao" color="bg-amber-50 text-amber-600" />
+          </>
+        ) : role === 'RECEPTIONIST' ? (
+          <>
+            <StatCard title="Consultas Hoje" value={stats.appointmentsToday} icon={<Calendar size={20} />} trend="Todas" color="bg-primary-50 text-primary-600" />
+            <StatCard title="Total de Pacientes" value={stats.totalPatients} icon={<Users size={20} />} trend="Cadastrados" color="bg-blue-50 text-blue-600" />
+            <StatCard title="A Receber Pendente" value={stats.pendingReceivables} icon={<Wallet size={20} />} trend="Pendentes" color="bg-amber-50 text-amber-600" />
+            <StatCard title="Contas a Pagar" value={stats.pendingPayables} icon={<AlertCircle size={20} />} trend="Pendentes" color="bg-red-50 text-red-600" />
+          </>
+        ) : (
+          <>
+            <StatCard title="Total de Pacientes" value={stats.totalPatients} icon={<Users size={20} />} trend="Cadastrados" color="bg-blue-50 text-blue-600" />
+            <StatCard title="Consultas Hoje" value={stats.appointmentsToday} icon={<Calendar size={20} />} trend="Ver agenda" color="bg-primary-50 text-primary-600" />
+            <StatCard title="Receita (Mes)" value={`R$ ${stats.revenueMonth.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} icon={<Wallet size={20} />} trend="Realizado" color="bg-green-50 text-green-600" />
+            <StatCard title="Contas a Pagar" value={stats.pendingPayables} icon={<AlertCircle size={20} />} trend="Pendentes" color="bg-red-50 text-red-600" />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -185,15 +224,24 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <QuickLink href="/pacientes" title="Gerenciar Pacientes" desc="Cadastre novos pacientes e edite dados." icon={<Users size={20} />} />
-            <QuickLink href="/financeiro" title="Fluxo de Caixa" desc="Acompanhe entradas e saídas." icon={<Wallet size={20} />} />
+            {role === 'DOCTOR' ? (
+              <>
+                <QuickLink href="/prontuarios" title="Prontuarios" desc="Acesse evolucoes e historico clinico." icon={<Clock size={20} />} />
+                <QuickLink href="/exames" title="Exames" desc="Solicite e acompanhe exames." icon={<Calendar size={20} />} />
+              </>
+            ) : (
+              <>
+                <QuickLink href="/pacientes" title="Gerenciar Pacientes" desc="Cadastre novos pacientes e edite dados." icon={<Users size={20} />} />
+                <QuickLink href="/financeiro" title="Fluxo de Caixa" desc="Acompanhe entradas e saidas." icon={<Wallet size={20} />} />
+              </>
+            )}
           </div>
         </div>
 
         {/* Próximos atendimentos */}
         <div className="card">
           <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Clock size={18} className="text-primary-600" /> Próximos Atendimentos
+            <Clock size={18} className="text-primary-600" /> {role === 'DOCTOR' ? 'Meus Proximos' : 'Proximos Atendimentos'}
           </h3>
           <div className="space-y-3">
             {stats.upcomingApts.length > 0 ? stats.upcomingApts.map(apt => (
