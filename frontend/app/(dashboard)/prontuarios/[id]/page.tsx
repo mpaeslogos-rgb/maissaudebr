@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { getMedicalRecord, getClinicConfig, getExams, uploadExam, deleteExam, getExamCatalog, createExamOrder, ClinicConfig, ExamCatalog, createAtestado, initSignature } from "@/lib/api";
 import { ExamSelectorModal } from "@/components/ExamSelectorModal";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { MedicalRecord, Exam, ExamType, EXAM_TYPE_LABEL } from "@/lib/types";
 
 interface PageProps {
@@ -364,9 +365,10 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10">
-      <Link href="/prontuarios" className="flex items-center gap-2 text-primary-600 hover:underline mb-4 w-fit">
-        <ArrowLeft size={18} /> Voltar para lista
-      </Link>
+      <Breadcrumb items={[
+        { label: "Prontuarios", href: "/prontuarios" },
+        { label: record?.patient?.fullName ?? "Paciente" },
+      ]} />
 
       <div className="card p-0 overflow-hidden shadow-lg border-t-4 border-primary-600">
         {/* Cabeçalho */}

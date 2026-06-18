@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { Breadcrumb } from '@/components/Breadcrumb'
 import {
   getPatient,
   getPrescriptions,
@@ -811,15 +812,13 @@ export default function PatientDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <Breadcrumb items={[
+        { label: "Pacientes", href: "/pacientes" },
+        { label: patient.fullName },
+      ]} />
+
       {/* Cabeçalho */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push('/pacientes')}
-          className="text-slate-400 hover:text-slate-600 text-xl leading-none"
-          title="Voltar"
-        >
-          ←
-        </button>
+      <div>
         <div>
           <h1 className="text-2xl font-bold text-slate-800">{patient.fullName}</h1>
           <p className="text-sm text-slate-400">
