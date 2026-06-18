@@ -36,19 +36,23 @@ export class VidaasProvider implements ISignatureProvider {
     url.searchParams.set("code_challenge_method", "S256");
     url.searchParams.set("cpf", params.doctorCpf?.replace(/\D/g, "") ?? "");
 
-    return { redirectUrl: url.toString() };
+    return { redirectUrl: url.toString(), codeVerifier };
   }
 
   async sign(pdfBuffer: Buffer, params: SignatureCallbackParams) {
-    const { code } = params;
+    const { code, codeVerifier } = params;
     if (!code) throw new Error("Vidaas: authorization code ausente no callback");
+    if (!codeVerifier) throw new Error("Vidaas: code_verifier ausente — PKCE comprometido");
 
-    // Troca code por signature_session token
+    const callbackUrl = `${process.env.BACKEND_URL ?? "http://localhost:3001"}/digital-signature/callback`;
+
     const tokenResp = await axios.post(`${VIDAAS_BASE}/v0/oauth/token`, {
       grant_type: "authorization_code",
       code,
       client_id: this.clientId,
       client_secret: this.clientSecret,
+      redirect_uri: callbackUrl,
+      code_verifier: codeVerifier,
     });
     const sessionToken: string = tokenResp.data.signature_session;
 

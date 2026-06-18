@@ -33,18 +33,22 @@ class VidaasProvider {
         url.searchParams.set("code_challenge", codeChallenge);
         url.searchParams.set("code_challenge_method", "S256");
         url.searchParams.set("cpf", params.doctorCpf?.replace(/\D/g, "") ?? "");
-        return { redirectUrl: url.toString() };
+        return { redirectUrl: url.toString(), codeVerifier };
     }
     async sign(pdfBuffer, params) {
-        const { code } = params;
+        const { code, codeVerifier } = params;
         if (!code)
             throw new Error("Vidaas: authorization code ausente no callback");
-        // Troca code por signature_session token
+        if (!codeVerifier)
+            throw new Error("Vidaas: code_verifier ausente — PKCE comprometido");
+        const callbackUrl = `${process.env.BACKEND_URL ?? "http://localhost:3001"}/digital-signature/callback`;
         const tokenResp = await axios_1.default.post(`${VIDAAS_BASE}/v0/oauth/token`, {
             grant_type: "authorization_code",
             code,
             client_id: this.clientId,
             client_secret: this.clientSecret,
+            redirect_uri: callbackUrl,
+            code_verifier: codeVerifier,
         });
         const sessionToken = tokenResp.data.signature_session;
         // Calcula hash SHA-256 do PDF
