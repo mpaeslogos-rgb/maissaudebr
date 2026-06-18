@@ -199,6 +199,7 @@ model Doctor {
   examOrders        ExamOrder[]
   atestados         Atestado[]
   digitalSignatures DigitalSignature[]
+  examPackages      ExamPackage[]
 
   @@index([crm])
   @@index([specialty])
@@ -764,10 +765,37 @@ model ExamCatalog {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  orders ExamOrder[]
+  orders       ExamOrder[]
+  packageItems ExamPackageItem[]
 
   @@index([name])
   @@map("exam_catalog")
+}
+
+model ExamPackage {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  doctorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  doctor Doctor?          @relation(fields: [doctorId], references: [id])
+  items  ExamPackageItem[]
+
+  @@map("exam_packages")
+}
+
+model ExamPackageItem {
+  id        String @id @default(cuid())
+  packageId String
+  catalogId String
+
+  package ExamPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  catalog ExamCatalog @relation(fields: [catalogId], references: [id])
+
+  @@unique([packageId, catalogId])
+  @@map("exam_package_items")
 }
 
 model ExamOrder {
