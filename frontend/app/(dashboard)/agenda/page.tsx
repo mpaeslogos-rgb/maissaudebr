@@ -85,9 +85,14 @@ interface NewAppointmentModalProps {
   onSaved: () => void
   prefillDate?: string
   prefillHour?: number
+  prefillPatientId?: string
+  prefillDoctorId?: string
+  prefillInsurancePlanId?: string
+  prefillDurationMin?: number
+  prefillReason?: string
 }
 
-function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: NewAppointmentModalProps) {
+function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour, prefillPatientId, prefillDoctorId, prefillInsurancePlanId, prefillDurationMin, prefillReason }: NewAppointmentModalProps) {
   const [patients, setPatients]           = useState<Patient[]>([])
   const [doctors, setDoctors]             = useState<Doctor[]>([])
   const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([])
@@ -97,16 +102,16 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
   const [showNewDoctor, setShowNewDoctor]  = useState(false)
   const [showNewPatient, setShowNewPatient] = useState(false)
 
-  const [patientId, setPatientId]         = useState('')
-  const [doctorId, setDoctorId]           = useState('')
+  const [patientId, setPatientId]         = useState(prefillPatientId ?? '')
+  const [doctorId, setDoctorId]           = useState(prefillDoctorId ?? '')
   const [date, setDate]                   = useState(prefillDate ?? formatDateISO(new Date()))
   const [startHour, setStartHour]         = useState(prefillHour ?? 8)
   const [startMin, setStartMin]           = useState(0)
-  const [durationMin, setDurationMin]     = useState(30)
-  const [reason, setReason]               = useState('')
+  const [durationMin, setDurationMin]     = useState(prefillDurationMin ?? 30)
+  const [reason, setReason]               = useState(prefillReason ?? '')
   const [amount, setAmount]               = useState('')
   const [isReturn, setIsReturn]           = useState(false)
-  const [insurancePlanId, setInsurancePlanId] = useState('')
+  const [insurancePlanId, setInsurancePlanId] = useState(prefillInsurancePlanId ?? '')
 
   useEffect(() => {
     const errors: string[] = []
@@ -385,6 +390,7 @@ interface DetailPanelProps {
   appointment: Appointment
   onClose: () => void
   onRefresh: () => void
+  onReschedule?: (apt: Appointment) => void
 }
 
 type ProntuarioForm = {
@@ -554,7 +560,7 @@ function buildReceituarioHtml(p: ReceituarioParams): string {
 </html>`
 }
 
-function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps) {
+function DetailPanel({ appointment: apt, onClose, onRefresh, onReschedule }: DetailPanelProps) {
   const confirm = useConfirm()
   const [tab, setTab]     = useState<'resumo' | 'prontuario'>('resumo')
   const [acting, setActing] = useState(false)
@@ -1265,7 +1271,17 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
             </button>
           )}
           {(localStatus === 'COMPLETED' || localStatus === 'CANCELLED' || localStatus === 'NO_SHOW') && (
-            <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
+            <>
+              <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
+              {onReschedule && (
+                <button
+                  onClick={() => { onReschedule(apt); onClose() }}
+                  className="btn-primary flex-1 text-sm flex items-center justify-center gap-1.5"
+                >
+                  <Calendar size={14} /> Reagendar
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1642,6 +1658,7 @@ export default function AgendaPage() {
   const [showNewModal, setShowNewModal]               = useState(false)
   const [prefillDate, setPrefillDate]                 = useState<string | undefined>()
   const [prefillHour, setPrefillHour]                 = useState<number | undefined>()
+  const [rescheduleFrom, setRescheduleFrom]           = useState<Appointment | null>(null)
 
   const weekStart = startOfWeekDate(currentDate)
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -1947,6 +1964,12 @@ export default function AgendaPage() {
           appointment={selectedAppointment}
           onClose={() => setSelectedAppointment(null)}
           onRefresh={fetchAppointments}
+          onReschedule={(apt) => {
+            setRescheduleFrom(apt)
+            setPrefillDate(undefined)
+            setPrefillHour(undefined)
+            setShowNewModal(true)
+          }}
         />
       )}
 
@@ -1955,8 +1978,13 @@ export default function AgendaPage() {
         <NewAppointmentModal
           prefillDate={prefillDate}
           prefillHour={prefillHour}
-          onClose={() => setShowNewModal(false)}
-          onSaved={() => { setShowNewModal(false); fetchAppointments() }}
+          prefillPatientId={rescheduleFrom?.patientId}
+          prefillDoctorId={rescheduleFrom?.doctorId}
+          prefillInsurancePlanId={(rescheduleFrom as any)?.insurancePlanId ?? undefined}
+          prefillDurationMin={rescheduleFrom ? Math.round((new Date(rescheduleFrom.endTime).getTime() - new Date(rescheduleFrom.startTime).getTime()) / 60000) : undefined}
+          prefillReason={rescheduleFrom?.reason ?? undefined}
+          onClose={() => { setShowNewModal(false); setRescheduleFrom(null) }}
+          onSaved={() => { setShowNewModal(false); setRescheduleFrom(null); fetchAppointments() }}
         />
       )}
     </div>
