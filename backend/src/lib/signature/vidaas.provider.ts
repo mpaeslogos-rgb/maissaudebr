@@ -46,14 +46,18 @@ export class VidaasProvider implements ISignatureProvider {
 
     const callbackUrl = `${process.env.BACKEND_URL ?? "http://localhost:3001"}/digital-signature/callback`;
 
-    const tokenResp = await axios.post(`${VIDAAS_BASE}/v0/oauth/token`, {
-      grant_type: "authorization_code",
-      code,
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      redirect_uri: callbackUrl,
-      code_verifier: codeVerifier,
-    });
+    const tokenResp = await axios.post(
+      `${VIDAAS_BASE}/v0/oauth/token`,
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        redirect_uri: callbackUrl,
+        code_verifier: codeVerifier,
+      }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
     const sessionToken: string = tokenResp.data.signature_session;
 
     // Calcula hash SHA-256 do PDF
