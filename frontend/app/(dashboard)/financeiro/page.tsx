@@ -17,6 +17,7 @@ import {
   type CashflowData,
 } from "@/lib/api";
 import type { Payment, AccountPayable } from "@/lib/types";
+import { useConfirm } from "@/components/ConfirmModal";
 
 // ─── Formatadores ─────────────────────────────────────────────────────────────
 
@@ -76,6 +77,7 @@ const TABS = [
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function FinanceiroPage() {
+  const confirm = useConfirm()
   const [tab, setTab]             = useState("cashflow");
   const [payments, setPayments]   = useState<Payment[]>([]);
   const [payables, setPayables]   = useState<AccountPayable[]>([]);
@@ -449,6 +451,7 @@ const STATUS_PAYABLE = {
 } as const;
 
 function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRefresh: () => void }) {
+  const confirm = useConfirm()
   const [filter,      setFilter]      = useState("all");
   const [showForm,    setShowForm]    = useState(false);
   const [paying,      setPaying]      = useState<string | null>(null);
@@ -475,7 +478,7 @@ function ContasPagar({ payables, onRefresh }: { payables: AccountPayable[]; onRe
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Cancelar esta conta a pagar?")) return;
+    if (!await confirm({ title: 'Cancelar despesa', message: 'Cancelar esta conta a pagar?', confirmLabel: 'Sim, cancelar', variant: 'danger' })) return;
     setDeleting(id);
     try {
       await deleteAccountPayable(id);

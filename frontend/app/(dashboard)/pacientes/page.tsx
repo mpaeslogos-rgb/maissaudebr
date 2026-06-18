@@ -9,6 +9,7 @@ import {
   deletePatient,
 } from '@/lib/api'
 import { Patient, Gender } from '@/lib/types'
+import { useConfirm } from '@/components/ConfirmModal'
 
 // ─── Utilitários ────────────────────────────────────────────────────────────
 
@@ -297,6 +298,7 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
 const PAGE_SIZE = 10
 
 export default function PacientesPage() {
+  const confirm = useConfirm()
   const [patients, setPatients]     = useState<Patient[]>([])
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
@@ -358,7 +360,7 @@ export default function PacientesPage() {
 
   // ── Exclusão ──────────────────────────────────────────────────────────────
   async function handleDelete(patient: Patient) {
-    if (!window.confirm(`Excluir o paciente "${patient.fullName}"? Esta ação não pode ser desfeita.`)) return
+    if (!await confirm({ title: 'Excluir paciente', message: `Excluir "${patient.fullName}"? Os dados serao anonimizados conforme LGPD.`, confirmLabel: 'Excluir', variant: 'danger' })) return
     try {
       await deletePatient(patient.id)
       fetchPatients()   // recarrega a lista após excluir
