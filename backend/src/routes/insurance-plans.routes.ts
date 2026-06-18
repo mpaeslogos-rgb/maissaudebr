@@ -29,7 +29,7 @@ const procedureSchema = z.object({
 
 export async function insurancePlansRoutes(app: FastifyInstance) {
   // ── Planos ───────────────────────────────────────────────────────────────
-  app.get("/insurance-plans", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/insurance-plans", { preHandler: [requireRole('ADMIN', 'RECEPTIONIST', 'DOCTOR')] }, async (req, reply) => {
     const plans = await prisma.insurancePlan.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },

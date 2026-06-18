@@ -27,7 +27,7 @@ const procedureSchema = zod_1.z.object({
 });
 async function insurancePlansRoutes(app) {
     // ── Planos ───────────────────────────────────────────────────────────────
-    app.get("/insurance-plans", { preHandler: [requireAuth] }, async (req, reply) => {
+    app.get("/insurance-plans", { preHandler: [(0, auth_1.requireRole)('ADMIN', 'RECEPTIONIST', 'DOCTOR')] }, async (req, reply) => {
         const plans = await prisma2_1.prisma.insurancePlan.findMany({
             where: { isActive: true },
             orderBy: { name: "asc" },

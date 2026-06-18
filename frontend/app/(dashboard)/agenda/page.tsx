@@ -107,16 +107,20 @@ function NewAppointmentModal({ onClose, onSaved, prefillDate, prefillHour }: New
   const [insurancePlanId, setInsurancePlanId] = useState('')
 
   useEffect(() => {
-    Promise.all([
+    const errors: string[] = []
+    Promise.allSettled([
       getPatients({ limit: 200 }),
       getDoctors({ limit: 100 }),
       getInsurancePlans(),
-    ]).then(([p, d, plans]) => {
-      setPatients(p.data)
-      setDoctors(d.data.filter(doc => doc.user?.isActive))
-      setInsurancePlans(plans)
-    }).catch(() => setError('Erro ao carregar pacientes/médicos.'))
-      .finally(() => setLoading(false))
+    ]).then(([pRes, dRes, plansRes]) => {
+      if (pRes.status === 'fulfilled') setPatients(pRes.value.data)
+      else errors.push('pacientes')
+      if (dRes.status === 'fulfilled') setDoctors(dRes.value.data.filter((doc: any) => doc.user?.isActive))
+      else errors.push('médicos')
+      if (plansRes.status === 'fulfilled') setInsurancePlans(plansRes.value)
+      else errors.push('convênios')
+      if (errors.length) setError(`Erro ao carregar: ${errors.join(', ')}. Recarregue a página.`)
+    }).finally(() => setLoading(false))
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
