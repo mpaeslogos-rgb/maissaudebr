@@ -578,6 +578,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
 
   // Controle de saída e PiP
   const [isDirty,          setIsDirty]          = useState(false)
+  const [lastSavedAt,      setLastSavedAt]      = useState<Date | null>(null)
   const [showExitConfirm,  setShowExitConfirm]  = useState(false)
   const [showPip,          setShowPip]          = useState(false)
   const [pipMinimized,     setPipMinimized]     = useState(false)
@@ -666,6 +667,32 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     }
   }, [tab, localStatus])
 
+  // Auto-save prontuário a cada 30s quando dirty
+  useEffect(() => {
+    if (!isDirty || saving || tab !== 'prontuario') return
+    const timer = setTimeout(async () => {
+      setSaving(true); setSaveErr('')
+      try {
+        const payload = sanitizeProntuarioForm(form)
+        if (record) {
+          await updateMedicalRecord(record.id, payload)
+        } else {
+          const created = await createMedicalRecord({
+            ...payload,
+            patientId: apt.patientId,
+            doctorId: apt.doctorId,
+            appointmentId: apt.id,
+          })
+          setRecord(created)
+        }
+        setIsDirty(false)
+        setLastSavedAt(new Date())
+      } catch {}
+      finally { setSaving(false) }
+    }, 30000)
+    return () => clearTimeout(timer)
+  })
+
   function handleFormChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
     setSaveOk(false)
@@ -711,6 +738,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
       }
       setSaveOk(true)
       setIsDirty(false)
+      setLastSavedAt(new Date())
     } catch (err: unknown) {
       setSaveErr(err instanceof Error ? err.message : 'Erro ao salvar.')
     } finally {
@@ -1024,8 +1052,16 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
                     </div>
                   )}
 
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">
+                      {saving ? 'Salvando...' : isDirty ? 'Nao salvo' : lastSavedAt ? `Salvo ${lastSavedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                    </span>
+                    {isDirty && !saving && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Alteracoes nao salvas" />
+                    )}
+                  </div>
                   <button onClick={handleSaveProntuario} disabled={saving} className="btn-primary w-full">
-                    {saving ? 'Salvando…' : record ? 'Salvar alterações' : 'Criar prontuário'}
+                    {saving ? 'Salvando...' : record ? 'Salvar alteracoes' : 'Criar prontuario'}
                   </button>
 
                   {/* Imprimir Receituário | Solicitar Exame | Emitir Atestado */}
