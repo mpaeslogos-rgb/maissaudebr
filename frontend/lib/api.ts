@@ -805,6 +805,17 @@ export function createExamOrder(data: {
   return apiPost('/exam-orders', data)
 }
 
+export function createExamOrdersBatch(data: {
+  patientId: string
+  doctorId:  string
+  catalogIds: string[]
+  appointmentId?: string
+  scheduledAt?:   string
+  notes?:         string
+}): Promise<ExamOrder[]> {
+  return apiPost('/exam-orders/batch', data)
+}
+
 export function updateExamOrder(id: string, data: { status?: string; notes?: string; completedAt?: string; scheduledAt?: string }): Promise<ExamOrder & { computedStatus?: string }> {
   return apiPatch(`/exam-orders/${id}`, data)
 }
