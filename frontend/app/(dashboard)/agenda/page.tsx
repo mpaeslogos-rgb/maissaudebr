@@ -678,14 +678,24 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
     setSaveOk(false)
   }
 
+  function sanitizeProntuarioForm(f: ProntuarioForm) {
+    const numericFields = ['heartRate', 'temperature', 'weight', 'height', 'oxygenSaturation'] as const
+    const enumFields    = ['smokingStatus', 'alcoholStatus', 'physicalActivity'] as const
+    const out: Record<string, unknown> = { ...f }
+    for (const k of numericFields) out[k] = f[k] === '' ? undefined : Number(f[k])
+    for (const k of enumFields)    out[k] = f[k] === '' ? undefined : f[k]
+    return out
+  }
+
   async function handleSaveProntuario() {
     setSaving(true); setSaveErr(''); setSaveOk(false)
     try {
+      const payload = sanitizeProntuarioForm(form)
       if (record) {
-        await updateMedicalRecord(record.id, form)
+        await updateMedicalRecord(record.id, payload)
       } else {
         const created = await createMedicalRecord({
-          ...form,
+          ...payload,
           patientId:     apt.patientId,
           doctorId:      apt.doctorId,
           appointmentId: apt.id,
