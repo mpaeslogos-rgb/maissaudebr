@@ -46,39 +46,51 @@ export class VidaasProvider implements ISignatureProvider {
 
     const callbackUrl = `${process.env.BACKEND_URL ?? "http://localhost:3001"}/digital-signature/callback`;
 
-    const tokenResp = await axios.post(
-      `${VIDAAS_BASE}/v0/oauth/token`,
-      new URLSearchParams({
-        grant_type: "authorization_code",
-        code,
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        redirect_uri: callbackUrl,
-        code_verifier: codeVerifier,
-      }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
+    let tokenResp: any;
+    try {
+      tokenResp = await axios.post(
+        `${VIDAAS_BASE}/v0/oauth/token`,
+        new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+          redirect_uri: callbackUrl,
+          code_verifier: codeVerifier,
+        }),
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+      );
+    } catch (e: any) {
+      const detail = e?.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message;
+      throw new Error(`Vidaas token exchange falhou: ${detail}`);
+    }
     const accessToken: string = tokenResp.data.access_token;
     const signerCpf: string = tokenResp.data.authorized_identification ?? "";
 
     const hashBase64 = crypto.createHash("sha256").update(pdfBuffer).digest("base64");
 
-    const signResp = await axios.post(
-      `${VIDAAS_BASE}/v0/oauth/signature`,
-      {
-        hashes: [
-          {
-            id: "doc-1",
-            alias: "Documento Médico",
-            hash: hashBase64,
-            hash_algorithm: "2.16.840.1.101.3.4.2.1",
-            signature_format: "CAdES_AD_RB",
-            base64_content: pdfBuffer.toString("base64"),
-          },
-        ],
-      },
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
+    let signResp: any;
+    try {
+      signResp = await axios.post(
+        `${VIDAAS_BASE}/v0/oauth/signature`,
+        {
+          hashes: [
+            {
+              id: "doc-1",
+              alias: "Documento Médico",
+              hash: hashBase64,
+              hash_algorithm: "2.16.840.1.101.3.4.2.1",
+              signature_format: "CAdES_AD_RB",
+              base64_content: pdfBuffer.toString("base64"),
+            },
+          ],
+        },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+    } catch (e: any) {
+      const detail = e?.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message;
+      throw new Error(`Vidaas signature falhou: ${detail}`);
+    }
 
     const rawSignature: string = signResp.data.signatures?.[0]?.raw_signature;
     if (!rawSignature) throw new Error("Vidaas: resposta de assinatura inválida");
