@@ -29,6 +29,7 @@ import { Appointment, AppointmentStatus, Doctor, Patient, MedicalRecord } from '
 import { DoctorCreateModal } from '@/components/DoctorCreateModal'
 import { PatientCreateModal } from '@/components/PatientCreateModal'
 import { ExamSelectorModal } from '@/components/ExamSelectorModal'
+import { useConfirm } from '@/components/ConfirmModal'
 import { Cid10Search } from '@/components/Cid10Search'
 
 // ─── Helpers de status ───────────────────────────────────────────────────────
@@ -554,6 +555,7 @@ function buildReceituarioHtml(p: ReceituarioParams): string {
 }
 
 function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps) {
+  const confirm = useConfirm()
   const [tab, setTab]     = useState<'resumo' | 'prontuario'>('resumo')
   const [acting, setActing] = useState(false)
   const [error, setError]   = useState('')
@@ -754,7 +756,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   }
 
   async function handleCancel() {
-    if (!window.confirm(`Cancelar a consulta de ${apt.patient.fullName}?`)) return
+    if (!await confirm({ title: 'Cancelar consulta', message: `Cancelar a consulta de ${apt.patient.fullName}?`, confirmLabel: 'Sim, cancelar', variant: 'danger' })) return
     setActing(true); setError('')
     try { await cancelAppointment(apt.id); setLocalStatus('CANCELLED'); onRefresh(); onClose() }
     catch (err: unknown) { setError(err instanceof Error ? err.message : 'Erro') }
@@ -774,7 +776,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh }: DetailPanelProps)
   }
 
   async function handleFinishConsulta() {
-    if (!window.confirm('Finalizar consulta?')) return
+    if (!await confirm({ title: 'Finalizar consulta', message: 'Deseja finalizar esta consulta?', confirmLabel: 'Finalizar', variant: 'default' })) return
     setActing(true); setError('')
     try {
       await updateAppointment(apt.id, { status: 'COMPLETED' })

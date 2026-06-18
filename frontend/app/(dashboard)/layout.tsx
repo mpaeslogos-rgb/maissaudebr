@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { SignatureOnboardingModal } from "@/components/SignatureOnboardingModal";
+import { ConfirmProvider } from "@/components/ConfirmModal";
 import { getDoctorMe, type SignatureProvider } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
@@ -59,6 +60,7 @@ export default function DashboardLayout({
   }
 
   return (
+    <ConfirmProvider>
     <div className="flex h-screen bg-cream-100 overflow-hidden">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -74,5 +76,6 @@ export default function DashboardLayout({
         />
       )}
     </div>
+    </ConfirmProvider>
   );
 }

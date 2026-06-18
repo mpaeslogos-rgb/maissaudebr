@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { getDoctors, createDoctor, updateDoctor, deleteDoctor } from '@/lib/api'
 import { Doctor } from '@/lib/types'
+import { useConfirm } from '@/components/ConfirmModal'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -411,6 +412,7 @@ function EditDoctorModal({ doctor, onClose, onSaved }: EditModalProps) {
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function MedicosPage() {
+  const confirm = useConfirm()
   const [doctors, setDoctors]     = useState<Doctor[]>([])
   const [total, setTotal]         = useState(0)
   const [page, setPage]           = useState(1)
@@ -462,7 +464,7 @@ export default function MedicosPage() {
 
   async function handleDeactivate(doctor: Doctor) {
     const name = doctor.user?.name ?? 'este médico'
-    if (!window.confirm(`Desativar ${name}? O médico não poderá mais fazer login.`)) return
+    if (!await confirm({ title: 'Desativar medico', message: `Desativar ${name}? O medico nao podera mais fazer login.`, confirmLabel: 'Desativar', variant: 'danger' })) return
     try {
       await deleteDoctor(doctor.id)
       fetchDoctors()
