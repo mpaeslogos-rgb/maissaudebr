@@ -234,8 +234,8 @@
     <p class="subtitle">Sistema de Gestão de Clínica Médica</p>
   </div>
   <div class="tag">📖 Manual do Operador — Guia Completo de Uso</div>
-  <div class="tag">Versão 2.4 · Junho 2026</div>
-  <p class="version">Documento de uso interno · Atualizado em 16/06/2026</p>
+  <div class="tag">Versao 2.5 · Junho 2026</div>
+  <p class="version">Documento de uso interno · Atualizado em 18/06/2026</p>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -286,7 +286,10 @@
   <div class="toc-section">
     <h3>Assinatura Digital ICP-Brasil</h3>
     <div class="toc-item"><span class="num">22.</span> Assinatura Digital <span class="dots"></span></div>
-    <div class="toc-item"><span class="num">22a.</span> &nbsp;&nbsp;↳ Configuração do Provedor (Médico) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">22a.</span> &nbsp;&nbsp;↳ Configuracao do Provedor (Medico) <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">23.</span> Solicitacao de Exames em Lote <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">23a.</span> &nbsp;&nbsp;↳ Pacotes de Exames <span class="dots"></span></div>
+    <div class="toc-item"><span class="num">24.</span> Melhorias de Interface (v2.5) <span class="dots"></span></div>
   </div>
 
   <div class="toc-section">
@@ -428,26 +431,47 @@
     <div class="label">[ Inserir print do Dashboard ]</div>
   </div>
 
-  <h3>Indicadores (KPIs)</h3>
+  <h3>Indicadores (KPIs) — Visao por Perfil</h3>
+  <p>O Dashboard adapta os KPIs automaticamente conforme o perfil do usuario logado:</p>
+
+  <h4 style="color:#1B5E3F; margin-top:16px;">Administrador (ADMIN)</h4>
   <table>
     <tr><th>Card</th><th>O que mostra</th></tr>
-    <tr><td>👥 Total de Pacientes</td><td>Número total de pacientes cadastrados no sistema</td></tr>
-    <tr><td>📅 Consultas Hoje</td><td>Quantidade de consultas agendadas para o dia atual</td></tr>
-    <tr><td>💰 Faturamento Mensal</td><td>Soma de pagamentos confirmados no mês corrente</td></tr>
-    <tr><td>📋 Contas a Pagar</td><td>Total de despesas pendentes</td></tr>
+    <tr><td>Total de Pacientes</td><td>Numero total de pacientes cadastrados</td></tr>
+    <tr><td>Consultas Hoje</td><td>Todas as consultas do dia</td></tr>
+    <tr><td>Receita (Mes)</td><td>Soma de pagamentos confirmados no mes</td></tr>
+    <tr><td>Contas a Pagar</td><td>Despesas pendentes</td></tr>
   </table>
 
-  <h3>Gráfico de Consultas (7 dias)</h3>
-  <p>Barras mostrando total de consultas e consultas concluídas nos últimos 7 dias. Útil para acompanhar a produção da clínica.</p>
+  <h4 style="color:#1B5E3F; margin-top:16px;">Medico (DOCTOR)</h4>
+  <table>
+    <tr><th>Card</th><th>O que mostra</th></tr>
+    <tr><td>Minhas Consultas Hoje</td><td>Apenas consultas do medico logado</td></tr>
+    <tr><td>Pacientes Esta Semana</td><td>Pacientes unicos atendidos na semana</td></tr>
+    <tr><td>Prontuarios Pendentes</td><td>Consultas concluidas sem evolucao registrada</td></tr>
+  </table>
+  <p>A lista de "Proximos Atendimentos" tambem mostra apenas as consultas do medico logado.</p>
 
-  <h3>Próximas Consultas</h3>
-  <p>Lista das próximas 5 consultas agendadas/confirmadas. Clique em qualquer uma para ver detalhes completos.</p>
+  <h4 style="color:#1B5E3F; margin-top:16px;">Recepcionista (RECEPTIONIST)</h4>
+  <table>
+    <tr><th>Card</th><th>O que mostra</th></tr>
+    <tr><td>Consultas Hoje</td><td>Todas as consultas do dia</td></tr>
+    <tr><td>Total de Pacientes</td><td>Pacientes cadastrados</td></tr>
+    <tr><td>A Receber Pendente</td><td>Pagamentos pendentes ou vencidos</td></tr>
+    <tr><td>Contas a Pagar</td><td>Despesas pendentes</td></tr>
+  </table>
 
-  <h3>Ações rápidas</h3>
+  <h3>Grafico de Consultas (7 dias)</h3>
+  <p>Barras mostrando total de consultas e consultas concluidas nos ultimos 7 dias.</p>
+
+  <h3>Proximas Consultas</h3>
+  <p>Lista das proximas 5 consultas agendadas/confirmadas. Para medicos, mostra apenas suas proprias consultas.</p>
+
+  <h3>Acoes rapidas</h3>
   <ol class="steps">
-    <li><span>Para abrir os detalhes de uma consulta: clique sobre ela no painel "Próximas Consultas".</span></li>
-    <li><span>Para ir à agenda completa: clique em <strong>"Ver Agenda Completa"</strong>.</span></li>
-    <li><span>Para acessar o Fluxo de Caixa: clique no link rápido no painel financeiro.</span></li>
+    <li><span>Clique em qualquer consulta no painel "Proximos Atendimentos" para ver detalhes.</span></li>
+    <li><span>Clique em <strong>"Ver Agenda Completa"</strong> para acessar a agenda.</span></li>
+    <li><span>Use <strong>Ctrl+K</strong> para abrir a busca rapida a qualquer momento.</span></li>
   </ol>
 </div>
 
@@ -1386,14 +1410,30 @@
     <tr><td>Pacotes Preventivos</td><td>Check-up básico, Cardiometabólico, Hormonal M/F, Longevidade</td></tr>
   </table>
 
-  <h3>Solicitando um Exame / Procedimento</h3>
-  <p>A solicitação pode ser feita de três formas:</p>
+  <h3>Solicitando Exames (Multi-selecao)</h3>
+  <p>A solicitacao agora permite selecionar <strong>multiplos exames de uma vez</strong> atraves de um modal com checkboxes. A solicitacao pode ser feita de tres formas:</p>
   <ul>
-    <li><strong>Página Exames e Procedimentos</strong> → botão "Solicitar" → selecione exame, paciente e médico</li>
-    <li><strong>Prontuário do paciente</strong> → botão "Solicitar Exame" no cabeçalho</li>
-    <li><strong>Agenda</strong> → painel da consulta → aba Prontuário → botão "Solicitar Exame"</li>
+    <li><strong>Pagina Exames e Procedimentos</strong> &rarr; botao "+ Solicitar" &rarr; selecione paciente e medico</li>
+    <li><strong>Prontuario do paciente</strong> &rarr; botao "Solicitar Exame" no cabecalho</li>
+    <li><strong>Agenda</strong> &rarr; painel da consulta &rarr; aba Prontuario &rarr; botao "Solicitar Exame"</li>
   </ul>
-  <p>Ao informar data e hora, o exame entra na <strong>Agenda</strong> como evento teal (visualmente distinto das consultas). Sem data, fica como <strong>Pendente</strong>.</p>
+
+  <h4 style="color:#1B5E3F; margin-top:16px;">Como usar o modal de exames</h4>
+  <ol class="steps">
+    <li><span>Clique em <strong>"Solicitar Exame"</strong> em qualquer uma das telas acima.</span></li>
+    <li><span>O modal abre mostrando todos os exames do catalogo com checkboxes.</span></li>
+    <li><span>Use o campo de <strong>busca</strong> para filtrar por nome.</span></li>
+    <li><span>Marque os exames desejados — o resumo mostra quantidade e valor total.</span></li>
+    <li><span>Opcionalmente: defina <strong>Data/Hora</strong> e <strong>Observacoes</strong> (compartilhados para todos).</span></li>
+    <li><span>Clique em <strong>"Solicitar N Exames"</strong> para criar todos de uma vez.</span></li>
+    <li><span>Apos a criacao, opcoes de <strong>Assinatura Digital</strong> ficam disponiveis individualmente.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 <strong>Pacotes de Exames:</strong> Se houver pacotes salvos, eles aparecem como chips clicaveis acima da busca. Clique em um pacote para selecionar todos os exames dele automaticamente. Veja a secao 23a para mais detalhes.
+  </div>
+
+  <p>Ao informar data e hora, os exames entram na <strong>Agenda</strong> como eventos teal. Sem data, ficam como <strong>Pendente</strong>.</p>
 
   <h3>Esteira de Status</h3>
   <table>
@@ -2083,9 +2123,154 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 23 — Solicitacao de Exames em Lote                  -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="module" id="exames-lote">
+  <div class="module-header">
+    <div class="module-icon">🧪</div>
+    <div>
+      <h2>23. Solicitacao de Exames em Lote</h2>
+      <p>Selecione multiplos exames de uma vez com checkboxes</p>
+    </div>
+  </div>
+
+  <p>O novo modal de solicitacao de exames substitui o dropdown antigo por uma <strong>lista completa com checkboxes</strong>, permitindo selecionar quantos exames forem necessarios em uma unica operacao.</p>
+
+  <h3>Funcionalidades do modal</h3>
+  <table>
+    <tr><th>Recurso</th><th>Descricao</th></tr>
+    <tr><td>Busca em tempo real</td><td>Filtra exames por nome conforme digita</td></tr>
+    <tr><td>Checkboxes</td><td>Selecione/desmarque exames individualmente</td></tr>
+    <tr><td>Resumo visual</td><td>Mostra quantidade selecionada + valor total em chips teal</td></tr>
+    <tr><td>Data/Hora compartilhada</td><td>Todos os exames recebem a mesma data (opcional)</td></tr>
+    <tr><td>Observacoes</td><td>Indicacao clinica aplicada a todos os exames</td></tr>
+    <tr><td>Catalogo atualizado</td><td>Busca o catalogo fresco a cada abertura do modal</td></tr>
+  </table>
+
+  <h3>Apos a solicitacao</h3>
+  <p>Ao confirmar, o sistema cria <strong>um pedido de exame separado para cada item selecionado</strong>, cada um com seu proprio:</p>
+  <ul>
+    <li>Lancamento em <strong>Contas a Receber</strong></li>
+    <li><strong>Repasse ao Medico</strong> conforme regra do catalogo</li>
+    <li>Botao individual de <strong>Assinatura Digital</strong></li>
+  </ul>
+
+  <div class="info">
+    ℹ️ Se algum exame falhar na criacao, todos sao revertidos (transacao atomica). Nenhuma cobranca parcial e gerada.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 23a — Pacotes de Exames                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="module" id="pacotes-exames">
+  <div class="module-header">
+    <div class="module-icon">📦</div>
+    <div>
+      <h2>23a. Pacotes de Exames</h2>
+      <p>Salve e reutilize combinacoes frequentes de exames</p>
+    </div>
+  </div>
+
+  <p>Pacotes de exames permitem salvar uma selecao de exames como grupo reutilizavel. Existem dois tipos:</p>
+  <table>
+    <tr><th>Tipo</th><th>Quem cria</th><th>Quem ve</th></tr>
+    <tr><td><strong>Global</strong></td><td>Administrador</td><td>Todos os medicos e recepcionistas</td></tr>
+    <tr><td><strong>Pessoal</strong></td><td>Cada medico</td><td>Apenas o medico que criou</td></tr>
+  </table>
+
+  <h3>Como salvar um pacote</h3>
+  <ol class="steps">
+    <li><span>No modal de solicitacao de exames, selecione os exames desejados.</span></li>
+    <li><span>No rodape dos selecionados, clique em <strong>"Salvar como pacote"</strong>.</span></li>
+    <li><span>Digite um nome descritivo (ex: "Check-up Basico", "Painel Tireoide").</span></li>
+    <li><span>Clique em <strong>"Salvar"</strong>. O pacote fica disponivel para uso futuro.</span></li>
+  </ol>
+
+  <h3>Como usar um pacote</h3>
+  <ol class="steps">
+    <li><span>Ao abrir o modal de solicitacao, os pacotes salvos aparecem como <strong>chips clicaveis</strong> acima do campo de busca.</span></li>
+    <li><span>Clique no pacote desejado — ex: <strong>"Check-up Basico (8)"</strong>.</span></li>
+    <li><span>Todos os exames do pacote sao marcados automaticamente.</span></li>
+    <li><span>Ajuste a selecao se necessario (adicione ou remova itens).</span></li>
+    <li><span>Clique em <strong>"Solicitar N Exames"</strong>.</span></li>
+  </ol>
+
+  <div class="tip">
+    💡 <strong>Exemplos de pacotes uteis:</strong> "Check-up Basico" (hemograma, glicemia, colesterol, TGO/TGP, creatinina, urina), "Painel Tireoide" (TSH, T4L, T3L, Anti-TPO), "Pre-operatorio" (hemograma, coagulograma, glicemia, ECG).
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- CAP. 24 — Melhorias de Interface (v2.5)                  -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="module" id="melhorias-v25">
+  <div class="module-header">
+    <div class="module-icon">✨</div>
+    <div>
+      <h2>24. Melhorias de Interface (v2.5)</h2>
+      <p>Novidades de usabilidade e navegacao — Junho 2026</p>
+    </div>
+  </div>
+
+  <h3>Navegacao — Sidebar Agrupada</h3>
+  <p>O menu lateral foi reorganizado em <strong>5 secoes collapsiveis</strong>:</p>
+  <table>
+    <tr><th>Secao</th><th>Itens</th></tr>
+    <tr><td>Atendimento</td><td>Agenda, Prontuarios, Exames, Assin. Digital, Chats</td></tr>
+    <tr><td>Pacientes</td><td>Cadastro, Leads, Prog. Preventivos</td></tr>
+    <tr><td>Financeiro</td><td>Fluxo de Caixa, Faturamento TISS, Convenios, Analytics</td></tr>
+    <tr><td>Administracao</td><td>Medicos, Estoque, Config, Usuarios, Logs, Relatorios</td></tr>
+    <tr><td>Fixos</td><td>Inicio, Manual</td></tr>
+  </table>
+  <p>Clique no titulo da secao para colapsar/expandir. A secao com a pagina ativa nunca colapsa.</p>
+
+  <h3>Busca Rapida — Command Palette (Ctrl+K)</h3>
+  <p>Pressione <strong>Ctrl+K</strong> (ou Cmd+K no Mac) em qualquer tela para abrir a busca universal:</p>
+  <ul>
+    <li>Busca <strong>pacientes</strong> por nome, CPF ou telefone</li>
+    <li>Navega para qualquer <strong>pagina</strong> do sistema</li>
+    <li>Navegacao por <strong>teclado</strong>: setas ↑↓ + Enter + Esc</li>
+    <li>Resultados agrupados por categoria</li>
+  </ul>
+
+  <h3>Breadcrumbs</h3>
+  <p>Paginas de detalhe (Paciente, Prontuario) mostram a trilha de navegacao no topo:</p>
+  <p style="background:#f8fafc; padding:8px 16px; border-radius:8px; font-size:10pt;">🏠 &rarr; Pacientes &rarr; <strong>Joao Silva</strong></p>
+
+  <h3>Auto-save do Prontuario</h3>
+  <p>O prontuario salva automaticamente a cada <strong>30 segundos</strong> enquanto o medico digita. Um indicador visual mostra o status:</p>
+  <table>
+    <tr><th>Indicador</th><th>Significado</th></tr>
+    <tr><td>🟡 "Nao salvo"</td><td>Ha alteracoes nao salvas (bolinha ambar pulsante)</td></tr>
+    <tr><td>"Salvando..."</td><td>Auto-save em andamento</td></tr>
+    <tr><td>"Salvo 14:32"</td><td>Ultima vez que foi salvo</td></tr>
+  </table>
+  <p>O botao manual "Salvar" continua disponivel e tambem reseta o timer.</p>
+
+  <h3>Reagendar Consulta</h3>
+  <p>Consultas concluidas, canceladas ou com no-show agora exibem o botao <strong>"Reagendar"</strong>. Ao clicar, abre o modal de nova consulta pre-preenchido com paciente, medico, duracao e motivo — basta escolher a nova data/hora.</p>
+
+  <h3>Confirmacao de Acoes Destrutivas</h3>
+  <p>Acoes como excluir paciente, cancelar consulta ou desativar medico agora exibem um <strong>modal de confirmacao personalizado</strong> (vermelho para acoes de perigo) ao inves do popup nativo do navegador.</p>
+
+  <h3>Skeleton Loaders</h3>
+  <p>Ao carregar dados, as paginas Dashboard, Pacientes, Financeiro e Prontuarios mostram <strong>placeholders animados</strong> que imitam o layout final, substituindo spinners genericos.</p>
+
+  <h3>Tabelas com Ordenacao</h3>
+  <p>As tabelas de <strong>Pacientes</strong> e <strong>Financeiro (A Receber)</strong> permitem clicar no cabecalho da coluna para ordenar. Clique uma vez para ascendente, novamente para descendente, e uma terceira para remover o sort.</p>
+
+  <h3>Contraste e Acessibilidade</h3>
+  <p>Textos secundarios foram ajustados para garantir <strong>ratio de contraste 4.5:1</strong> conforme WCAG AA, melhorando a leitura para todos os usuarios.</p>
+
+  <h3>Validacao de CPF em Tempo Real</h3>
+  <p>O campo CPF no cadastro de pacientes agora valida os digitos verificadores <strong>enquanto o usuario digita</strong>. A borda do campo fica verde (valido) ou vermelha (invalido) ao completar 11 digitos.</p>
+</div>
+
 <!-- ── Footer ── -->
 <div class="footer">
-  MaisSaúde BR · Sistema de Gestão de Clínica Médica · Manual do Operador v2.4 · Junho 2026<br>
+  MaisSaude BR · Sistema de Gestao de Clinica Medica · Manual do Operador v2.5 · Junho 2026<br>
   Desenvolvido para uso interno · Todos os direitos reservados
 </div>
 
