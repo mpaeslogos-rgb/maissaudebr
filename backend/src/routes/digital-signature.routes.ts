@@ -104,10 +104,13 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
 
     const filename = `documento-assinado-${id}.pdf`;
     const fileBuffer = fs.readFileSync(sig.signedPdfPath);
-    reply.header("Content-Disposition", `attachment; filename="${filename}"`);
-    reply.header("Content-Type", "application/pdf");
-    reply.header("Content-Length", fileBuffer.length);
-    return reply.send(fileBuffer);
+    reply.raw.writeHead(200, {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Length": fileBuffer.length,
+    });
+    reply.raw.end(fileBuffer);
+    return reply;
   });
 
   // ─── Listar assinaturas ────────────────────────────────────────────────────
