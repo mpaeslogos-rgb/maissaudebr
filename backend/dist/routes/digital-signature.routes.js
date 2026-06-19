@@ -44,10 +44,10 @@ async function digitalSignatureRoutes(app) {
                 metadata: metadata,
             },
         });
-        // Salva PDF não-assinado em disco
+        // Salva PDF não-assinado no banco + disco (fallback)
         const pdfPath = path_1.default.join(UPLOADS_DIR, `${sigRec.id}_unsigned.pdf`);
         fs_1.default.writeFileSync(pdfPath, pdfBuffer);
-        await prisma2_1.prisma.digitalSignature.update({ where: { id: sigRec.id }, data: { pdfPath } });
+        await prisma2_1.prisma.digitalSignature.update({ where: { id: sigRec.id }, data: { pdfPath, pdfData: pdfBuffer } });
         // Obtém URL de redirect para o provider OAuth
         const provider = (0, factory_1.getSignatureProvider)(providerName);
         const doctor = await prisma2_1.prisma.doctor.findUniqueOrThrow({
@@ -91,10 +91,17 @@ async function digitalSignatureRoutes(app) {
             return reply.status(404).send({ error: "Assinatura não encontrada" });
         if (sig.status !== "SIGNED" || !sig.signedPdfPath)
             return reply.status(400).send({ error: "Documento ainda não assinado" });
-        if (!fs_1.default.existsSync(sig.signedPdfPath))
+        let fileBuffer;
+        if (sig.signedPdfData) {
+            fileBuffer = Buffer.from(sig.signedPdfData);
+        }
+        else if (sig.signedPdfPath && fs_1.default.existsSync(sig.signedPdfPath)) {
+            fileBuffer = fs_1.default.readFileSync(sig.signedPdfPath);
+        }
+        else {
             return reply.status(404).send({ error: "Arquivo não encontrado no servidor" });
+        }
         const filename = `documento-assinado-${id}.pdf`;
-        const fileBuffer = fs_1.default.readFileSync(sig.signedPdfPath);
         return reply
             .type("application/octet-stream")
             .header("Content-Disposition", `attachment; filename="${filename}"`)
@@ -284,9 +291,16 @@ async function processSignature(signatureId, callbackParams, reply, frontendUrl)
         return reply.redirect(`${fe}/assinaturas?id=${signatureId}&status=signed`);
     }
     try {
-        if (!sig.pdfPath || !fs_1.default.existsSync(sig.pdfPath))
+        let pdfBuffer;
+        if (sig.pdfData) {
+            pdfBuffer = Buffer.from(sig.pdfData);
+        }
+        else if (sig.pdfPath && fs_1.default.existsSync(sig.pdfPath)) {
+            pdfBuffer = fs_1.default.readFileSync(sig.pdfPath);
+        }
+        else {
             throw new Error("PDF original não encontrado");
-        const pdfBuffer = fs_1.default.readFileSync(sig.pdfPath);
+        }
         const provider = (0, factory_1.getSignatureProvider)(sig.provider);
         const meta = sig.metadata ?? {};
         const { signedBuffer, result } = await provider.sign(pdfBuffer, {
@@ -301,6 +315,7 @@ async function processSignature(signatureId, callbackParams, reply, frontendUrl)
             data: {
                 status: "SIGNED",
                 signedPdfPath,
+                signedPdfData: signedBuffer,
                 signerName: result.signerName,
                 signerCpf: result.signerCpf,
                 signedAt: result.signedAt,
