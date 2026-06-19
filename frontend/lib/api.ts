@@ -1224,16 +1224,19 @@ export function downloadSignedPdf(signatureId: string): void {
   const token = getToken()
   const base  = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
   const url   = `${base}/digital-signature/${signatureId}/download`
-  const a     = document.createElement('a')
-  a.href      = url
-  a.setAttribute('download', `documento-assinado-${signatureId}.pdf`)
-  // Fetch com token e força download
   fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-    .then(r => r.blob())
+    .then(r => {
+      if (!r.ok) throw new Error(`Erro ${r.status}`)
+      return r.blob()
+    })
     .then(blob => {
+      const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
+      a.download = `documento-assinado-${signatureId}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
+      URL.revokeObjectURL(a.href)
     })
+    .catch(e => alert(e.message || 'Erro ao baixar PDF'))
 }

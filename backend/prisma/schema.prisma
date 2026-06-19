@@ -1145,6 +1145,8 @@ model DigitalSignature {
   oauthState    String?            @unique
   pdfPath       String?
   signedPdfPath String?
+  pdfData       Bytes?
+  signedPdfData Bytes?
   documentHash  String?
   signerName    String?
   signerCpf     String?

@@ -46,10 +46,10 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
       },
     });
 
-    // Salva PDF não-assinado em disco
+    // Salva PDF não-assinado no banco + disco (fallback)
     const pdfPath = path.join(UPLOADS_DIR, `${sigRec.id}_unsigned.pdf`);
     fs.writeFileSync(pdfPath, pdfBuffer);
-    await prisma.digitalSignature.update({ where: { id: sigRec.id }, data: { pdfPath } });
+    await prisma.digitalSignature.update({ where: { id: sigRec.id }, data: { pdfPath, pdfData: pdfBuffer } });
 
     // Obtém URL de redirect para o provider OAuth
     const provider = getSignatureProvider(providerName);
@@ -99,11 +99,16 @@ export async function digitalSignatureRoutes(app: FastifyInstance) {
     if (sig.status !== "SIGNED" || !sig.signedPdfPath)
       return reply.status(400).send({ error: "Documento ainda não assinado" });
 
-    if (!fs.existsSync(sig.signedPdfPath))
+    let fileBuffer: Buffer;
+    if (sig.signedPdfData) {
+      fileBuffer = Buffer.from(sig.signedPdfData);
+    } else if (sig.signedPdfPath && fs.existsSync(sig.signedPdfPath)) {
+      fileBuffer = fs.readFileSync(sig.signedPdfPath);
+    } else {
       return reply.status(404).send({ error: "Arquivo não encontrado no servidor" });
+    }
 
     const filename = `documento-assinado-${id}.pdf`;
-    const fileBuffer = fs.readFileSync(sig.signedPdfPath);
     return reply
       .type("application/octet-stream")
       .header("Content-Disposition", `attachment; filename="${filename}"`)
@@ -307,9 +312,14 @@ async function processSignature(
   }
 
   try {
-    if (!sig.pdfPath || !fs.existsSync(sig.pdfPath)) throw new Error("PDF original não encontrado");
-
-    const pdfBuffer = fs.readFileSync(sig.pdfPath);
+    let pdfBuffer: Buffer;
+    if (sig.pdfData) {
+      pdfBuffer = Buffer.from(sig.pdfData);
+    } else if (sig.pdfPath && fs.existsSync(sig.pdfPath)) {
+      pdfBuffer = fs.readFileSync(sig.pdfPath);
+    } else {
+      throw new Error("PDF original não encontrado");
+    }
     const provider = getSignatureProvider(sig.provider as ProviderName);
     const meta = (sig.metadata as Record<string, string>) ?? {};
     const { signedBuffer, result } = await provider.sign(pdfBuffer, {
@@ -326,6 +336,7 @@ async function processSignature(
       data: {
         status: "SIGNED",
         signedPdfPath,
+        signedPdfData: signedBuffer,
         signerName: result.signerName,
         signerCpf: result.signerCpf,
         signedAt: result.signedAt,
