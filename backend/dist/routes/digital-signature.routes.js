@@ -95,13 +95,11 @@ async function digitalSignatureRoutes(app) {
             return reply.status(404).send({ error: "Arquivo não encontrado no servidor" });
         const filename = `documento-assinado-${id}.pdf`;
         const fileBuffer = fs_1.default.readFileSync(sig.signedPdfPath);
-        reply.raw.writeHead(200, {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename="${filename}"`,
-            "Content-Length": fileBuffer.length,
-        });
-        reply.raw.end(fileBuffer);
-        return reply;
+        return reply
+            .type("application/octet-stream")
+            .header("Content-Disposition", `attachment; filename="${filename}"`)
+            .header("Content-Length", fileBuffer.length)
+            .send(fileBuffer);
     });
     // ─── Listar assinaturas ────────────────────────────────────────────────────
     app.get("/digital-signature", { preHandler: [auth] }, async (req, reply) => {
