@@ -23,6 +23,7 @@ interface Props {
   doctorId?: string;
   patientName?: string;
   appointmentId?: string;
+  insurancePlanId?: string;
   onClose: () => void;
   onCreated?: (orders: ExamOrder[]) => void;
 }
@@ -32,6 +33,7 @@ export function ExamSelectorModal({
   doctorId: initialDoctorId,
   patientName: initialPatientName,
   appointmentId,
+  insurancePlanId,
   onClose,
   onCreated,
 }: Props) {
@@ -131,6 +133,7 @@ export function ExamSelectorModal({
         doctorId: did,
         catalogIds: Array.from(selectedIds),
         appointmentId,
+        insurancePlanId: insurancePlanId || undefined,
         scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
         notes: notes || undefined,
       });
@@ -338,7 +341,10 @@ export function ExamSelectorModal({
                       {isSelected && <Check size={13} className="text-white" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{exam.name}</p>
+                      <p className="text-sm font-medium text-slate-800 truncate">
+                        {exam.name}
+                        {exam.tussCode && <span className="ml-2 text-xs font-mono text-slate-400">{exam.tussCode}</span>}
+                      </p>
                       {exam.description && (
                         <p className="text-xs text-slate-500 truncate">{exam.description}</p>
                       )}

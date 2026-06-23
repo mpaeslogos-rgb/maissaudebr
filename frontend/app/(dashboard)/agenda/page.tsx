@@ -1375,6 +1375,7 @@ function DetailPanel({ appointment: apt, onClose, onRefresh, onReschedule }: Det
           doctorId={apt.doctorId}
           patientName={apt.patient.fullName}
           appointmentId={apt.id}
+          insurancePlanId={apt.insurancePlanId ?? undefined}
           onClose={() => setShowExameModal(false)}
         />
       )}

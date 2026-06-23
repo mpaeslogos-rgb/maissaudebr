@@ -55,6 +55,7 @@ function CatalogModal({ item, onClose, onSaved }: {
   item?: ExamCatalog; onClose: () => void; onSaved: () => void
 }) {
   const [name, setName]               = useState(item?.name ?? '')
+  const [tussCode, setTussCode]       = useState(item?.tussCode ?? '')
   const [description, setDescription] = useState(item?.description ?? '')
   const [price, setPrice]             = useState(item ? String(item.price) : '')
   const [duration, setDuration]       = useState(item?.duration ? String(item.duration) : '')
@@ -69,7 +70,8 @@ function CatalogModal({ item, onClose, onSaved }: {
     setSaving(true)
     try {
       const data = {
-        name, description: description || null,
+        name, tussCode: tussCode || null,
+        description: description || null,
         price: parseFloat(price.replace(',', '.')),
         duration: duration ? parseInt(duration) : null,
         repasseType: (repasseType || null) as any,
@@ -95,6 +97,11 @@ function CatalogModal({ item, onClose, onSaved }: {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nome <span className="text-red-500">*</span></label>
             <input value={name} onChange={e => setName(e.target.value)} className="input" placeholder="Ex: Holter 24h, Ergométrico, ECG…" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Código TUSS</label>
+            <input value={tussCode} onChange={e => setTussCode(e.target.value)} className="input" placeholder="Ex: 40301052" />
+            <p className="text-xs text-slate-400 mt-1">Código da tabela TUSS — necessário para guias TISS e integração Tasy</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Descrição</label>
@@ -467,10 +474,11 @@ export default function ExamesPage() {
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Exame / Procedimento</th>
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Paciente</th>
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Médico</th>
+                    <th className="text-left px-4 py-3 font-medium text-slate-600">Convênio</th>
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Data/Hora</th>
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Valor</th>
                     <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
-                    <th className="text-left px-4 py-3 font-medium text-slate-600">Pagamento</th>
+                    <th className="text-left px-4 py-3 font-medium text-slate-600">Guia TISS</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -483,6 +491,11 @@ export default function ExamesPage() {
                         <td className="px-4 py-3 font-medium text-slate-800">{o.catalog.name}</td>
                         <td className="px-4 py-3 text-slate-600">{o.patient.fullName}</td>
                         <td className="px-4 py-3 text-slate-500 text-xs">Dr(a). {o.doctor.user.name}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {o.insurancePlan
+                            ? <span className="text-blue-700 font-medium">{o.insurancePlan.name}</span>
+                            : <span className="text-slate-400">Particular</span>}
+                        </td>
                         <td className="px-4 py-3 text-slate-500 text-xs">
                           {o.scheduledAt
                             ? new Date(o.scheduledAt).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
@@ -494,13 +507,20 @@ export default function ExamesPage() {
                             {STATUS_LABELS[effective]}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-medium ${PAYMENT_STYLES[o.payment?.status ?? 'PENDING']}`}>
-                            {isPaid
-                              ? <span className="flex items-center gap-1"><CheckCircle size={12} />Pago</span>
-                              : <span className="flex items-center gap-1"><AlertCircle size={12} />{PAYMENT_LABELS[o.payment?.status ?? 'PENDING']}</span>
-                            }
-                          </span>
+                        <td className="px-4 py-3 text-xs">
+                          {o.guia ? (
+                            <span className={`inline-flex px-2 py-0.5 rounded-full font-medium ${
+                              o.guia.status === 'AUTORIZADA' ? 'bg-green-100 text-green-800' :
+                              o.guia.status === 'NEGADA' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {o.guia.numeroGuia}{o.guia.numeroAutorizacao ? ` | ${o.guia.numeroAutorizacao}` : ''}
+                            </span>
+                          ) : o.insurancePlan ? (
+                            <span className="text-slate-400">Sem guia</span>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           {effective !== 'CANCELLED' && effective !== 'COMPLETED' && (
@@ -536,6 +556,7 @@ export default function ExamesPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-semibold text-slate-800">{c.name}</p>
+                        {c.tussCode && <p className="text-xs text-primary-600 font-mono mt-0.5">TUSS {c.tussCode}</p>}
                         {c.description && <p className="text-sm text-slate-500 mt-0.5">{c.description}</p>}
                       </div>
                       <div className="flex gap-1">
