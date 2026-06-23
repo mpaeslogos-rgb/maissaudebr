@@ -10,10 +10,12 @@ import {
   createExamPackage,
   getPatients,
   getDoctors,
+  getInsurancePlans,
   initSignature,
   type ExamCatalog,
   type ExamOrder,
   type ExamPackage,
+  type InsurancePlan,
   type SignatureProvider,
 } from "@/lib/api";
 import type { Doctor, Patient } from "@/lib/types";
@@ -41,8 +43,10 @@ export function ExamSelectorModal({
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [plans, setPlans] = useState<InsurancePlan[]>([]);
   const [selPatientId, setSelPatientId] = useState(initialPatientId ?? "");
   const [selDoctorId, setSelDoctorId] = useState(initialDoctorId ?? "");
+  const [selPlanId, setSelPlanId] = useState(insurancePlanId ?? "");
   const needsContext = !initialPatientId || !initialDoctorId;
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -72,6 +76,11 @@ export function ExamSelectorModal({
       promises.push(
         getPatients({ limit: 500 }).then((r) => setPatients(r.data)).catch(() => {}),
         getDoctors({ limit: 100 }).then((r) => setDoctors(r.data.filter((d: any) => d.user?.isActive))).catch(() => {}),
+      );
+    }
+    if (!insurancePlanId) {
+      promises.push(
+        getInsurancePlans().then((data) => setPlans(data.filter((p) => p.isActive))).catch(() => {}),
       );
     }
     Promise.allSettled(promises).finally(() => setLoadingCatalog(false));
@@ -133,7 +142,7 @@ export function ExamSelectorModal({
         doctorId: did,
         catalogIds: Array.from(selectedIds),
         appointmentId,
-        insurancePlanId: insurancePlanId || undefined,
+        insurancePlanId: selPlanId || undefined,
         scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
         notes: notes || undefined,
       });
@@ -257,6 +266,18 @@ export function ExamSelectorModal({
         ) : (
           <div className="px-5 pt-4 pb-2 text-sm text-slate-500 shrink-0">
             Paciente: <span className="font-medium text-slate-700">{initialPatientName}</span>
+          </div>
+        )}
+
+        {/* Insurance plan selector */}
+        {!insurancePlanId && plans.length > 0 && (
+          <div className="px-5 pb-2 shrink-0">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Convênio</label>
+            <select value={selPlanId} onChange={(e) => setSelPlanId(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+              <option value="">Particular</option>
+              {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           </div>
         )}
 
