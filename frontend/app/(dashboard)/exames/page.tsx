@@ -5,8 +5,8 @@ import { Plus, Pencil, Trash2, FlaskConical, X, Clock, DollarSign, CheckCircle, 
 import {
   getExamCatalog, createExamCatalogItem, updateExamCatalogItem, deleteExamCatalogItem,
   getExamOrders, createExamOrder, updateExamOrder, cancelExamOrder,
-  getDoctors, getPatients,
-  type ExamCatalog, type ExamOrder,
+  getDoctors, getPatients, getInsurancePlans,
+  type ExamCatalog, type ExamOrder, type InsurancePlan,
 } from '@/lib/api'
 import type { Doctor, Patient } from '@/lib/types'
 import { ExamSelectorModal } from '@/components/ExamSelectorModal'
@@ -143,13 +143,14 @@ function CatalogModal({ item, onClose, onSaved }: {
 
 // ─── Modal: Solicitar Exame / Procedimento ────────────────────────────────────
 
-function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
-  catalog: ExamCatalog[]; doctors: Doctor[]; patients: Patient[]
+function OrderModal({ catalog, doctors, patients, insurancePlans, onClose, onSaved }: {
+  catalog: ExamCatalog[]; doctors: Doctor[]; patients: Patient[]; insurancePlans: InsurancePlan[]
   onClose: () => void; onSaved: () => void
 }) {
   const [patientId, setPatientId]   = useState('')
   const [doctorId, setDoctorId]     = useState('')
   const [catalogId, setCatalogId]   = useState('')
+  const [insurancePlanId, setInsurancePlanId] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [notes, setNotes]           = useState('')
   const [saving, setSaving]         = useState(false)
@@ -164,6 +165,7 @@ function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
     try {
       await createExamOrder({
         patientId, doctorId, catalogId,
+        insurancePlanId: insurancePlanId || undefined,
         scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
         notes: notes || undefined,
       })
@@ -208,6 +210,16 @@ function OrderModal({ catalog, doctors, patients, onClose, onSaved }: {
             <select value={doctorId} onChange={e => setDoctorId(e.target.value)} className="input">
               <option value="">Selecione…</option>
               {doctors.map(d => <option key={d.id} value={d.id}>Dr(a). {d.user?.name} — {d.specialty}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Convênio <span className="text-slate-500 text-xs">(deixe em branco para Particular)</span>
+            </label>
+            <select value={insurancePlanId} onChange={e => setInsurancePlanId(e.target.value)} className="input">
+              <option value="">Particular</option>
+              {insurancePlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
 
@@ -359,6 +371,7 @@ export default function ExamesPage() {
   const [orders, setOrders]     = useState<(ExamOrder & { computedStatus?: string })[]>([])
   const [doctors, setDoctors]   = useState<Doctor[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
+  const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([])
   const [loading, setLoading]   = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
   const [showCatalogModal, setShowCatalogModal] = useState(false)
@@ -369,16 +382,18 @@ export default function ExamesPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [cat, ord, doc, pat] = await Promise.all([
+      const [cat, ord, doc, pat, plans] = await Promise.all([
         getExamCatalog(),
         getExamOrders(filterStatus ? { status: filterStatus } : undefined),
         getDoctors({ limit: 100 }),
         getPatients({ limit: 200 }),
+        getInsurancePlans(),
       ])
       setCatalog(cat)
       setOrders(ord as any)
       setDoctors(doc.data.filter(d => d.user?.isActive))
       setPatients(pat.data)
+      setInsurancePlans(plans.filter(p => p.isActive))
     } finally { setLoading(false) }
   }, [filterStatus])
 

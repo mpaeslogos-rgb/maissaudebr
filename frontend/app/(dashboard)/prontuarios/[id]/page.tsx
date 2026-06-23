@@ -683,6 +683,8 @@ export default function DetalheProntuarioPage({ params }: PageProps) {
           patientId={record.patientId}
           doctorId={record.doctorId}
           patientName={record.patient?.fullName ?? ''}
+          appointmentId={record.appointmentId}
+          insurancePlanId={record.appointment?.insurancePlanId ?? undefined}
           onClose={() => setShowExameModal(false)}
         />
       )}

@@ -454,6 +454,10 @@ export interface MedicalRecord {
     specialty: string
     user?: { name: string; email: string }
   }
+  appointment?: {
+    id: string
+    insurancePlanId?: string | null
+  } | null
   createdAt: string
   updatedAt: string
 }

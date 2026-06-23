@@ -150,6 +150,7 @@ const recordDetailInclude = {
       endTime: true,
       status: true,
       reason: true,
+      insurancePlanId: true,
     },
   },
 } satisfies Prisma.MedicalRecordInclude
