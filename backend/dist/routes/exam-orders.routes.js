@@ -73,13 +73,35 @@ async function examOrdersRoutes(app) {
         }));
         return reply.send(enriched);
     });
-    // ── Criar pedido → gera Payment + DoctorPayment ───────────────────────────
+    // ── Criar pedido → gera Payment + DoctorPayment + Guia SP/SADT (se convênio) ─
     app.post("/exam-orders", { preHandler: [requireAuth] }, async (req, reply) => {
         const data = createSchema.parse(req.body);
         const catalog = await prisma2_1.prisma.examCatalog.findUniqueOrThrow({ where: { id: data.catalogId } });
         const repasseAmount = await calcRepasse(data.catalogId, data.doctorId, catalog.price);
-        // Status inicial determinado pelo agendamento
         const initialStatus = data.scheduledAt ? "SCHEDULED" : "PENDING";
+        // Pré-carrega dados para auto-geração de Guia SP/SADT
+        let patient = null;
+        let doctor = null;
+        let plan = null;
+        let contract = null;
+        if (data.insurancePlanId && catalog.tussCode) {
+            [patient, doctor, plan] = await Promise.all([
+                prisma2_1.prisma.patient.findUnique({ where: { id: data.patientId } }),
+                prisma2_1.prisma.doctor.findUnique({ where: { id: data.doctorId }, include: { user: true } }),
+                prisma2_1.prisma.insurancePlan.findUnique({ where: { id: data.insurancePlanId } }),
+            ]);
+            if (plan) {
+                contract = await prisma2_1.prisma.insuranceContract.findFirst({
+                    where: {
+                        planId: plan.id,
+                        startDate: { lte: new Date() },
+                        OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+                    },
+                    include: { procedures: true },
+                    orderBy: { startDate: "desc" },
+                });
+            }
+        }
         const order = await prisma2_1.prisma.$transaction(async (tx) => {
             const payment = await tx.payment.create({
                 data: {
@@ -99,6 +121,39 @@ async function examOrdersRoutes(app) {
                     },
                 })
                 : null;
+            let guiaId;
+            // Auto-geração de Guia SP/SADT
+            if (data.insurancePlanId && catalog.tussCode && patient && doctor && plan) {
+                const proc = contract?.procedures?.find((p) => p.tussCode === catalog.tussCode);
+                const valor = proc?.price ?? catalog.price;
+                const guiaCount = await tx.guiaFaturamento.count({ where: { insurancePlanId: data.insurancePlanId } });
+                const numeroGuia = String(guiaCount + 1).padStart(6, "0");
+                const guia = await tx.guiaFaturamento.create({
+                    data: {
+                        insurancePlanId: data.insurancePlanId,
+                        tipo: "SP_SADT",
+                        numeroGuia,
+                        nomeBeneficiario: patient.fullName,
+                        numeroCarteirinha: patient.healthInsuranceNumber ?? "",
+                        valorApresentado: valor,
+                        nomeExecutante: doctor.user.name,
+                        crmExecutante: doctor.crm,
+                        crmEstado: doctor.crmState,
+                        indicacaoAcidente: 9,
+                        codigoPrestadorNaOperadora: plan.codigoPrestadorNaOperadora ?? undefined,
+                        procedimentos: {
+                            create: [{
+                                    tussCode: catalog.tussCode,
+                                    descricao: catalog.name,
+                                    quantidade: 1,
+                                    valorUnitario: valor,
+                                    valorTotal: valor,
+                                }],
+                        },
+                    },
+                });
+                guiaId = guia.id;
+            }
             return tx.examOrder.create({
                 data: {
                     patientId: data.patientId,
@@ -106,6 +161,7 @@ async function examOrdersRoutes(app) {
                     catalogId: data.catalogId,
                     appointmentId: data.appointmentId,
                     insurancePlanId: data.insurancePlanId,
+                    guiaId,
                     scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
                     notes: data.notes,
                     status: initialStatus,
@@ -139,8 +195,32 @@ async function examOrdersRoutes(app) {
             return reply.status(400).send({ error: "Um ou mais exames não encontrados ou inativos." });
         }
         const initialStatus = data.scheduledAt ? "SCHEDULED" : "PENDING";
+        // Pré-carrega dados para auto-geração de Guia SP/SADT
+        let patient = null;
+        let doctor = null;
+        let plan = null;
+        let contract = null;
+        if (data.insurancePlanId) {
+            [patient, doctor, plan] = await Promise.all([
+                prisma2_1.prisma.patient.findUnique({ where: { id: data.patientId } }),
+                prisma2_1.prisma.doctor.findUnique({ where: { id: data.doctorId }, include: { user: true } }),
+                prisma2_1.prisma.insurancePlan.findUnique({ where: { id: data.insurancePlanId } }),
+            ]);
+            if (plan) {
+                contract = await prisma2_1.prisma.insuranceContract.findFirst({
+                    where: {
+                        planId: plan.id,
+                        startDate: { lte: new Date() },
+                        OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+                    },
+                    include: { procedures: true },
+                    orderBy: { startDate: "desc" },
+                });
+            }
+        }
         const orders = await prisma2_1.prisma.$transaction(async (tx) => {
             const results = [];
+            const orderIds = [];
             for (const catalog of catalogs) {
                 const repasseAmount = await calcRepasse(catalog.id, data.doctorId, catalog.price);
                 const payment = await tx.payment.create({
@@ -176,7 +256,58 @@ async function examOrdersRoutes(app) {
                     },
                     include: includeRelations,
                 });
+                orderIds.push(order.id);
                 results.push({ ...order, computedStatus: computeStatus(order) });
+            }
+            // Auto-geração de Guia SP/SADT para exames com convênio
+            const catalogsComTuss = catalogs.filter(c => c.tussCode);
+            if (data.insurancePlanId && patient && doctor && plan && catalogsComTuss.length > 0) {
+                const procedimentosMap = contract?.procedures ?? [];
+                const procedimentos = catalogsComTuss.map(c => {
+                    const proc = procedimentosMap.find((p) => p.tussCode === c.tussCode);
+                    const valor = proc?.price ?? c.price;
+                    return {
+                        tussCode: c.tussCode,
+                        descricao: c.name,
+                        quantidade: 1,
+                        valorUnitario: valor,
+                        valorTotal: valor,
+                    };
+                });
+                const valorTotal = procedimentos.reduce((sum, p) => sum + p.valorTotal, 0);
+                const guiaCount = await tx.guiaFaturamento.count({ where: { insurancePlanId: data.insurancePlanId } });
+                const numeroGuia = String(guiaCount + 1).padStart(6, "0");
+                const guia = await tx.guiaFaturamento.create({
+                    data: {
+                        insurancePlanId: data.insurancePlanId,
+                        tipo: "SP_SADT",
+                        numeroGuia,
+                        nomeBeneficiario: patient.fullName,
+                        numeroCarteirinha: patient.healthInsuranceNumber ?? "",
+                        valorApresentado: valorTotal,
+                        nomeExecutante: doctor.user.name,
+                        crmExecutante: doctor.crm,
+                        crmEstado: doctor.crmState,
+                        indicacaoAcidente: 9,
+                        codigoPrestadorNaOperadora: plan.codigoPrestadorNaOperadora ?? undefined,
+                        procedimentos: { create: procedimentos },
+                    },
+                });
+                // Vincula todos os ExamOrders à guia
+                await tx.examOrder.updateMany({
+                    where: { id: { in: orderIds } },
+                    data: { guiaId: guia.id },
+                });
+                // Re-carrega os orders com a guia vinculada
+                for (let i = 0; i < results.length; i++) {
+                    results[i] = {
+                        ...(await tx.examOrder.findUniqueOrThrow({
+                            where: { id: results[i].id },
+                            include: includeRelations,
+                        })),
+                        computedStatus: computeStatus(results[i]),
+                    };
+                }
             }
             return results;
         });
