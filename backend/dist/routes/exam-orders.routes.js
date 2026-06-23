@@ -10,6 +10,7 @@ const createSchema = zod_1.z.object({
     doctorId: zod_1.z.string(),
     catalogId: zod_1.z.string(),
     appointmentId: zod_1.z.string().optional(),
+    insurancePlanId: zod_1.z.string().optional(),
     scheduledAt: zod_1.z.string().datetime().optional(),
     scheduledEnd: zod_1.z.string().datetime().optional(),
     notes: zod_1.z.string().optional(),
@@ -40,6 +41,8 @@ const includeRelations = {
     catalog: true,
     patient: { select: { id: true, fullName: true, phone: true } },
     doctor: { select: { id: true, user: { select: { name: true } }, specialty: true } },
+    insurancePlan: { select: { id: true, name: true } },
+    guia: { select: { id: true, numeroGuia: true, status: true, numeroAutorizacao: true } },
     payment: true,
 };
 async function examOrdersRoutes(app) {
@@ -102,6 +105,7 @@ async function examOrdersRoutes(app) {
                     doctorId: data.doctorId,
                     catalogId: data.catalogId,
                     appointmentId: data.appointmentId,
+                    insurancePlanId: data.insurancePlanId,
                     scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
                     notes: data.notes,
                     status: initialStatus,
@@ -122,6 +126,7 @@ async function examOrdersRoutes(app) {
         doctorId: zod_1.z.string(),
         catalogIds: zod_1.z.array(zod_1.z.string()).min(1).max(50),
         appointmentId: zod_1.z.string().optional(),
+        insurancePlanId: zod_1.z.string().optional(),
         scheduledAt: zod_1.z.string().datetime().optional(),
         notes: zod_1.z.string().optional(),
     });
@@ -162,6 +167,7 @@ async function examOrdersRoutes(app) {
                         doctorId: data.doctorId,
                         catalogId: catalog.id,
                         appointmentId: data.appointmentId,
+                        insurancePlanId: data.insurancePlanId,
                         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
                         notes: data.notes,
                         status: initialStatus,

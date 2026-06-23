@@ -6,13 +6,14 @@ import { requireRole } from "../plugins/auth"
 const requireAuth = requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST');
 
 const createSchema = z.object({
-  patientId:     z.string(),
-  doctorId:      z.string(),
-  catalogId:     z.string(),
-  appointmentId: z.string().optional(),
-  scheduledAt:   z.string().datetime().optional(),
-  scheduledEnd:  z.string().datetime().optional(),
-  notes:         z.string().optional(),
+  patientId:       z.string(),
+  doctorId:        z.string(),
+  catalogId:       z.string(),
+  appointmentId:   z.string().optional(),
+  insurancePlanId: z.string().optional(),
+  scheduledAt:     z.string().datetime().optional(),
+  scheduledEnd:    z.string().datetime().optional(),
+  notes:           z.string().optional(),
 });
 
 // Regra de status automático por horário
@@ -40,10 +41,12 @@ async function calcRepasse(catalogId: string, doctorId: string, amount: number):
 }
 
 const includeRelations = {
-  catalog:  true,
-  patient:  { select: { id: true, fullName: true, phone: true } },
-  doctor:   { select: { id: true, user: { select: { name: true } }, specialty: true } },
-  payment:  true,
+  catalog:       true,
+  patient:       { select: { id: true, fullName: true, phone: true } },
+  doctor:        { select: { id: true, user: { select: { name: true } }, specialty: true } },
+  insurancePlan: { select: { id: true, name: true } },
+  guia:          { select: { id: true, numeroGuia: true, status: true, numeroAutorizacao: true } },
+  payment:       true,
 } as const;
 
 export async function examOrdersRoutes(app: FastifyInstance) {
@@ -111,14 +114,15 @@ export async function examOrdersRoutes(app: FastifyInstance) {
 
       return tx.examOrder.create({
         data: {
-          patientId:      data.patientId,
-          doctorId:       data.doctorId,
-          catalogId:      data.catalogId,
-          appointmentId:  data.appointmentId,
-          scheduledAt:    data.scheduledAt    ? new Date(data.scheduledAt)   : undefined,
-          notes:          data.notes,
-          status:         initialStatus as any,
-          paymentId:      payment.id,
+          patientId:       data.patientId,
+          doctorId:        data.doctorId,
+          catalogId:       data.catalogId,
+          appointmentId:   data.appointmentId,
+          insurancePlanId: data.insurancePlanId,
+          scheduledAt:     data.scheduledAt    ? new Date(data.scheduledAt)   : undefined,
+          notes:           data.notes,
+          status:          initialStatus as any,
+          paymentId:       payment.id,
           doctorPaymentId: doctorPayment?.id,
         },
         include: includeRelations,
@@ -133,12 +137,13 @@ export async function examOrdersRoutes(app: FastifyInstance) {
 
   // ── Criar pedidos em lote ──────────────────────────────────────────────────
   const batchSchema = z.object({
-    patientId:     z.string(),
-    doctorId:      z.string(),
-    catalogIds:    z.array(z.string()).min(1).max(50),
-    appointmentId: z.string().optional(),
-    scheduledAt:   z.string().datetime().optional(),
-    notes:         z.string().optional(),
+    patientId:       z.string(),
+    doctorId:        z.string(),
+    catalogIds:      z.array(z.string()).min(1).max(50),
+    appointmentId:   z.string().optional(),
+    insurancePlanId: z.string().optional(),
+    scheduledAt:     z.string().datetime().optional(),
+    notes:           z.string().optional(),
   });
 
   app.post("/exam-orders/batch", { preHandler: [requireAuth] }, async (req, reply) => {
@@ -184,6 +189,7 @@ export async function examOrdersRoutes(app: FastifyInstance) {
             doctorId:        data.doctorId,
             catalogId:       catalog.id,
             appointmentId:   data.appointmentId,
+            insurancePlanId: data.insurancePlanId,
             scheduledAt:     data.scheduledAt ? new Date(data.scheduledAt) : undefined,
             notes:           data.notes,
             status:          initialStatus as any,

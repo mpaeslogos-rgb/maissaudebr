@@ -709,6 +709,7 @@ model InsurancePlan {
 
   contracts    InsuranceContract[]
   appointments Appointment[]
+  examOrders   ExamOrder[]
   guias        GuiaFaturamento[]
   lotes        LoteFaturamento[]
 
@@ -756,6 +757,7 @@ model InsuranceProcedure {
 model ExamCatalog {
   id           String       @id @default(cuid())
   name         String
+  tussCode     String? // Código TUSS — ponte com InsuranceProcedure e Guia SP/SADT
   description  String?
   price        Float
   duration     Int? // Duração estimada em minutos
@@ -769,6 +771,7 @@ model ExamCatalog {
   packageItems ExamPackageItem[]
 
   @@index([name])
+  @@index([tussCode])
   @@map("exam_catalog")
 }
 
@@ -804,6 +807,8 @@ model ExamOrder {
   doctorId        String
   catalogId       String
   appointmentId   String?
+  insurancePlanId String?
+  guiaId          String?
   scheduledAt     DateTime?
   completedAt     DateTime?
   status          ExamOrderStatus @default(PENDING)
@@ -819,12 +824,16 @@ model ExamOrder {
   doctor        Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   catalog       ExamCatalog       @relation(fields: [catalogId], references: [id])
   appointment   Appointment?      @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  insurancePlan InsurancePlan?    @relation(fields: [insurancePlanId], references: [id], onDelete: SetNull)
+  guia          GuiaFaturamento?  @relation(fields: [guiaId], references: [id], onDelete: SetNull)
   payment       Payment?          @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   doctorPayment DoctorPayment?    @relation(fields: [doctorPaymentId], references: [id], onDelete: SetNull)
   signature     DigitalSignature? @relation(fields: [signatureId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
   @@index([doctorId])
+  @@index([insurancePlanId])
+  @@index([guiaId])
   @@index([status])
   @@map("exam_orders")
 }
@@ -958,6 +967,7 @@ model GuiaFaturamento {
   plan          InsurancePlan      @relation(fields: [insurancePlanId], references: [id], onDelete: Cascade)
   appointment   Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   procedimentos GuiaProcedimento[]
+  examOrders    ExamOrder[]
 
   @@index([insurancePlanId])
   @@index([loteId])

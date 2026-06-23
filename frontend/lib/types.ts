@@ -291,6 +291,7 @@ export interface Appointment {
   id: string
   patientId: string
   doctorId: string
+  insurancePlanId?: string | null
   startTime: string
   endTime: string
   status: AppointmentStatus

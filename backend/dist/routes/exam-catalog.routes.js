@@ -7,6 +7,7 @@ const auth_1 = require("../plugins/auth");
 const requireAuth = (0, auth_1.requireRole)('ADMIN', 'DOCTOR', 'RECEPTIONIST');
 const catalogSchema = zod_1.z.object({
     name: zod_1.z.string().min(1),
+    tussCode: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
     price: zod_1.z.number().positive(),
     duration: zod_1.z.number().int().positive().optional(),

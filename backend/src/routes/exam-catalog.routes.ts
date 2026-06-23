@@ -6,6 +6,7 @@ const requireAuth = requireRole('ADMIN', 'DOCTOR', 'RECEPTIONIST');
 
 const catalogSchema = z.object({
   name:         z.string().min(1),
+  tussCode:     z.string().optional(),
   description:  z.string().optional(),
   price:        z.number().positive(),
   duration:     z.number().int().positive().optional(),

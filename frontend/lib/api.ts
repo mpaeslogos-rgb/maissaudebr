@@ -736,6 +736,7 @@ export function getAuditLogsSummary(): Promise<{
 export interface ExamCatalog {
   id:           string
   name:         string
+  tussCode:     string | null
   description:  string | null
   price:        number
   duration:     number | null
@@ -765,23 +766,27 @@ export function deleteExamCatalogItem(id: string): Promise<void> {
 // ─── Pedidos de Exame ─────────────────────────────────────────────────────────
 
 export interface ExamOrder {
-  id:             string
-  patientId:      string
-  doctorId:       string
-  catalogId:      string
-  appointmentId:  string | null
-  scheduledAt:    string | null
-  completedAt:    string | null
-  status:         'PENDING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
-  notes:          string | null
-  paymentId:      string | null
+  id:              string
+  patientId:       string
+  doctorId:        string
+  catalogId:       string
+  appointmentId:   string | null
+  insurancePlanId: string | null
+  guiaId:          string | null
+  scheduledAt:     string | null
+  completedAt:     string | null
+  status:          'PENDING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  notes:           string | null
+  paymentId:       string | null
   doctorPaymentId: string | null
-  catalog:        ExamCatalog
-  patient:        { id: string; fullName: string }
-  doctor:         { id: string; user: { name: string } }
-  payment:        { amount: number; status: string } | null
-  createdAt:      string
-  updatedAt:      string
+  catalog:         ExamCatalog
+  patient:         { id: string; fullName: string }
+  doctor:          { id: string; user: { name: string } }
+  insurancePlan:   { id: string; name: string } | null
+  guia:            { id: string; numeroGuia: string; status: string; numeroAutorizacao: string | null } | null
+  payment:         { amount: number; status: string } | null
+  createdAt:       string
+  updatedAt:       string
 }
 
 export function getExamOrders(params?: { patientId?: string; doctorId?: string; status?: string; from?: string; to?: string }): Promise<(ExamOrder & { computedStatus?: string })[]> {
@@ -798,9 +803,10 @@ export function createExamOrder(data: {
   patientId: string
   doctorId:  string
   catalogId: string
-  appointmentId?: string
-  scheduledAt?:   string
-  notes?:         string
+  appointmentId?:   string
+  insurancePlanId?: string
+  scheduledAt?:     string
+  notes?:           string
 }): Promise<ExamOrder> {
   return apiPost('/exam-orders', data)
 }
@@ -837,9 +843,10 @@ export function createExamOrdersBatch(data: {
   patientId: string
   doctorId:  string
   catalogIds: string[]
-  appointmentId?: string
-  scheduledAt?:   string
-  notes?:         string
+  appointmentId?:   string
+  insurancePlanId?: string
+  scheduledAt?:     string
+  notes?:           string
 }): Promise<ExamOrder[]> {
   return apiPost('/exam-orders/batch', data)
 }
