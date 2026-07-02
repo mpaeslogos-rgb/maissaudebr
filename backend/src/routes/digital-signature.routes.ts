@@ -328,6 +328,16 @@ async function processSignature(
       codeVerifier: meta.codeVerifier,
     });
 
+    if (signedBuffer.subarray(0, 5).toString("latin1") !== "%PDF-") {
+      console.error(
+        `[SIGNATURE ERROR] ${signatureId}: provider ${sig.provider} devolveu um buffer que não é PDF ` +
+          `(${signedBuffer.length} bytes, prefixo: ${signedBuffer.subarray(0, 16).toString("hex")})`
+      );
+      throw new Error(
+        `Provider ${sig.provider} retornou um arquivo inválido (não é um PDF). Verifique o formato de assinatura configurado.`
+      );
+    }
+
     const signedPdfPath = path.join(UPLOADS_DIR, `${signatureId}_signed.pdf`);
     fs.writeFileSync(signedPdfPath, signedBuffer);
 
