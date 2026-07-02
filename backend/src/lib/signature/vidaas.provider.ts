@@ -1,5 +1,8 @@
 import axios from "axios";
 import crypto from "crypto";
+import { SignPdf } from "@signpdf/signpdf";
+import { Signer, SUBFILTER_ETSI_CADES_DETACHED } from "@signpdf/utils";
+import { plainAddPlaceholder } from "@signpdf/placeholder-plain";
 import type { ISignatureProvider, SignatureInitParams, SignatureInitResult, SignatureCallbackParams } from "./interface";
 
 // Vidaas (Valid Certificadora) — ICP-Brasil cloud certificate
@@ -67,36 +70,58 @@ export class VidaasProvider implements ISignatureProvider {
     const accessToken: string = tokenResp.data.access_token;
     const signerCpf: string = tokenResp.data.authorized_identification ?? "";
 
-    const hashBase64 = crypto.createHash("sha256").update(pdfBuffer).digest("base64");
+    // Vidaas assina apenas o HASH do intervalo de bytes do PAdES (não o PDF inteiro).
+    // A resposta ("raw_signature") é o envelope CMS/CAdES a ser embutido no PDF —
+    // NUNCA o arquivo PDF final. Por isso usamos @signpdf para reservar um placeholder
+    // de assinatura no PDF, calcular o digest sobre o ByteRange correto e reinserir
+    // o envelope retornado no lugar certo, preservando o documento original.
+    let certAlias = "";
 
-    let signResp: any;
-    try {
-      signResp = await axios.post(
-        `${VIDAAS_BASE}/v0/oauth/signature`,
-        {
-          hashes: [
+    const preparedPdf = plainAddPlaceholder({
+      pdfBuffer,
+      reason: "Assinatura Digital Médica",
+      contactInfo: "",
+      name: "Assinatura ICP-Brasil",
+      location: "Brasil",
+      signatureLength: 32768,
+      subFilter: SUBFILTER_ETSI_CADES_DETACHED,
+    });
+
+    const vidaasSigner = new (class extends Signer {
+      async sign(byteRangeBuffer: Buffer): Promise<Buffer> {
+        const hashBase64 = crypto.createHash("sha256").update(byteRangeBuffer).digest("base64");
+
+        let signResp: any;
+        try {
+          signResp = await axios.post(
+            `${VIDAAS_BASE}/v0/oauth/signature`,
             {
-              id: "doc-1",
-              alias: "Documento Médico",
-              hash: hashBase64,
-              hash_algorithm: "2.16.840.1.101.3.4.2.1",
-              signature_format: "PAdES_AD_RB",
-              base64_content: pdfBuffer.toString("base64"),
+              hashes: [
+                {
+                  id: "doc-1",
+                  alias: "Documento Médico",
+                  hash: hashBase64,
+                  hash_algorithm: "2.16.840.1.101.3.4.2.1",
+                  signature_format: "PAdES_AD_RB",
+                },
+              ],
             },
-          ],
-        },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-    } catch (e: any) {
-      const detail = e?.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message;
-      throw new Error(`Vidaas signature falhou: ${detail}`);
-    }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+        } catch (e: any) {
+          const detail = e?.response ? `${e.response.status} ${JSON.stringify(e.response.data)}` : e.message;
+          throw new Error(`Vidaas signature falhou: ${detail}`);
+        }
 
-    const rawSignature: string = signResp.data.signatures?.[0]?.raw_signature;
-    if (!rawSignature) throw new Error("Vidaas: resposta de assinatura inválida");
+        const rawSignature: string = signResp.data.signatures?.[0]?.raw_signature;
+        if (!rawSignature) throw new Error("Vidaas: resposta de assinatura inválida");
+        certAlias = signResp.data.certificate_alias ?? "";
 
-    const signedBuffer = Buffer.from(rawSignature.replace(/\r?\n/g, ""), "base64");
-    const certAlias: string = signResp.data.certificate_alias ?? "";
+        return Buffer.from(rawSignature.replace(/\r?\n/g, ""), "base64");
+      }
+    })();
+
+    const signedBuffer = await new SignPdf().sign(preparedPdf, vidaasSigner);
 
     return {
       signedBuffer,

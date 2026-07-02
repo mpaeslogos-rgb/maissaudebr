@@ -58,7 +58,7 @@ export class BirDIProvider implements ISignatureProvider {
       `${BIRDID_BASE}/v2/sign`,
       {
         hashes: [{ id: "doc-1", alias: "Documento Médico", hash: documentHash, hash_algorithm: "SHA256" }],
-        signature_format: "CAdES_AD_RB",
+        signature_format: "PAdES_AD_RB",
         pdf_signature: {
           location: "Brasil",
           reason: "Assinatura Digital Médica",
