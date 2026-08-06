@@ -340,13 +340,20 @@ export function getAppointments(params?: {
   patientId?: string
   doctorId?: string
   status?: string
+  from?: string
+  to?: string
 }): Promise<AppointmentListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)      query.set('page', String(params.page))
-  if (params?.limit)     query.set('limit', String(params.limit))
+  // ✅ CORREÇÃO: backend espera "take"/"skip", não "limit"/"page" — nomes errados
+  // faziam o schema ignorar o valor pedido e cair no padrão de 50 registros.
+  // "take" tem max(100) no backend — outras telas pedem limit maior, então limitamos aqui.
+  if (params?.limit)     query.set('take', String(Math.min(params.limit, 100)))
+  if (params?.page && params?.limit) query.set('skip', String((params.page - 1) * params.limit))
   if (params?.patientId) query.set('patientId', params.patientId)
   if (params?.doctorId)  query.set('doctorId', params.doctorId)
   if (params?.status)    query.set('status', params.status)
+  if (params?.from)      query.set('from', params.from)
+  if (params?.to)        query.set('to', params.to)
   const qs = query.toString()
   return apiGet<AppointmentListResponse>(`/appointments${qs ? `?${qs}` : ''}`)
 }

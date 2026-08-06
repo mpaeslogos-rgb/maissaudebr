@@ -1681,12 +1681,24 @@ export default function AgendaPage() {
     setLoading(true)
     setError('')
     try {
-      const params: Record<string, string | number> = { limit: 200 }
-      if (filterDoctorId) params.doctorId = filterDoctorId
-
       const weekStart = startOfWeekDate(currentDate)
       const weekEnd   = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 7)
+
+      // Vista mensal precisa do mês inteiro; vista semanal, só da semana visível.
+      const rangeStart = viewMode === 'month'
+        ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+        : weekStart
+      const rangeEnd = viewMode === 'month'
+        ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+        : weekEnd
+
+      const params: Record<string, string | number> = {
+        limit: 200,
+        from: rangeStart.toISOString(),
+        to:   rangeEnd.toISOString(),
+      }
+      if (filterDoctorId) params.doctorId = filterDoctorId
 
       const [res, exams] = await Promise.all([
         getAppointments(params),
@@ -1703,7 +1715,7 @@ export default function AgendaPage() {
     } finally {
       setLoading(false)
     }
-  }, [filterDoctorId, currentDate])
+  }, [filterDoctorId, currentDate, viewMode])
 
   useEffect(() => { fetchAppointments() }, [fetchAppointments])
 
