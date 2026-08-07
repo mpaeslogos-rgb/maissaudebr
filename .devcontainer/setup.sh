@@ -24,6 +24,9 @@ JWT_SECRET=${JWT_SECRET}
 NODE_ENV=development
 PORT=3001
 CORS_ALLOW_ORIGIN=http://localhost:3000
+# Placeholder — só evita o crash na subida (o cliente OpenAI é instanciado no
+# import de ocr.routes.ts). OCR/IA não funcionam de verdade sem uma chave real.
+OPENAI_API_KEY=sk-placeholder-codespace-not-real
 EOF
 fi
 
