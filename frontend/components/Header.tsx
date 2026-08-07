@@ -50,11 +50,19 @@ export function Header({ onMenuClick }: HeaderProps) {
     return () => clearTimeout(t);
   }, [search]);
 
-  function handleSelect() {
+  function handleSelectPatient(id: string) {
     setSearch("");
     setShowDrop(false);
     setShowMobileSearch(false);
-    router.push("/pacientes");
+    router.push(`/pacientes/${id}`);
+  }
+
+  function handleSeeAll() {
+    const term = search.trim();
+    setSearch("");
+    setShowDrop(false);
+    setShowMobileSearch(false);
+    router.push(`/pacientes?search=${encodeURIComponent(term)}`);
   }
 
   return (
@@ -92,7 +100,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               {results.map(p => (
                 <button
                   key={p.id}
-                  onClick={handleSelect}
+                  onClick={() => handleSelectPatient(p.id)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cream-50 text-left border-b border-cream-50 last:border-0"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center shrink-0">
@@ -105,7 +113,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 </button>
               ))}
               <button
-                onClick={handleSelect}
+                onClick={handleSeeAll}
                 className="w-full text-center text-xs text-primary-600 font-medium py-2.5 hover:bg-cream-50"
               >
                 Ver todos os resultados em Pacientes →
@@ -187,7 +195,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               {results.map(p => (
                 <button
                   key={p.id}
-                  onClick={handleSelect}
+                  onClick={() => handleSelectPatient(p.id)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cream-50 text-left border-b border-cream-50 last:border-0"
                 >
                   <div className="w-7 h-7 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center shrink-0">

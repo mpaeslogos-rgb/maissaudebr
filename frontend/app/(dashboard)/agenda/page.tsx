@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Plus, Filter, X, Video, Printer, LayoutGrid, Rows3, Activity, ClipboardList, Sparkles, FileText, FlaskConical as FlaskIcon, ClipboardCheck, ShieldCheck, Loader2 } from 'lucide-react'
 import {
   getAppointments,
@@ -1647,7 +1648,23 @@ function Legend({ color, label }: { color: string; label: string }) {
 type ViewMode = 'week' | 'month'
 
 export default function AgendaPage() {
-  const [currentDate, setCurrentDate]                 = useState(new Date())
+  return (
+    <Suspense fallback={null}>
+      <AgendaPageInner />
+    </Suspense>
+  )
+}
+
+function AgendaPageInner() {
+  const searchParams = useSearchParams()
+  const initialDateParam = searchParams.get('date')
+  const [currentDate, setCurrentDate]                 = useState(() => {
+    if (initialDateParam) {
+      const parsed = new Date(`${initialDateParam}T00:00:00`)
+      if (!isNaN(parsed.getTime())) return parsed
+    }
+    return new Date()
+  })
   const [viewMode, setViewMode]                       = useState<ViewMode>('week')
   const [appointments, setAppointments]               = useState<Appointment[]>([])
   const [examOrders, setExamOrders]                   = useState<(ExamOrder & { computedStatus?: string })[]>([])

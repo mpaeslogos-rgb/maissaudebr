@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   getPatients,
   createPatient,
@@ -304,13 +305,23 @@ function PatientModal({ patient, onClose, onSaved }: PatientModalProps) {
 const PAGE_SIZE = 10
 
 export default function PacientesPage() {
+  return (
+    <Suspense fallback={null}>
+      <PacientesPageInner />
+    </Suspense>
+  )
+}
+
+function PacientesPageInner() {
   const confirm = useConfirm()
+  // Preenche a busca quando vem do "Ver todos os resultados" da busca do cabeçalho.
+  const initialSearch = useSearchParams().get('search') ?? ''
   const [patients, setPatients]     = useState<Patient[]>([])
   const { sorted: sortedPatients, sort, toggle } = useSortable(patients, 'fullName', 'asc')
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
-  const [search, setSearch]         = useState('')
-  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch]         = useState(initialSearch)
+  const [searchInput, setSearchInput] = useState(initialSearch)
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState('')
 

@@ -4,15 +4,15 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Users, Calendar, Wallet, AlertCircle,
-  ArrowRight, Plus, Clock, TrendingUp, Loader2, X,
+  ArrowRight, Plus, Clock, TrendingUp, Loader2,
 } from "lucide-react";
 import { SkeletonKPIRow, SkeletonChart, SkeletonList } from "@/components/Skeleton";
 import Link from "next/link";
 import {
   getPatients,
   getAppointments,
-  getPayments,
-  getAccountsPayable,
+  getPaymentSummary,
+  getAccountsPayableSummary,
 } from "@/lib/api";
 import { Appointment } from "@/lib/types";
 import {
@@ -20,46 +20,46 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 
-const STATUS_LABELS: Record<string, string> = {
-  SCHEDULED: "Agendada", CONFIRMED: "Confirmada", IN_PROGRESS: "Em atendimento",
-  COMPLETED: "Concluída", CANCELLED: "Cancelada", NO_SHOW: "Não compareceu",
-};
-const STATUS_COLORS: Record<string, string> = {
-  SCHEDULED: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  CONFIRMED: "bg-primary-100 text-primary-800 border-primary-300",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
-  COMPLETED: "bg-green-100 text-green-800 border-green-300",
-  CANCELLED: "bg-red-100 text-red-700 border-red-300",
-  NO_SHOW: "bg-slate-100 text-slate-600 border-slate-300",
-};
-
 export default function DashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState({
     patients: [] as any[],
     appointments: [] as Appointment[],
-    payments: [] as any[],
-    payables: [] as any[],
+    revenueMonth: 0,
+    pendingReceivables: 0,
+    pendingPayables: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [aptDetail, setAptDetail] = useState<Appointment | null>(null);
   const role = user?.role ?? 'ADMIN';
 
   useEffect(() => {
     async function loadDashboardData() {
       setLoading(true);
       try {
-        const [p, a, pay, acc] = await Promise.all([
-          getPatients({ limit: 1000 }),
-          getAppointments({ limit: 1000 }),
-          getPayments({ take: 100 }),
-          getAccountsPayable({ take: 100 }),
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+        const future = new Date(now); future.setDate(future.getDate() + 30);
+
+        const [p, a, revenueSummary, receivablesSummary, payablesSummary] = await Promise.all([
+          getPatients({ limit: 100 }),
+          getAppointments({ limit: 100, from: weekAgo.toISOString(), to: future.toISOString() }),
+          // "Receita (Mês)": soma agregada no backend, filtrada por pago no mês
+          // atual — antes somava todos os pagamentos PAID retornados (sem filtro
+          // de data), inflando o valor com receita de meses anteriores.
+          getPaymentSummary({ from: monthStart.toISOString(), to: monthEnd.toISOString(), dateField: 'paidAt' }),
+          getPaymentSummary(),
+          getAccountsPayableSummary(),
         ]);
         setData({
           patients: p.data,
           appointments: a.data,
-          payments: pay.data,
-          payables: acc.data,
+          revenueMonth: revenueSummary.byStatus.find(s => s.status === 'PAID')?.amount ?? 0,
+          pendingReceivables: receivablesSummary.byStatus
+            .filter(s => s.status === 'PENDING' || s.status === 'OVERDUE')
+            .reduce((acc, s) => acc + s.count, 0),
+          pendingPayables: payablesSummary.byStatus.find(s => s.status === 'PENDING')?.count ?? 0,
         });
       } catch (err) {
         console.error("Erro ao carregar dashboard:", err);
@@ -72,8 +72,9 @@ export default function DashboardPage() {
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
     const weekStr = weekAgo.toISOString().split("T")[0];
     const myName = user?.name ?? '';
 
@@ -87,17 +88,18 @@ export default function DashboardPage() {
     return {
       totalPatients: data.patients.length,
       appointmentsToday: todayApts.length,
-      revenueMonth: data.payments
-        .filter((p: any) => p.status === "PAID")
-        .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0),
-      pendingPayables: data.payables.filter((p: any) => p.status === "PENDING").length,
-      pendingReceivables: data.payments.filter((p: any) => p.status === "PENDING" || p.status === "OVERDUE").length,
+      revenueMonth: data.revenueMonth,
+      pendingPayables: data.pendingPayables,
+      pendingReceivables: data.pendingReceivables,
       myAppointmentsToday: myTodayApts.length,
       myPatientsWeek: new Set(myWeekApts.map(a => a.patientId)).size,
       pendingRecords: myPendingRecords,
       upcomingApts: data.appointments
         .filter(a => {
-          const isUpcoming = a.status === "SCHEDULED" || a.status === "CONFIRMED";
+          // ✅ CORREÇÃO: antes só checava o status, então uma consulta SCHEDULED
+          // do passado (nunca atualizada) aparecia como "próxima".
+          const isFuture = new Date(a.startTime).getTime() >= now.getTime();
+          const isUpcoming = isFuture && (a.status === "SCHEDULED" || a.status === "CONFIRMED");
           if (role === 'DOCTOR') return isUpcoming && a.doctor?.user?.name === myName;
           return isUpcoming;
         })
@@ -245,9 +247,11 @@ export default function DashboardPage() {
           </h3>
           <div className="space-y-3">
             {stats.upcomingApts.length > 0 ? stats.upcomingApts.map(apt => (
-              <div
+              <Link
                 key={apt.id}
+                href={`/agenda?date=${new Date(apt.startTime).toISOString().split("T")[0]}`}
                 className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-cream-50 transition-colors border border-transparent hover:border-cream-200 group"
+                title="Abrir na agenda"
               >
                 <div className="bg-white p-2 rounded-lg shadow-sm font-mono text-[10px] text-center min-w-[52px]">
                   <span className="block font-bold text-primary-700">
@@ -261,14 +265,8 @@ export default function DashboardPage() {
                   <p className="text-sm font-bold text-slate-800 truncate">{apt.patient.fullName}</p>
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider truncate">{apt.doctor.specialty}</p>
                 </div>
-                <button
-                  onClick={() => setAptDetail(apt)}
-                  className="text-slate-300 group-hover:text-primary-600 transition-colors p-1 hover:bg-primary-50 rounded"
-                  title="Ver detalhes"
-                >
-                  <ArrowRight size={16} />
-                </button>
-              </div>
+                <ArrowRight size={16} className="text-slate-300 group-hover:text-primary-600 transition-colors shrink-0" />
+              </Link>
             )) : (
               <p className="text-sm text-slate-500 text-center py-10">Nenhuma consulta agendada.</p>
             )}
@@ -279,71 +277,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Modal de detalhe da consulta */}
-      {aptDetail && (
-        <AptDetailModal apt={aptDetail} onClose={() => setAptDetail(null)} />
-      )}
-    </div>
-  );
-}
-
-// ── Modal de detalhe ──────────────────────────────────────────────────────────
-
-function AptDetailModal({ apt, onClose }: { apt: Appointment; onClose: () => void }) {
-  const start = new Date(apt.startTime);
-  const end = new Date(apt.endTime);
-  const durMin = Math.round((end.getTime() - start.getTime()) / 60_000);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <h2 className="font-semibold text-slate-800">Detalhes da Consulta</h2>
-          <button onClick={onClose} className="p-1 hover:bg-cream-100 rounded-lg">
-            <X size={18} className="text-slate-500" />
-          </button>
-        </div>
-
-        <div className="p-5 space-y-4">
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[apt.status] ?? ""}`}>
-            {STATUS_LABELS[apt.status] ?? apt.status}
-          </span>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center shrink-0">
-              {apt.patient.fullName.charAt(0)}
-            </div>
-            <div>
-              <div className="font-semibold text-slate-800">{apt.patient.fullName}</div>
-              {apt.patient.phone && <div className="text-xs text-slate-500">{apt.patient.phone}</div>}
-            </div>
-          </div>
-
-          <div className="space-y-2 text-sm divide-y divide-cream-100">
-            <InfoRow label="Data / Hora" value={start.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })} />
-            <InfoRow label="Duração" value={`${durMin} min`} />
-            <InfoRow label="Médico" value={`Dr(a). ${apt.doctor.user.name}`} />
-            <InfoRow label="Especialidade" value={apt.doctor.specialty} />
-            {apt.reason && <InfoRow label="Motivo" value={apt.reason} />}
-          </div>
-        </div>
-
-        <div className="p-5 border-t border-surface-border flex gap-2">
-          <button onClick={onClose} className="btn-outline flex-1 text-sm">Fechar</button>
-          <Link href="/agenda" onClick={onClose} className="btn-primary flex-1 text-sm text-center flex items-center justify-center">
-            Abrir na Agenda
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between py-1.5 first:pt-0 last:pb-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-slate-800 text-right max-w-[180px] truncate">{value}</span>
     </div>
   );
 }

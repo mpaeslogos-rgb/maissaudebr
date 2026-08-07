@@ -191,8 +191,11 @@ export function getPatients(params?: {
   search?: string
 }): Promise<PatientListResponse> {
   const query = new URLSearchParams()
-  if (params?.page)   query.set('page', String(params.page))
-  if (params?.limit)  query.set('limit', String(params.limit))
+  // ✅ CORREÇÃO: backend espera "take"/"skip", não "limit"/"page" (mesma causa do
+  // bug da agenda "Todos os médicos" — nomes errados eram ignorados e caíam no
+  // default de 50). "take" tem max(100) no backend.
+  if (params?.limit)     query.set('take', String(Math.min(params.limit, 100)))
+  if (params?.page && params?.limit) query.set('skip', String((params.page - 1) * params.limit))
   if (params?.search) query.set('search', params.search)
   const qs = query.toString()
   return apiGet<PatientListResponse>(`/patients${qs ? `?${qs}` : ''}`)
@@ -498,8 +501,17 @@ export function sendWhatsAppMessage(to: string, message: string): Promise<{ succ
 }
 
 // Retorna o formato real do backend
-export function getPaymentSummary(): Promise<PaymentSummary> {
-  return apiGet<PaymentSummary>('/payments/summary')
+export function getPaymentSummary(params?: {
+  from?: string
+  to?: string
+  dateField?: 'createdAt' | 'paidAt' | 'dueDate'
+}): Promise<PaymentSummary> {
+  const query = new URLSearchParams()
+  if (params?.from)      query.set('from', params.from)
+  if (params?.to)        query.set('to', params.to)
+  if (params?.dateField) query.set('dateField', params.dateField)
+  const qs = query.toString()
+  return apiGet<PaymentSummary>(`/payments/summary${qs ? `?${qs}` : ''}`)
 }
 
 // ─── Contas a Pagar ───────────────────────────────────────────────────────────
@@ -523,6 +535,15 @@ export function getAccountsPayable(params?: {
   if (params?.to)          query.set('to', params.to)
   const qs = query.toString()
   return apiGet<AccountPayableListResponse>(`/accounts-payable${qs ? `?${qs}` : ''}`)
+}
+
+export interface AccountsPayableSummary {
+  byStatus: { status: string; total: number; count: number }[]
+  overdue: { total: number; count: number }
+}
+
+export function getAccountsPayableSummary(): Promise<AccountsPayableSummary> {
+  return apiGet<AccountsPayableSummary>('/accounts-payable/summary')
 }
 
 export function createAccountPayable(data: unknown): Promise<{ data: AccountPayable }> {
