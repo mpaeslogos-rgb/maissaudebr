@@ -1,12 +1,11 @@
 describe('Patients CRUD', () => {
-  const user = require('../fixtures/user.json')
   const fixturePatient = require('../fixtures/patient.json')
   const timestamp = Date.now()
   const patientEmail = `e2e+${timestamp}@example.com`
 
   it('creates, edits and deletes a patient', () => {
     // login via API and ensure patient exists via API
-    cy.apiLogin(user.email, user.password)
+    cy.apiLogin()
 
     const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, firstName: `E2E ${timestamp}` })
     cy.createPatient(patientPayload).then((resp) => {

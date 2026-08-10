@@ -32,6 +32,14 @@ export CYPRESS_BASE_URL=https://maissaudebr.vercel.app
 # on Windows (PowerShell): $env:CYPRESS_BASE_URL = 'https://maissaudebr.vercel.app'
 ```
 
+**Credentials are never committed.** Set them as env vars before running (or as repo secrets in CI —
+see `.github/workflows/cypress.yml`):
+
+```bash
+export CYPRESS_ADMIN_EMAIL=...
+export CYPRESS_ADMIN_PASSWORD=...
+```
+
 ## Test list (P1)
 - `login.cy.js` — login flow
 - `dashboard.cy.js` — dashboard smoke
@@ -42,20 +50,19 @@ export CYPRESS_BASE_URL=https://maissaudebr.vercel.app
 ## Best practices
 
 Fixtures and helper commands
-- Fixtures are in `frontend/cypress/fixtures/` (patient.json, appointment.json, payment.json, user.json).
+- Fixtures are in `frontend/cypress/fixtures/` (patient.json, appointment.json, payment.json — no credentials here, ever).
 - Helpful Cypress custom commands are available in `frontend/cypress/support/e2e.js`:
-	- `cy.apiLogin(email, password)` — logs in via API and sets localStorage before visiting the app.
+	- `cy.apiLogin(email?, password?)` — logs in via API and sets localStorage before visiting the app. With no args, reads `CYPRESS_ADMIN_EMAIL`/`CYPRESS_ADMIN_PASSWORD` from env.
 	- `cy.createPatient(payload)` — create a patient via API (returns `cy.request`).
 	- `cy.deletePatient(id)` — delete patient via API.
 
 Quick example: use fixtures and commands in a spec
 
 ```js
-const user = require('../fixtures/user.json')
 const patient = require('../fixtures/patient.json')
 
 it('creates patient via API and visits dashboard', () => {
-	cy.apiLogin(user.email, user.password)
+	cy.apiLogin() // uses CYPRESS_ADMIN_EMAIL/CYPRESS_ADMIN_PASSWORD from env
 	cy.createPatient(patient).then((resp) => {
 		expect(resp.status).to.be.oneOf([200,201])
 	})

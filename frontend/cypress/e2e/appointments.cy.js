@@ -1,9 +1,8 @@
 describe('Appointments flow', () => {
-  const user = require('../fixtures/user.json')
   const fixturePatient = require('../fixtures/patient.json')
 
   it('creates and cancels an appointment', () => {
-    cy.apiLogin(user.email, user.password)
+    cy.apiLogin()
 
     // ensure patient exists
     const patientPayload = Object.assign({}, fixturePatient, { firstName: 'João', email: `e2e+${Date.now()}@example.com` })

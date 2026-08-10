@@ -1,9 +1,7 @@
 describe('Payments flow', () => {
-  const user = require('../fixtures/user.json')
-
   it('creates an avulso payment and marks as paid', () => {
     const timestamp = Date.now()
-    cy.apiLogin(user.email, user.password)
+    cy.apiLogin()
 
     cy.visit('/financeiro')
 

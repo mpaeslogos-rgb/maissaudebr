@@ -6,11 +6,17 @@
 // - cy.createPatient(data): creates a patient via API
 // - cy.cleanupPatient(id): deletes a patient via API
 
-Cypress.Commands.add('apiLogin', (email = 'admin@maissaudebr.com', password = '***REMOVED***') => {
+Cypress.Commands.add('apiLogin', (email, password) => {
+	// Credenciais nunca hardcoded aqui — vêm de env vars/secrets do CI (ver cypress/README.md).
+	const loginEmail = email || Cypress.env('ADMIN_EMAIL')
+	const loginPassword = password || Cypress.env('ADMIN_PASSWORD')
+	if (!loginEmail || !loginPassword) {
+		throw new Error('cy.apiLogin: defina CYPRESS_ADMIN_EMAIL/CYPRESS_ADMIN_PASSWORD (env) ou passe email/password explicitamente.')
+	}
 	// API base; keep frontend baseUrl as the app URL. Use CYPRESS_API_URL to point to backend.
 	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
 	const url = `${apiBase}/auth/login`
-	return cy.request({ method: 'POST', url, body: { email, password } }).then((resp) => {
+	return cy.request({ method: 'POST', url, body: { email: loginEmail, password: loginPassword } }).then((resp) => {
 		const token = resp.body.token
 		const user = resp.body.user
 		// visit frontend root and set localStorage before app loads
