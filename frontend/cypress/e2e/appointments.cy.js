@@ -4,8 +4,10 @@ describe('Appointments flow', () => {
   it('creates and cancels an appointment', () => {
     cy.apiLogin()
 
-    // ensure patient exists
-    const patientPayload = Object.assign({}, fixturePatient, { fullName: 'João E2E', email: `e2e+${Date.now()}@example.com` })
+    // ensure patient exists — unique CPF per run avoids 409s against leftovers
+    // from prior failed runs (this spec never cleans up its patient).
+    const timestamp = Date.now()
+    const patientPayload = Object.assign({}, fixturePatient, { fullName: 'João E2E', email: `e2e+${timestamp}@example.com`, cpf: String(timestamp).slice(-11) })
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200,201])
 

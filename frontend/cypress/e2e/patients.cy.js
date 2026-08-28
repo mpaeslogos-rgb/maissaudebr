@@ -7,7 +7,9 @@ describe('Patients CRUD', () => {
     // login via API and ensure patient exists via API
     cy.apiLogin()
 
-    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, fullName: `E2E ${timestamp}` })
+    // Unique CPF per run: a fixed CPF would 409-conflict with leftovers from any
+    // run that failed before reaching the cy.deletePatient() cleanup below.
+    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, fullName: `E2E ${timestamp}`, cpf: String(timestamp).slice(-11) })
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200, 201])
       const id = resp.body.id || resp.body._id || resp.body.patientId
