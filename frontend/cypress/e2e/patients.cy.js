@@ -7,17 +7,17 @@ describe('Patients CRUD', () => {
     // login via API and ensure patient exists via API
     cy.apiLogin()
 
-    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, firstName: `E2E ${timestamp}` })
+    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, fullName: `E2E ${timestamp}` })
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200, 201])
       const id = resp.body.id || resp.body._id || resp.body.patientId
 
       // visit patients list and verify
       cy.visit('/pacientes')
-      cy.contains(patientPayload.firstName, { timeout: 10000 }).should('be.visible')
+      cy.contains(patientPayload.fullName, { timeout: 10000 }).should('be.visible')
 
       // Edit via UI
-      cy.contains(patientPayload.firstName).parent().contains('Editar').click()
+      cy.contains(patientPayload.fullName).parent().contains('Editar').click()
       cy.get('input[name="phone"]').clear().type('11911112222')
       cy.contains('Salvar').click()
       cy.contains('11911112222').should('be.visible')

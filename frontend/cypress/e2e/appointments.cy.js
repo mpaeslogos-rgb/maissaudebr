@@ -5,7 +5,7 @@ describe('Appointments flow', () => {
     cy.apiLogin()
 
     // ensure patient exists
-    const patientPayload = Object.assign({}, fixturePatient, { firstName: 'João', email: `e2e+${Date.now()}@example.com` })
+    const patientPayload = Object.assign({}, fixturePatient, { fullName: 'João E2E', email: `e2e+${Date.now()}@example.com` })
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200,201])
 
