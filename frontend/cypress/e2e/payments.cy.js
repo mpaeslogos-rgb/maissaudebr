@@ -1,18 +1,45 @@
+const { genValidCpf } = require('../support/gen-cpf')
+
 describe('Payments flow', () => {
-  it('creates an avulso payment and marks as paid', () => {
+  it('marks a pending payment as paid', () => {
+    const fixturePatient = require('../fixtures/patient.json')
     const timestamp = Date.now()
+
     cy.apiLogin()
 
-    cy.visit('/financeiro')
+    // There's no "create payment" UI in financeiro/page.tsx (ContasReceber only
+    // lists and marks payments as paid) — /payments exists on the backend but is
+    // never called from the frontend. Seed patient + payment via API instead.
+    const patientPayload = Object.assign({}, fixturePatient, {
+      fullName: `E2E Pagamento ${timestamp}`,
+      email: `e2e+${timestamp}@example.com`,
+      cpf: genValidCpf(timestamp),
+    })
+    cy.createPatient(patientPayload).then((patientResp) => {
+      expect(patientResp.status).to.be.oneOf([200, 201])
+      const patientId = patientResp.body.id
 
-    cy.contains('Novo Pagamento').click()
-    cy.get('input[name="description"]').clear().type(`E2E payment ${timestamp}`)
-    cy.get('input[name="amount"]').clear().type('120')
-    cy.get('select[name="method"]').select('PIX')
-    cy.contains('Salvar').click()
+      const dueDate = new Date().toISOString().slice(0, 10)
+      cy.createPayment({ patientId, amount: 150, dueDate, description: `E2E payment ${timestamp}` }).then((paymentResp) => {
+        expect(paymentResp.status).to.be.oneOf([200, 201])
 
-    cy.contains(`E2E payment ${timestamp}`, { timeout: 10000 }).should('be.visible')
-    cy.contains(`E2E payment ${timestamp}`).parent().contains('Marcar como pago').click()
-    cy.contains('PAID').should('be.visible')
+        cy.visit('/financeiro')
+        cy.contains('A Receber').click()
+
+        cy.contains(patientPayload.fullName, { timeout: 10000 })
+          .closest('tr')
+          .contains('Receber')
+          .click()
+
+        // The status badge is clipped by the table's scroll container until
+        // scrolled into view — it exists and has the right classes right after
+        // the click, just not visible without this.
+        cy.contains(patientPayload.fullName)
+          .closest('tr')
+          .contains('Recebido', { timeout: 10000 })
+          .scrollIntoView()
+          .should('be.visible')
+      })
+    })
   })
 })

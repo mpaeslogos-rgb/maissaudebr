@@ -19,8 +19,12 @@ Cypress.Commands.add('apiLogin', (email, password) => {
 	return cy.request({ method: 'POST', url, body: { email: loginEmail, password: loginPassword } }).then((resp) => {
 		const token = resp.body.token
 		const user = resp.body.user
-		// visit frontend root and set localStorage before app loads
-		cy.visit('/', {
+		Cypress.env('authToken', token)
+		// visit the dashboard directly: the login page (/) never auto-redirects an
+		// already-authenticated visitor, it only navigates on form submit (see
+		// AuthContext.login()). The (dashboard) layout only redirects away when
+		// NOT authenticated, so landing here with the token already set works.
+		cy.visit('/dashboard', {
 			onBeforeLoad(win) {
 				win.localStorage.setItem('maissaudebr_token', token)
 				try {
@@ -34,13 +38,22 @@ Cypress.Commands.add('apiLogin', (email, password) => {
 Cypress.Commands.add('createPatient', (payload) => {
 	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
 	const url = `${apiBase}/patients`
-	return cy.request({ method: 'POST', url, body: payload, headers: { 'content-type': 'application/json' } })
+	const token = Cypress.env('authToken')
+	return cy.request({ method: 'POST', url, body: payload, headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` } })
 })
 
 Cypress.Commands.add('deletePatient', (id) => {
 	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
 	const url = `${apiBase}/patients/${id}`
-	return cy.request({ method: 'DELETE', url })
+	const token = Cypress.env('authToken')
+	return cy.request({ method: 'DELETE', url, headers: { Authorization: `Bearer ${token}` } })
+})
+
+Cypress.Commands.add('createPayment', (payload) => {
+	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
+	const url = `${apiBase}/payments`
+	const token = Cypress.env('authToken')
+	return cy.request({ method: 'POST', url, body: payload, headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` } })
 })
 
 // You can add more helper commands for appointments/payments as needed.

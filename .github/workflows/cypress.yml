@@ -19,6 +19,7 @@ jobs:
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CYPRESS_ADMIN_EMAIL: ${{ secrets.CYPRESS_ADMIN_EMAIL }}
       CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
+      CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
     steps:
       - uses: actions/checkout@v4
 
