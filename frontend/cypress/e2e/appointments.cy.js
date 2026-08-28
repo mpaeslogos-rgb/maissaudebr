@@ -38,9 +38,11 @@ describe('Appointments flow', () => {
       cy.contains('Cancelar').click()
       cy.contains('Sim, cancelar').click()
 
-      // handleCancel() closes the panel right after cancelAppointment() resolves, so
-      // re-open the same card to see the refreshed status: cancelled appointments show
-      // Fechar/Reagendar instead of Confirmar/Cancelar.
+      // handleCancel() calls onClose() right after cancelAppointment() resolves,
+      // racing its own onRefresh() — the in-place appointments list can still be
+      // stale for a moment. Reload so the re-opened card reflects the committed
+      // status: cancelled appointments show Fechar/Reagendar instead of Confirmar/Cancelar.
+      cy.reload()
       cy.contains('E2EAppt' + timestamp, { timeout: 10000 }).click()
       cy.contains('Reagendar', { timeout: 10000 }).should('be.visible')
     })
