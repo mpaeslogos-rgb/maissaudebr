@@ -18,8 +18,9 @@ describe('Patients CRUD', () => {
       cy.visit('/pacientes')
       cy.contains(patientPayload.fullName, { timeout: 10000 }).should('be.visible')
 
-      // Edit via UI
-      cy.contains(patientPayload.fullName).parent().contains('Editar').click()
+      // Edit via UI — "Editar" lives in a sibling <td> in the same <tr>, not the
+      // immediate parent of the name cell.
+      cy.contains(patientPayload.fullName).closest('tr').contains('Editar').click()
       cy.get('input[name="phone"]').clear().type('11911112222')
       cy.contains('Salvar').click()
       cy.contains('11911112222').should('be.visible')
