@@ -1,3 +1,5 @@
+const { genValidCpf } = require('../support/gen-cpf')
+
 describe('Patients CRUD', () => {
   const fixturePatient = require('../fixtures/patient.json')
   const timestamp = Date.now()
@@ -8,8 +10,10 @@ describe('Patients CRUD', () => {
     cy.apiLogin()
 
     // Unique CPF per run: a fixed CPF would 409-conflict with leftovers from any
-    // run that failed before reaching the cy.deletePatient() cleanup below.
-    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, fullName: `E2E ${timestamp}`, cpf: String(timestamp).slice(-11) })
+    // run that failed before reaching the cy.deletePatient() cleanup below. It
+    // also has to carry valid check digits — the edit modal below runs the same
+    // checksum as lib/cpf.ts validateCpf() and silently no-ops the save if it fails.
+    const patientPayload = Object.assign({}, fixturePatient, { email: patientEmail, fullName: `E2E ${timestamp}`, cpf: genValidCpf(timestamp) })
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200, 201])
       const id = resp.body.id || resp.body._id || resp.body.patientId
