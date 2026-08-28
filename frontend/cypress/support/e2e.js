@@ -49,5 +49,12 @@ Cypress.Commands.add('deletePatient', (id) => {
 	return cy.request({ method: 'DELETE', url, headers: { Authorization: `Bearer ${token}` } })
 })
 
+Cypress.Commands.add('createPayment', (payload) => {
+	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
+	const url = `${apiBase}/payments`
+	const token = Cypress.env('authToken')
+	return cy.request({ method: 'POST', url, body: payload, headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` } })
+})
+
 // You can add more helper commands for appointments/payments as needed.
 
