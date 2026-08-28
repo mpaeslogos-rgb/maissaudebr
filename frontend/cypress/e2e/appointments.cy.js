@@ -19,14 +19,17 @@ describe('Appointments flow', () => {
 
       // Modal fields have no name attributes; selects are in a fixed DOM order
       // (patient, doctor, start hour, start minute, duration, insurance plan) and
-      // there's exactly one <input type="date">.
-      cy.get('select').eq(0).select(patientId)
-      cy.get('select').eq(1).select(1) // first real doctor option (index 0 is the placeholder)
+      // there's exactly one <input type="date"> — but the agenda page itself
+      // already has a "Filtrar por médico" <select> before the modal even opens,
+      // so scope everything to the modal instead of cy.get('select') globally.
+      cy.contains('h2', 'Nova Consulta').parents('.fixed.inset-0').as('modal')
+      cy.get('@modal').find('select').eq(0).select(patientId)
+      cy.get('@modal').find('select').eq(1).select(1) // first real doctor option (index 0 is the placeholder)
       const future = new Date(Date.now() + 24 * 60 * 60 * 1000)
       const dateStr = future.toISOString().slice(0, 10)
-      cy.get('input[type="date"]').clear().type(dateStr)
-      cy.get('select').eq(2).select('10') // start hour = 10h
-      cy.contains('Agendar Consulta').click()
+      cy.get('@modal').find('input[type="date"]').clear().type(dateStr)
+      cy.get('@modal').find('select').eq(2).select('10') // start hour = 10h
+      cy.get('@modal').contains('Agendar Consulta').click()
 
       // Card renders the first "word" of fullName — unique since it has no spaces.
       cy.contains('E2EAppt' + timestamp, { timeout: 10000 }).click()

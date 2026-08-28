@@ -31,9 +31,13 @@ describe('Payments flow', () => {
           .contains('Receber')
           .click()
 
+        // The status badge is clipped by the table's scroll container until
+        // scrolled into view — it exists and has the right classes right after
+        // the click, just not visible without this.
         cy.contains(patientPayload.fullName)
           .closest('tr')
           .contains('Recebido', { timeout: 10000 })
+          .scrollIntoView()
           .should('be.visible')
       })
     })
