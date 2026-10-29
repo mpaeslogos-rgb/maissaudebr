@@ -1,6 +1,15 @@
 const { genValidCpf } = require('../support/gen-cpf')
 
 describe('Appointments flow', () => {
+  let createdPatientId
+
+  // Criar a consulta gera uma cobrança PENDING com o valor do médico, que
+  // continua pendente mesmo após cancelar a consulta — limpa paciente + cobrança.
+  afterEach(() => {
+    cy.cleanupPatientData(createdPatientId)
+    createdPatientId = undefined
+  })
+
   it('creates and cancels an appointment', () => {
     const fixturePatient = require('../fixtures/patient.json')
     const timestamp = Date.now()
@@ -13,6 +22,7 @@ describe('Appointments flow', () => {
     cy.createPatient(patientPayload).then((resp) => {
       expect(resp.status).to.be.oneOf([200, 201])
       const patientId = resp.body.id
+      createdPatientId = patientId
 
       cy.visit('/agenda')
       cy.contains('Nova Consulta').click()

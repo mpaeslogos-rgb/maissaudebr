@@ -56,5 +56,27 @@ Cypress.Commands.add('createPayment', (payload) => {
 	return cy.request({ method: 'POST', url, body: payload, headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` } })
 })
 
-// You can add more helper commands for appointments/payments as needed.
+// Limpeza dos dados de teste. Os specs rodam contra o banco de produção, então
+// tudo que eles criam precisa ser desfeito — inclusive quando o teste falha no
+// meio (por isso failOnStatusCode: false e uso em afterEach).
+// - pagamento PENDING/OVERDUE → DELETE (vira CANCELLED)
+// - pagamento PAID → /refund (vira REFUNDED; PAID não pode ser cancelado)
+// - paciente → DELETE (anonimização LGPD)
+Cypress.Commands.add('cleanupPatientData', (patientId) => {
+	if (!patientId) return
+	const apiBase = Cypress.env('API_URL') || process.env.CYPRESS_API_URL || 'http://localhost:3001'
+	const headers = { Authorization: `Bearer ${Cypress.env('authToken')}` }
+	cy.request({ method: 'GET', url: `${apiBase}/payments?patientId=${patientId}&take=500`, headers, failOnStatusCode: false }).then((resp) => {
+		const body = resp.body || {}
+		const payments = Array.isArray(body) ? body : body.data || body.items || []
+		payments.forEach((p) => {
+			if (p.status === 'PENDING' || p.status === 'OVERDUE') {
+				cy.request({ method: 'DELETE', url: `${apiBase}/payments/${p.id}`, headers, failOnStatusCode: false })
+			} else if (p.status === 'PAID') {
+				cy.request({ method: 'POST', url: `${apiBase}/payments/${p.id}/refund`, headers, failOnStatusCode: false })
+			}
+		})
+	})
+	cy.request({ method: 'DELETE', url: `${apiBase}/patients/${patientId}`, headers, failOnStatusCode: false })
+})
 

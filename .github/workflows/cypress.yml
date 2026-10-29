@@ -1,10 +1,9 @@
 name: Cypress E2E
 
+# Só disparo manual: os secrets CYPRESS_API_URL/CYPRESS_BASE_URL apontam para
+# PRODUÇÃO e cada execução grava pacientes, consultas e pagamentos reais.
+# Voltar a rodar em push/pull_request só depois de existir um ambiente de teste.
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
   workflow_dispatch:
 
 jobs:
