@@ -1,4 +1,4 @@
-# v40 — fix: assinatura digital Vidaas gerava PDF corrompido (PAdES via @signpdf) + build sempre a partir do src
+# v41 — fix: cancelar consulta via PATCH também cancela a cobrança pendente
 FROM node:22-slim
 
 WORKDIR /app
