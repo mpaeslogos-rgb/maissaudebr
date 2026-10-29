@@ -10,14 +10,14 @@ WhatsApp integrado e funcionando via **Z-API** (z-api.io). Evolution API foi des
 ## Configuração atual (FUNCIONANDO ✅)
 
 - **Provedor:** Z-API (z-api.io)
-- **Instância:** `3F3514193C94B20E8795EE63DD404397`
+- **Instância:** ver `ZAPI_INSTANCE_ID` no Railway
 - **Número conectado:** 11999963756 (WhatsApp Business)
 
 ## Variáveis no Railway (serviço exquisite-tranquility)
 
-- `ZAPI_INSTANCE_ID` = `3F3514193C94B20E8795EE63DD404397`
-- `ZAPI_TOKEN` = `4BCC174D00674FB1D6546522`
-- `ZAPI_CLIENT_TOKEN` = `Fb60e6d339d8c477084ceef962f82d86aS`
+- `ZAPI_INSTANCE_ID` — ID da instância (valor só no Railway)
+- `ZAPI_TOKEN` — token da instância (valor só no Railway)
+- `ZAPI_CLIENT_TOKEN` — token de segurança da conta (valor só no Railway)
 
 ## Webhook Z-API
 - URL configurada no painel Z-API: `https://exquisite-tranquility-production-75d3.up.railway.app/api/whatsapp/webhook`
