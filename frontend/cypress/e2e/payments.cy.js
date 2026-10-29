@@ -1,6 +1,15 @@
 const { genValidCpf } = require('../support/gen-cpf')
 
 describe('Payments flow', () => {
+  let createdPatientId
+
+  // O pagamento termina PAID (entra no Fluxo de Caixa como receita) — estorna e
+  // anonimiza o paciente para não deixar lixo no banco.
+  afterEach(() => {
+    cy.cleanupPatientData(createdPatientId)
+    createdPatientId = undefined
+  })
+
   it('marks a pending payment as paid', () => {
     const fixturePatient = require('../fixtures/patient.json')
     const timestamp = Date.now()
@@ -18,6 +27,7 @@ describe('Payments flow', () => {
     cy.createPatient(patientPayload).then((patientResp) => {
       expect(patientResp.status).to.be.oneOf([200, 201])
       const patientId = patientResp.body.id
+      createdPatientId = patientId
 
       const dueDate = new Date().toISOString().slice(0, 10)
       cy.createPayment({ patientId, amount: 150, dueDate, description: `E2E payment ${timestamp}` }).then((paymentResp) => {
