@@ -326,6 +326,16 @@ export async function appointmentsRoutes(app: FastifyInstance) {
         data: body.data,
         include: appointmentInclude,
       })
+
+      // Mesma regra do DELETE: a Agenda cancela via PATCH, e sem isso a cobrança
+      // pendente da consulta continuava em "A Receber".
+      if (body.data.status === 'CANCELLED') {
+        await prisma.payment.updateMany({
+          where: { appointmentId: updated.id, status: { in: ['PENDING', 'OVERDUE'] } },
+          data: { status: 'CANCELLED' },
+        })
+      }
+
       const uid = (request.user as JwtPayload)?.sub ?? null
       const action = body.data.status ? `STATUS_${body.data.status}` : 'UPDATE'
       logAudit({ userId: uid, action, entity: 'Appointment', entityId: updated.id, request })
